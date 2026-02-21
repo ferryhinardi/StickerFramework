@@ -29,9 +29,10 @@ python run_pipeline.py --process-only --input ./stickers --skip-bg
 ## Features
 
 - **AI Image Generation** - Generates stickers via DALL-E 3 with structured character-consistent prompts
+- **Sticker Sheet Splitting** - Splits multi-sticker sheet images into individual PNGs with configurable pack profiles
 - **Background Removal** - AI-powered bg removal using rembg (U2-Net model)
 - **Die-Cut Outline** - Automatic white outline generation for sticker aesthetics
-- **Multi-Platform Export** - Automatically resizes and optimizes for 6 platforms
+- **Multi-Platform Export** - Automatically resizes and optimizes for 7 platform targets (WhatsApp, Telegram, iMessage, LINE stickers + LINE main + LINE tab, Etsy/print)
 - **Print Sheet Generation** - Creates print-ready layouts (US Letter, A4) for physical stickers
 - **Telegram Auto-Publish** - Fully automated sticker set creation via Telegram Bot API
 - **iMessage Xcode Project** - Generates a complete Xcode Sticker Pack Application structure
@@ -56,7 +57,9 @@ python run_pipeline.py --process-only --input ./stickers --skip-bg
 | WhatsApp (Sticker.ly) | WEBP | 512x512 | 100 KB |
 | Telegram | WEBP | 512x512 | 256 KB |
 | iMessage | PNG | 618x618 | 500 KB |
-| LINE | PNG | 370x320 | 1000 KB |
+| LINE (stickers) | PNG | 370x320 | 1000 KB |
+| LINE (main image) | PNG | 240x240 | 1000 KB |
+| LINE (tab icon) | PNG | 96x74 | 1000 KB |
 | Etsy / Gumroad (Print) | PNG | 2048x2048 | Unlimited |
 
 ## Project Structure
@@ -84,7 +87,15 @@ StickerFramework/
 │   ├── distribution_guide.md
 │   └── stickerly_guide.md
 ├── stickers/                    # Sample sticker assets
-├── chubby mochi cat/            # Mochi character references
+├── chubby mochi cat/            # Mochi cat sticker pack
+├── chubby mochi hamster/        # Mochi hamster pack (vol 1)
+├── chubby mochi hamster 2/      # Mochi hamster pack (vol 2)
+├── Jesus Christ – Faith & Peace/ # Jesus Christ sticker pack
+├── Jesus Christ 1/              # Jesus Christ pack (alt version)
+├── Jesus Christ 2/              # Jesus Christ pack vol 2
+├── Little Angel – Daily Blessings/ # Little Angel sticker pack
+├── Corporate Sloth – Tired but Trying/ # Corporate Sloth pack
+├── Office Teddy Bear/           # Office Teddy Bear pack
 └── output/                      # Pipeline output (gitignored)
 ```
 

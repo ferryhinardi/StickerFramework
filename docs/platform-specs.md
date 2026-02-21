@@ -98,24 +98,65 @@ The publisher:
 
 ## LINE Creators Market
 
+> Source: [Official LINE Sticker Creation Guidelines](https://creator.line.me/en/guideline/sticker/)
+
+### Image Requirements
+
+| Image Type | Quantity | Size (W x H) |
+|------------|----------|---------------|
+| **Main Image** | 1 | 240 x 240 |
+| **Sticker Images** | Either 8, 16, 24, 32, or 40 | Up to 370 x 320 |
+| **Chat Thumbnail Icon** | 1 | 96 x 74 |
+
 ### Technical Specs
 
 | Property | Requirement |
 |----------|-------------|
-| **Sticker Format** | PNG |
-| **Sticker Size** | 370x320 pixels (W x H) |
-| **Max File Size** | 1 MB per sticker |
-| **Main Image** | 240x240 PNG |
-| **Tab Image** | 96x74 PNG |
+| **Format** | PNG |
+| **Color Mode** | RGB |
+| **Resolution** | At least 72 dpi |
 | **Background** | Transparent |
-| **Pack Size** | 8, 16, 24, 32, or 40 stickers |
-| **Margin** | 10px margin on all sides |
+| **Dimensions** | Must have even-numbered height and width |
+| **Max File Size** | 1 MB per image |
+| **ZIP Upload** | Max 60 MB if submitting all images in a single ZIP |
+| **Sticker Margin** | ~10px between trimmed image edge and content |
+
+### Pack Size Rules
+- Select from exactly **8, 16, 24, 32, or 40** stickers (no other counts accepted)
+- You can change the count freely before submission on the Manage Stickers page
+
+### Text Metadata Limits
+
+| Field | Max Characters |
+|-------|---------------|
+| Creator | 50 |
+| Sticker Title | 40 |
+| Sticker Description | 160 |
+| Copyright | 50 |
+
+- Asian language characters and some symbols count as 2 characters each.
+
+### Sticker Margins
+- There should be a margin of around **10 pixels** between the trimmed image and the content around it.
+- Consider the balance of the stickers when creating designs.
 
 ### Processing Notes
 - Non-square format (370x320) -- wider than tall
-- Specific pack sizes only (multiples of 8, max 40)
-- Requires separate main image and tab image
-- Strictest margin requirements
+- Sticker images are resized automatically by LINE, but dimensions must be even numbers
+- Main image (240x240) is the pack cover shown in the LINE store
+- Chat thumbnail icon (96x74) is displayed in the chat sticker tray
+
+### Content Guidelines
+**Recommended:**
+- Stickers that are easy to use in daily conversation and communication
+- Stickers with easily understandable expressions, messages, and illustrations
+
+**Not recommended:**
+- Objects and scenery that are difficult to use in conversation
+- Poor visibility (images too long, full-length illustrations of tall characters)
+- Sets that lack variety (purely pale colors, strings of numbers)
+- Advertising content, corporate logos, product release dates
+- Content that offends public order/morality, suggestive of underage drinking/smoking, sexual/violent imagery
 
 ### Distribution
 - Submit via LINE Creators Market (https://creator.line.me)
@@ -132,11 +173,15 @@ The publisher:
 {
     "title": "Mochi Emotions Vol. 1",
     "author": "Your Brand Name",
+    "description": "Cute chubby cat stickers for daily conversation",
+    "copyright": "Your Brand Name",
     "sticker_count": 24,
     "format": "PNG",
-    "dimensions": "370x320",
-    "main_image": "240x240",
-    "tab_image": "96x74"
+    "images": {
+        "main_image": "main.png (240x240)",
+        "stickers": "01_what.png ... (up to 370x320 each)",
+        "chat_thumbnail": "tab.png (96x74)"
+    }
 }
 ```
 

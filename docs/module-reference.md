@@ -383,7 +383,57 @@ Extracts ordered emoji list from pack configuration. Returns list of emoji strin
 
 ## `split_stickers.py`
 
-**Purpose**: Standalone utility to split a multi-sticker sheet image into individual PNGs.
+**Purpose**: Standalone utility to split a multi-sticker sheet image into individual PNGs. Supports multiple sticker packs via a built-in registry and environment variable selection.
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `STICKER_PACK` | `"Jesus Christ – Faith & Peace"` | Name of the pack to process (must match a key in `PACKS`) |
+
+### Pack Registry (`PACKS`)
+
+The `main()` function contains a `PACKS` dictionary with per-pack settings:
+
+```python
+PACKS = {
+    "pack name": {
+        "input_file": "sticker_pack.png",  # Filename of the sheet image
+        "grid_rows": 4,                     # Expected row count (for sort buckets)
+        "threshold": 235,                   # Optional: white bg threshold (default 240)
+        "names": [                          # Ordered sticker names
+            "01_sticker_name",
+            "02_sticker_name",
+            ...
+        ],
+    },
+}
+```
+
+**Currently registered packs:**
+
+| Pack Name | Stickers | Grid Rows | Threshold |
+|-----------|----------|-----------|-----------|
+| chubby mochi cat | 10 | 3 | 240 |
+| chubby mochi hamster 2 | 13 | 5 | 240 |
+| Little Angel -- Daily Blessings | 16 | 4 | 240 |
+| Jesus Christ -- Faith & Peace | 16 | 4 | 235 |
+| Jesus Christ 1 | 16 | 4 | 235 |
+| Jesus Christ 2 | 16 | 4 | 235 |
+| Corporate Sloth -- Tired but Trying | 16 | 4 | 240 |
+
+### Usage
+
+```bash
+# Process the default pack
+python split_stickers.py
+
+# Process a specific pack
+STICKER_PACK="Corporate Sloth – Tired but Trying" python split_stickers.py
+```
+
+**Input**: `<pack_name>/sticker_pack.png` (or the filename specified in pack config)
+**Output**: `<pack_name>/split/*.png` (individual 512x512 transparent PNGs)
 
 ### Functions
 
@@ -395,17 +445,20 @@ Converts white/near-white pixels to transparent.
 | `img` | PIL.Image | - | Input image |
 | `threshold` | int | `240` | RGB threshold (pixels above this become transparent) |
 
-#### `find_sticker_bboxes(img: PIL.Image, min_size: int) -> list`
+#### `find_sticker_bboxes(img: PIL.Image, min_size: int, grid_rows: int) -> list`
 Detects individual sticker regions using connected component analysis.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `img` | PIL.Image | - | Image with transparent background |
 | `min_size` | int | `50` | Minimum region size to be considered a sticker |
+| `grid_rows` | int | `4` | Expected number of rows in the grid (used for row-bucket sorting) |
 
-**Algorithm**: Uses `scipy.ndimage.label` on non-transparent pixels, filters by size, sorts top-to-bottom then left-to-right.
+**Algorithm**: Uses `scipy.ndimage.label` on non-transparent pixels, filters by size, sorts by center-y bucket (row height = image height / grid_rows) then left-to-right by x.
 
 **Returns**: List of bounding box tuples `(x1, y1, x2, y2)`.
+
+**Known limitation**: Stickers that are touching or very close together may be detected as a single merged region. In these cases, manual sub-splitting of the merged bounding boxes is required.
 
 #### `crop_and_resize(img: PIL.Image, bbox: tuple, target_size: int, padding: int) -> PIL.Image`
 Crops a sticker region and resizes to standard dimensions.

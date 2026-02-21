@@ -198,7 +198,9 @@ PACK_CONFIG = {
 | `imessage_small` | iMessage (small grid) | 300x300 PNG |
 | `imessage_medium` | iMessage (medium grid) | 408x408 PNG |
 | `imessage_large` | iMessage (large grid) | 618x618 PNG |
-| `line` | LINE Creators Market | 370x320 PNG |
+| `line` | LINE sticker images | 370x320 PNG |
+| `line_main` | LINE main/cover image | 240x240 PNG |
+| `line_tab` | LINE chat thumbnail icon | 96x74 PNG |
 | `print_etsy` | High-res for print/Etsy | 2048x2048 PNG |
 
 ---
@@ -282,3 +284,47 @@ The `brand_kit.md` file serves as the visual identity reference. Key elements to
 - **No text in stickers**: Ensures international market compatibility
 - **Consistent accessory**: The gold star pin on Mochi's left ear appears in every sticker
 - **Expression guide**: Standardized ways to show emotions (blue teardrops, steam for anger, etc.)
+
+---
+
+## Split Stickers Pack Registry
+
+When using the `split_stickers.py` workflow (splitting a sticker sheet into individual PNGs), pack configurations are defined in the `PACKS` dictionary inside `split_stickers.py`.
+
+### Adding a New Pack to the Registry
+
+```python
+# In split_stickers.py, add to the PACKS dict:
+"My New Pack": {
+    "input_file": "sticker_pack.png",  # Sheet image filename (relative to pack folder)
+    "grid_rows": 4,                     # Number of rows in the grid layout
+    "threshold": 240,                   # Optional: white bg removal threshold (default 240)
+    "names": [                          # Sticker names in reading order (top-left to bottom-right)
+        "01_hello",
+        "02_goodbye",
+        # ...
+    ],
+},
+```
+
+### Pack Registry Fields
+
+| Field | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `input_file` | Yes | - | Filename of the sheet image inside the pack folder |
+| `grid_rows` | Yes | - | Expected number of rows (used for row-bucket sorting) |
+| `threshold` | No | `240` | RGB threshold for white background removal (lower = more aggressive) |
+| `names` | Yes | - | Ordered list of sticker names matching the grid reading order |
+
+### Running a Pack
+
+```bash
+# Set the pack name via environment variable
+STICKER_PACK="My New Pack" python split_stickers.py
+
+# Then process for all platforms
+python sticker_processor.py "My New Pack/split" "My New Pack/final" \
+    whatsapp telegram imessage_large line line_main line_tab print_etsy --skip-bg
+```
+
+The `split` directory and `final` directory are created automatically inside the pack folder.

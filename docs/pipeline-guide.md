@@ -44,7 +44,7 @@ python run_pipeline.py
 
 This executes stages 1-5:
 1. Generates all 24 stickers via DALL-E 3 (HD quality)
-2. Processes images (bg removal, outline, resize)
+2. Processes images (bg removal, outline, resize for all platforms including LINE main/tab)
 3. Creates tray icons
 4. Generates metadata JSON files
 5. Creates print sheets and distribution ZIP
@@ -119,17 +119,30 @@ python run_pipeline.py --process-only --input ./my_stickers/ --skip-bg
 If you have a single image containing multiple stickers in a grid layout:
 
 ```bash
+# Split using the default pack (or set STICKER_PACK env var)
 python split_stickers.py
+
+# Split a specific pack
+STICKER_PACK="Jesus Christ – Faith & Peace" python split_stickers.py
+
+# Then process the split stickers for all platforms
+python sticker_processor.py "Jesus Christ – Faith & Peace/split" \
+    "Jesus Christ – Faith & Peace/final" \
+    whatsapp telegram imessage_large line line_main line_tab print_etsy --skip-bg
 ```
 
-> **Note**: Currently the script has hardcoded paths. Edit the `main()` function in `split_stickers.py` to point to your sheet image and desired output directory.
+The `split_stickers.py` script has a built-in pack registry (`PACKS` dict) with per-pack settings including input filename, grid layout, white-background threshold, and sticker names. Select a pack via the `STICKER_PACK` environment variable.
+
+**Available packs:** `chubby mochi cat`, `chubby mochi hamster 2`, `Little Angel – Daily Blessings`, `Jesus Christ – Faith & Peace`, `Jesus Christ 1`, `Jesus Christ 2`, `Corporate Sloth – Tired but Trying`
 
 The splitter:
-1. Removes white background
-2. Detects individual sticker regions (connected components)
+1. Removes white background (configurable threshold per pack)
+2. Detects individual sticker regions (connected components with row-bucketed sorting)
 3. Crops each sticker
 4. Resizes to 512x512 with padding
-5. Saves as individual transparent PNGs
+5. Saves as individual transparent PNGs to `<pack_name>/split/`
+
+> **Note**: If stickers are touching in the sheet, the connected-component detection may merge them into one region. In that case, you need to manually sub-split the merged bounding boxes (check for aspect ratios significantly different from ~1:1).
 
 ### Workflow 4: Budget-Conscious Generation
 
@@ -175,6 +188,53 @@ publisher.create_sticker_set(
 
 After a full pipeline run, the output directory contains:
 
+```
+output/<pack_id>/
+├── raw/                         # Generated DALL-E images
+│   ├── 01_happy.png             # 1024x1024 raw images
+│   ├── 01_happy_prompt.txt      # Generation prompt + revised prompt
+│   └── ...                      # (24 images + 24 prompt files)
+├── final/                       # Processed platform-ready stickers
+│   ├── whatsapp/                # 512x512 WEBP, <100KB
+│   ├── telegram/                # 512x512 WEBP, <256KB
+│   ├── imessage_large/          # 618x618 PNG, <500KB
+│   ├── line/                    # 370x320 PNG, <1000KB
+│   ├── line_main/               # 240x240 PNG, <1000KB (LINE store cover)
+│   ├── line_tab/                # 96x74 PNG, <1000KB (LINE chat tray icon)
+│   └── print_etsy/              # 2048x2048 PNG, high-res
+├── metadata/
+│   ├── whatsapp_pack.json       # WhatsApp/Sticker.ly metadata
+│   ├── telegram_pack.json       # Telegram sticker set config
+│   ├── line_pack.json           # LINE Creators Market metadata
+│   └── pack_summary.json        # Human-readable summary
+├── dist/
+│   ├── sticker_sheet_letter.png # US Letter print layout (300 DPI)
+│   ├── sticker_sheet_a4.png     # A4 print layout (300 DPI)
+│   ├── social_preview.png       # 3000x3000 preview for Etsy/IG
+│   └── pack01_emotions_v1_distribution.zip
+└── xcode/                       # (if --imessage was used)
+    └── MochiEmotionsVol1/
+        ├── MochiEmotionsVol1.xcodeproj/
+        ├── Stickers.xcstickers/
+        └── Info.plist
+```
+
+For packs processed via `split_stickers.py` + `sticker_processor.py`, the output lives directly in the pack folder:
+
+```
+<Pack Name>/
+├── sticker_pack.png             # Original sheet image
+├── split/                       # Individual split stickers (512x512 PNG)
+│   ├── 01_sticker_name.png
+│   └── ...
+└── final/                       # Processed platform-ready stickers
+    ├── whatsapp/                # 512x512 WEBP, <100KB
+    ├── telegram/                # 512x512 WEBP, <256KB
+    ├── imessage_large/          # 618x618 PNG, <500KB
+    ├── line/                    # 370x320 PNG, <1000KB
+    ├── line_main/               # 240x240 PNG (LINE store cover)
+    ├── line_tab/                # 96x74 PNG (LINE chat tray icon)
+    └── print_etsy/              # 2048x2048 PNG, high-res
 ```
 output/pack01_emotions_v1/
 ├── raw/                         # Generated DALL-E images

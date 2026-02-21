@@ -59,13 +59,17 @@ StickerFramework is a modular, pipeline-based system where each stage transforms
 └────────────────────────────────────────────────────────────────┘
 
 Standalone Utility:
-┌──────────────────┐
-│ split_stickers.py│
-│                  │
-│ Sheet image ──►  │
-│ Individual PNGs  │
-│ (512x512, no bg) │
-└──────────────────┘
+┌──────────────────────────────────┐
+│ split_stickers.py                │
+│                                  │
+│ STICKER_PACK env var ──►         │
+│ Pack registry (PACKS dict)       │
+│ Sheet image ──►                  │
+│ Individual PNGs (512x512, no bg) │
+│                                  │
+│ Then pipe to sticker_processor:  │
+│ split/ ──► final/ (7 platforms)  │
+└──────────────────────────────────┘
 ```
 
 ## Module Dependency Graph
@@ -110,12 +114,12 @@ pack_config.py ──► image_generator.py ──► raw PNG files (1024x1024)
                                               ▼
                                      resize_to_spec() per platform
                                               │
-                    ┌─────────┬───────────┬───┴────┬──────────┐
-                    ▼         ▼           ▼        ▼          ▼
-               whatsapp/  telegram/  imessage/   line/    print_etsy/
-               512x512    512x512    618x618   370x320   2048x2048
-               WEBP       WEBP       PNG       PNG       PNG
-               <100KB     <256KB     <500KB    <1000KB   unlimited
+                     ┌─────────┬───────────┬───┴────┬──────────┬──────────┬─────────┐
+                     ▼         ▼           ▼        ▼          ▼          ▼         ▼
+                whatsapp/  telegram/  imessage/   line/    line_main/ line_tab/ print_etsy/
+                512x512    512x512    618x618   370x320   240x240    96x74    2048x2048
+                WEBP       WEBP       PNG       PNG       PNG        PNG      PNG
+                <100KB     <256KB     <500KB    <1000KB   <1000KB    <1000KB  unlimited
 ```
 
 ### Output Directory Structure
@@ -193,6 +197,7 @@ DALL-E 3 costs are managed through:
 | `OPENAI_API_KEY` | For generation | OpenAI API key for DALL-E 3 |
 | `TELEGRAM_BOT_TOKEN` | For Telegram publish | Bot token from @BotFather |
 | `TELEGRAM_USER_ID` | For Telegram publish | Your Telegram user ID |
+| `STICKER_PACK` | For split_stickers | Name of pack to split (default: `Jesus Christ – Faith & Peace`) |
 
 ## Error Handling Strategy
 
