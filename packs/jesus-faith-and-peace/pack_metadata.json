@@ -1,0 +1,40 @@
+{
+  "pack_name": "Jesus – Faith and Peace",
+  "pack_id": "jesus-faith-and-peace",
+  "version": "1.0",
+  "character": "Jesus Christ",
+  "theme": "christian-faith",
+  "description": "Cute Jesus Christ stickers with faith, prayer, and blessings for daily encouragement.",
+  "language": "en",
+  "sticker_count": 13,
+  "platforms": {
+    "line": {
+      "enabled": false,
+      "disabled_reason": "Violates LINE guideline 3.13 - Religious content. Pack features Jesus Christ character with Christian religious text (God bless you, Praying for you, Have faith, God is good, Amen, Thank you Lord).",
+      "line_guideline_3_13_risk": "high",
+      "religious_elements_found": [
+        "Jesus Christ character depiction",
+        "Religious text: 'God bless you', 'Have faith', 'Praying for you', 'God is good', 'Amen', 'Thank you Lord', 'Trust in Him'",
+        "Christian prayer and blessing themes throughout entire pack"
+      ]
+    },
+    "telegram": {
+      "enabled": true
+    },
+    "whatsapp": {
+      "enabled": true
+    },
+    "imessage": {
+      "enabled": true
+    },
+    "print_etsy": {
+      "enabled": true
+    }
+  },
+  "content_flags": {
+    "contains_religious_content": true,
+    "contains_violence": false,
+    "contains_adult_content": false,
+    "line_guideline_3_13_risk": "high"
+  }
+}

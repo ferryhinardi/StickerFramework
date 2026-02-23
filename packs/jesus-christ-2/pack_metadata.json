@@ -1,0 +1,40 @@
+{
+  "pack_name": "Jesus Christ 2",
+  "pack_id": "jesus-christ-2",
+  "version": "1.0",
+  "character": "Jesus Christ",
+  "theme": "christian-faith",
+  "description": "More cute Jesus Christ stickers with faith, grace, and hope for daily encouragement.",
+  "language": "en",
+  "sticker_count": 16,
+  "platforms": {
+    "line": {
+      "enabled": false,
+      "disabled_reason": "Violates LINE guideline 3.13 - Religious content. Pack features Jesus Christ character with Christian religious text (Walk by faith, Keep praying, Faith over fear, God is with you, Give it to God).",
+      "line_guideline_3_13_risk": "high",
+      "religious_elements_found": [
+        "Jesus Christ character depiction",
+        "Religious text: 'Walk by faith', 'Keep praying', 'Faith over fear', 'His grace is enough', 'Seek Him first', 'God is with you', 'Hope in Him', 'Give it to God'",
+        "Christian faith and prayer themes throughout entire pack"
+      ]
+    },
+    "telegram": {
+      "enabled": true
+    },
+    "whatsapp": {
+      "enabled": true
+    },
+    "imessage": {
+      "enabled": true
+    },
+    "print_etsy": {
+      "enabled": true
+    }
+  },
+  "content_flags": {
+    "contains_religious_content": true,
+    "contains_violence": false,
+    "contains_adult_content": false,
+    "line_guideline_3_13_risk": "high"
+  }
+}

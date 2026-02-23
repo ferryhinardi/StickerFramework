@@ -53,6 +53,64 @@ from automation.utils import (
     load_progress,
     save_progress,
 )
+from scripts.line_preflight_check import (
+    CheckResult,
+    check_metadata_file,
+    check_sticker_filenames,
+    check_title_description,
+    check_theme,
+)
+
+
+# ─── Pre-flight check ───────────────────────────────────────────────────────
+
+
+def run_preflight_gate(
+    pack_dir: Path, title: str | None, description: str | None
+) -> bool:
+    """Run LINE pre-flight checks before upload. Returns True if safe to proceed."""
+    print(f"\n{'=' * 60}")
+    print("  LINE PRE-FLIGHT CONTENT CHECK")
+    print(f"{'=' * 60}\n")
+
+    result = CheckResult()
+
+    # Check pack metadata
+    # pack_dir is typically packs/<name>/final, go up one level for metadata
+    pack_root = pack_dir.parent if pack_dir.name == "final" else pack_dir
+    metadata = check_metadata_file(pack_root, result)
+
+    # Check sticker filenames
+    check_sticker_filenames(pack_root, result)
+
+    # Check CLI-provided title/description
+    check_title_description(title, description, result)
+
+    # Check theme from metadata
+    if metadata:
+        check_theme(metadata, result)
+
+    for msg in result.info:
+        print(f"  INFO: {msg}")
+    if result.errors:
+        for msg in result.errors:
+            print(f"  FAIL: {msg}")
+    if result.warnings:
+        for msg in result.warnings:
+            print(f"  WARN: {msg}")
+
+    if not result.passed:
+        print(
+            f"\n  BLOCKED: Pack failed pre-flight check ({len(result.errors)} error(s))"
+        )
+        print(
+            "  This pack will be rejected by LINE under guideline 3.13 (religious content)."
+        )
+        print("  Use --skip-preflight to bypass this check.\n")
+        return False
+
+    print("  Pre-flight check PASSED\n")
+    return True
 
 
 # ─── Step runner ─────────────────────────────────────────────────────────────
@@ -356,6 +414,11 @@ Examples:
         action="store_true",
         help="Resume from last saved progress state",
     )
+    parser.add_argument(
+        "--skip-preflight",
+        action="store_true",
+        help="Skip LINE content pre-flight check (not recommended)",
+    )
 
     args = parser.parse_args()
 
@@ -364,6 +427,14 @@ Examples:
         parser.error("--pack-dir is required (or use --resume)")
     if not args.resume and not args.title:
         parser.error("--title is required (or use --resume)")
+
+    # Pre-flight content check (before launching browser)
+    if not args.resume and not args.skip_preflight:
+        pack_path = Path(args.pack_dir)
+        if not pack_path.is_absolute():
+            pack_path = Path(__file__).resolve().parent.parent / pack_path
+        if not run_preflight_gate(pack_path, args.title, args.description):
+            sys.exit(1)
 
     asyncio.run(run_pipeline(args))
 

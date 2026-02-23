@@ -1,0 +1,45 @@
+{
+  "pack_name": "Boba & Milo – Cheerful Otter Duo 6 (Ramadan Edition)",
+  "pack_id": "boba-milo-6",
+  "version": "1.0",
+  "character": "Boba & Milo",
+  "theme": "ramadan-eid",
+  "description": "Boba & Milo celebrate Ramadan and Eid – fasting, iftar, tarawih, and festive greetings!",
+  "language": "id",
+  "sticker_count": 8,
+  "platforms": {
+    "line": {
+      "enabled": false,
+      "disabled_reason": "Violates LINE guideline 3.13 - Religious content. Entire pack is Ramadan/Eid themed with mosques, prayer gestures, Islamic greetings.",
+      "submission_status": "rejected",
+      "rejection_reason": "3.13 - Images designed to solicit or spread religion, or with strong religious components",
+      "rejection_images": ["main", "tab", "07"],
+      "religious_elements_found": [
+        "Mosque silhouette (main image, tab image)",
+        "Eid greeting text 'Mohon maaf lahir batin' (main image, tab image)",
+        "Prayer/salam hand gestures (main, tab, multiple stickers)",
+        "Iftar reference 'Waktunya Berbuka' (sticker 07)",
+        "Islamic text: Marhaban ya Ramadan, Selamat Idul Fitri, Mohon maaf lahir batin",
+        "Ramadan practices: sahur, iftar/berbuka, tarawih, puasa"
+      ]
+    },
+    "telegram": {
+      "enabled": true
+    },
+    "whatsapp": {
+      "enabled": true
+    },
+    "imessage": {
+      "enabled": true
+    },
+    "print_etsy": {
+      "enabled": true
+    }
+  },
+  "content_flags": {
+    "contains_religious_content": true,
+    "contains_violence": false,
+    "contains_adult_content": false,
+    "line_guideline_3_13_risk": "high"
+  }
+}

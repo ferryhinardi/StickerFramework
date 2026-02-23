@@ -14,5 +14,7 @@
   "includes_photos": false,
   "price_tier": "23000",
   "creator_path": "LQu3ADYzrcqp2KCs",
-  "creator_id": "5964498"
+  "creator_id": "5964498",
+  "_comment_preflight": "Always run `python scripts/line_preflight_check.py --pack-dir <pack>` before submission",
+  "_comment_religious": "LINE guideline 3.13 prohibits religious content. Use pack_metadata.json to mark packs as LINE-incompatible."
 }

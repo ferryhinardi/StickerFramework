@@ -1,0 +1,40 @@
+{
+  "pack_name": "Little Angel",
+  "pack_id": "little-angel",
+  "version": "1.0",
+  "character": "Little Angel",
+  "theme": "christian-faith",
+  "description": "A cute little angel sticker pack with blessings, prayers, and encouragement.",
+  "language": "en",
+  "sticker_count": 16,
+  "platforms": {
+    "line": {
+      "enabled": false,
+      "disabled_reason": "Violates LINE guideline 3.13 - Religious content. Pack features angel character with Christian religious text (God bless you, Praying for you, Hallelujah, You are blessed, God is good, Have faith).",
+      "line_guideline_3_13_risk": "high",
+      "religious_elements_found": [
+        "Angel character depiction with religious context",
+        "Religious text: 'God bless you', 'Praying for you', 'Have faith', 'You are blessed', 'Hallelujah', 'God is good', 'Thank you Lord', 'Amen', 'Trust Him'",
+        "Christian prayer and blessing themes throughout entire pack"
+      ]
+    },
+    "telegram": {
+      "enabled": true
+    },
+    "whatsapp": {
+      "enabled": true
+    },
+    "imessage": {
+      "enabled": true
+    },
+    "print_etsy": {
+      "enabled": true
+    }
+  },
+  "content_flags": {
+    "contains_religious_content": true,
+    "contains_violence": false,
+    "contains_adult_content": false,
+    "line_guideline_3_13_risk": "high"
+  }
+}

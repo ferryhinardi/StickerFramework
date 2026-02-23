@@ -1,0 +1,43 @@
+{
+  "pack_name": "Boba & Milo – Cheerful Otter Duo 4",
+  "pack_id": "boba-milo-4",
+  "version": "1.0",
+  "character": "Boba & Milo",
+  "theme": "general-emotions",
+  "description": "A fun, caring otter duo for everyday chat – expressive stickers for all moods!",
+  "language": "en",
+  "sticker_count": 16,
+  "platforms": {
+    "line": {
+      "enabled": true,
+      "title": "Boba & Milo Cheerful Otter Duo 4",
+      "description": "A fun, caring otter duo for everyday chat",
+      "style_category": "cute",
+      "character_category": "animals-others",
+      "submission_status": "waiting_for_review",
+      "sticker_id": "43210574",
+      "submission_url": "https://creator.line.me/my/LQu3ADYzrcqp2KCs/sticker/43210574",
+      "rejection_reason": "3.13 - Religious content (1st submission, likely cross-contamination from concurrent Ramadan pack submissions)",
+      "rejection_image": "01",
+      "resubmit_action": "Resubmitted 2026-02-23 — old rejected submission deleted, new submission created separately"
+    },
+    "telegram": {
+      "enabled": true
+    },
+    "whatsapp": {
+      "enabled": true
+    },
+    "imessage": {
+      "enabled": true
+    },
+    "print_etsy": {
+      "enabled": true
+    }
+  },
+  "content_flags": {
+    "contains_religious_content": false,
+    "contains_violence": false,
+    "contains_adult_content": false,
+    "line_guideline_3_13_risk": "none"
+  }
+}

@@ -188,6 +188,42 @@ Verify all items before uploading to LINE Creator Market:
 - [ ] No content from other messaging platforms
 - [ ] Stickers are useful in everyday conversation
 
+### Guideline 3.13 — Religious Content (CRITICAL)
+
+LINE explicitly prohibits "images designed to solicit or spread religion, or with strong religious components." This applies to **all** elements of a submission: sticker images, main image, tab image, title, description, and tags.
+
+**Run the automated pre-flight check before submitting:**
+```bash
+python scripts/line_preflight_check.py --pack-dir packs/<pack-name>
+```
+
+The following will trigger a 3.13 rejection:
+
+#### Visual Elements — NOT ALLOWED
+- [ ] No religious buildings (mosques, churches, temples, synagogues)
+- [ ] No religious symbols (crescent moon in religious context, cross, Star of David, Om, etc.)
+- [ ] No prayer gestures or religious poses (hands together in prayer, prostration, etc.)
+- [ ] No religious clothing/accessories (prayer caps, prayer beads, prayer mats, rosaries, etc.)
+- [ ] No religious furniture or objects (altars, pulpits, menorahs, etc.)
+
+#### Text — NOT ALLOWED
+- [ ] No religious greetings (Marhaban ya Ramadan, Merry Christmas in religious context, etc.)
+- [ ] No religious phrases (Alhamdulillah, Hallelujah, Amen, etc.)
+- [ ] No religious practice references (sahur, iftar/berbuka, tarawih, Lent, etc.)
+- [ ] No religious holiday names (Ramadan, Eid, Easter, Diwali, Vesak, Hanukkah, etc.)
+- [ ] No prayer or worship references (doa, pray, worship, etc.)
+
+#### Metadata — NOT ALLOWED
+- [ ] Pack title must not contain religious references
+- [ ] Pack description must not contain religious references
+- [ ] Tags/keywords must not contain religious terms
+
+#### Submission Timing
+- [ ] Do NOT submit religious and non-religious packs simultaneously from the same account
+- [ ] Religious-themed packs flagged in one submission may cause concurrent submissions to be rejected
+
+> **Note:** Packs with religious themes should use `pack_metadata.json` with `platforms.line.enabled: false` and distribute on other platforms only (Telegram, WhatsApp, iMessage, Stickerly, Etsy).
+
 ---
 
 ## Reference Links
