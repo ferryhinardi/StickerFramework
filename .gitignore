@@ -34,3 +34,20 @@ Thumbs.db
 
 # Pipeline output (regeneratable)
 output/
+
+# Sticker pack large files (regeneratable via pipeline)
+packs/*/sticker_pack.png
+packs/*/split/
+packs/*/final/
+packs/*/line_output/
+
+# Playwright automation state
+automation/screenshots/
+automation/.storage_state.json
+
+# Reference large binaries (screenshots, PDFs)
+reference/line-creator/*.png
+reference/line-creator/*.pdf
+reference/cartoon-faces/
+reference/stickers/
+reference/stickers-gen/
