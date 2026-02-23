@@ -742,37 +742,45 @@ def main():
         "Cappy the Chill Capybara (Sheet 1)": {
             "pack_dir": "cappy-capybara",
             "input_file": "composite_sheet_1.png",
-            "grid_rows": 4,
-            "grid_cols": 2,
+            "grid_rows": 3,
+            "grid_cols": 3,
             "use_grid_crop": True,
             "skip_text_blank": True,
+            # DALL-E produced a 3×3 grid (9 stickers) instead of 2×4
+            "row_starts": [43, 381, 700],
+            "col_starts": [0, 377, 713, 1024],
             "names": [
                 "01_good_morning",
                 "02_ok_thumbs_up",
                 "03_thank_you",
-                "04_lol",
-                "05_love",
-                "06_sleepy",
-                "07_hungry",
-                "08_working_hard",
+                "04_love",
+                "05_lol",
+                "06_hungry",
+                "07_heart",
+                "08_sleepy",
+                "09_working_hard",
             ],
         },
         "Cappy the Chill Capybara (Sheet 2)": {
             "pack_dir": "cappy-capybara",
             "input_file": "composite_sheet_2.png",
-            "grid_rows": 4,
-            "grid_cols": 2,
+            "grid_rows": 3,
+            "grid_cols": 3,
             "use_grid_crop": True,
             "skip_text_blank": True,
+            # DALL-E produced a 3×3 grid (9 stickers) instead of 2×4
+            "row_starts": [41, 395, 686],
+            "col_starts": [0, 379, 706, 1024],
             "names": [
-                "09_excited",
-                "10_sad",
-                "11_angry",
-                "12_sorry",
+                "10_excited",
+                "11_sad",
+                "12_angry",
                 "13_bye",
                 "14_thinking",
-                "15_cheering",
-                "16_good_night",
+                "15_sorry",
+                "16_cheering",
+                "17_cheering_2",
+                "18_good_night",
             ],
         },
         "Boba & Milo – Cheerful Otter Duo 5": {
@@ -809,8 +817,13 @@ def main():
     output_dir = str(pack_dir / "split")
     os.makedirs(output_dir, exist_ok=True)
 
-    # Remove any stale PNG files from previous runs so orphans don't accumulate
+    # Remove stale PNG files from previous runs so orphans don't accumulate.
+    # For multi-sheet packs (same pack_dir, different input_file), only remove
+    # files whose names match THIS sheet's sticker names to preserve other sheets.
+    expected_names = {f"{n}.png" for n in pack.get("names", [])}
     for stale in Path(output_dir).glob("*.png"):
+        if expected_names and stale.name not in expected_names:
+            continue  # belongs to a different sheet of the same pack
         stale.unlink()
 
     print(f"Loading image: {input_path}")
