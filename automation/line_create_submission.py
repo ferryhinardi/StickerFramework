@@ -174,8 +174,16 @@ class LineCreateSubmission:
             try:
                 await page.locator(SEL_CONFIRM_OK).click(timeout=SAVE_TIMEOUT)
             except Exception:
-                # Fallback: find any visible OK button
-                await page.locator(SEL_CONFIRM_OK_FALLBACK).click(timeout=5_000)
+                try:
+                    # Fallback 1: class-based button
+                    await page.locator(SEL_CONFIRM_OK_FALLBACK).click(timeout=5_000)
+                except Exception:
+                    # Fallback 2: any visible OK/Save button in a dialog
+                    await page.locator(
+                        'button:visible:has-text("OK"), '
+                        'button:visible:has-text("Save"), '
+                        ".cm-modal button:visible >> nth=0"
+                    ).first.click(timeout=5_000)
 
             # ── Wait for redirect to management page ──
             # The redirect happens but Playwright's wait_for_url can miss

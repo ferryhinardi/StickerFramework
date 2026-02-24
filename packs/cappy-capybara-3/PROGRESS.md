@@ -3,7 +3,7 @@
 > **Purpose**: Resume-friendly checklist. If you hit `Request Entity Too Large`,
 > just pick up from the next unchecked `[ ]` item.
 >
-> **Last updated**: 2026-02-24
+> **Last updated**: 2026-02-24 (LINE submitted for review; WhatsApp/Telegram/iMessage pending manual setup)
 
 ---
 
@@ -37,29 +37,21 @@
 
 ---
 
-## Phase 1: Image Generation
+## Phase 1: Image Generation (COMPLETE — ComfyUI)
 
-> Choose one method: DALL-E composite sheets (v1 workflow) or ComfyUI individual (v2 workflow).
-> Prompts are in `dalle_prompts.md` for either approach.
-
-### Option A: DALL-E Composite Sheets
-
-- [ ] Generate Sheet 1 (stickers 01-08) via DALL-E using `dalle_prompts.md`
-- [ ] Generate Sheet 2 (stickers 09-16) via DALL-E using `dalle_prompts.md`
-- [ ] Review sheets — verify all 16 stickers are distinct and match descriptions
-- [ ] Re-generate any sheets with quality issues
+> Used ComfyUI individual generation (v2 workflow) with DreamShaperXL_Turbo_v2_1.
+> Generated in 3 batches due to timeouts: 01-07, 08-14, 15-16. Seed: 42.
 
 ### Option B: ComfyUI Individual Generation
 
-- [ ] Configure `comfyui_generator.py` for cappy-capybara-3
-- [ ] Generate all 16 stickers (DreamShaperXL_Turbo_v2_1, 8 steps, CFG 2.0)
-- [ ] Review each sticker — verify character consistency and pose/prop accuracy
-- [ ] Re-generate any stickers with quality issues
-- [ ] All 16 PNGs in `raw/`
+- [x] Configure `comfyui_generator.py` for cappy-capybara-3
+- [x] Generate all 16 stickers (DreamShaperXL_Turbo_v2_1, 8 steps, CFG 2.0)
+- [x] Review each sticker — verify character consistency and pose/prop accuracy
+- [x] All 16 PNGs in `raw/` (648KB–1.3MB each)
 
 ---
 
-## Phase 2: Split & Rename (DALL-E only — skip if using ComfyUI)
+## Phase 2: Split & Rename (SKIPPED — used ComfyUI)
 
 - [ ] Run `split_stickers.py` to split composite sheets into individual PNGs
 - [ ] Verify 16 individual PNGs in `split/`
@@ -68,23 +60,23 @@
 
 ---
 
-## Phase 3: Post-Processing Pipeline
+## Phase 3: Post-Processing Pipeline (COMPLETE)
 
 ### 3A: Background Removal
 
-- [ ] Process from `raw/` — remove backgrounds for all 16 stickers
-- [ ] Verify: all outputs RGBA with transparent backgrounds
-- [ ] No character parts accidentally removed
+- [x] Process from `raw/` — remove backgrounds for all 16 stickers
+- [x] Verify: all outputs RGBA with transparent backgrounds
+- [x] No character parts accidentally removed
 
 ### 3B: White Outline Addition (10px)
 
-- [ ] White outlines applied (10px, via PIL MaxFilter alpha dilation)
-- [ ] Outlines clean and consistent across all stickers
+- [x] White outlines applied (10px, via PIL MaxFilter alpha dilation)
+- [x] Outlines clean and consistent across all stickers
 
 ### 3C: Color Normalization
 
-- [ ] Applied: saturation=1.15, brightness=1.05, contrast=1.05
-- [ ] Colors vibrant, brown body color warm and consistent
+- [x] Applied: saturation=1.15, brightness=1.05, contrast=1.05
+- [x] Colors vibrant, brown body color warm and consistent
 
 ### 3D: Text Overlay
 
@@ -92,99 +84,120 @@
 > Text is rendered AFTER bg-removal + outline, BEFORE resize.
 > Pipeline reads `text` field from each sticker in pack_config.py.
 
-- [ ] Text overlaid on all 16 stickers
-- [ ] Text legible at small sizes (especially LINE 370x320)
-- [ ] Verify text positioning, color (white fill + dark brown stroke), font size
-- [ ] Check `12_its_fine` uses custom text config (dict form)
-- [ ] No text clipping or overlap with character artwork
+- [x] Text overlaid on all 16 stickers
+- [x] Text legible at small sizes (especially LINE 370x320)
+- [x] Verify text positioning, color (white fill + dark brown stroke), font size
+- [x] Check `12_its_fine` uses custom text config (dict form)
+- [x] No text clipping or overlap with character artwork
 
 ### 3E: Multi-Platform Resize & Export
 
-- [ ] **LINE** — 16 PNGs, 370x320, all < 300KB
-- [ ] **WhatsApp** — 16 WEBPs, 512x512, all < 100KB
-- [ ] **Telegram** — 16 WEBPs, 512x512
-- [ ] **iMessage** — 16 PNGs, 618x618
-- [ ] **Print/Etsy** — 16 PNGs, 2048x2048
+- [x] **LINE** — 16 PNGs, 370x320, all < 300KB (largest: 167KB)
+- [x] **WhatsApp** — 16 WEBPs, 512x512, all < 100KB (largest: 69KB)
+- [x] **Telegram** — 16 WEBPs, 512x512
+- [x] **iMessage** — 16 PNGs, 618x618
+- [x] **Print/Etsy** — 16 PNGs, 2048x2048
 
 ### 3F: Verify Outputs
 
-- [ ] All 5 platforms have exactly 16 files each
-- [ ] No file exceeds its platform size limit
-- [ ] Filenames consistent: `01_sup` through `16_mood` across all platforms
-- [ ] Text readable on all platforms at target resolution
+- [x] All 5 platforms have exactly 16 files each
+- [x] No file exceeds its platform size limit
+- [x] Filenames consistent: `01_sup` through `16_mood` across all platforms
+- [x] Text readable on all platforms at target resolution
 
 ---
 
-## Phase 4: Tray/Tab Icons
+## Phase 4: Tray/Tab Icons (COMPLETE)
 
-- [ ] Choose best sticker for tray icon (clear silhouette at tiny sizes)
-- [ ] **LINE main** — `final/line_main/main.png` (240x240 PNG, < 1MB)
-- [ ] **LINE tab** — `final/line_tab/tab.png` (96x74 PNG, < 1MB)
-- [ ] **WhatsApp tray** — `final/whatsapp_tray/tray.webp` (96x96 WEBP, < 50KB)
+- [x] Choose best sticker for tray icon — `01_sup` (waving pose, clear silhouette)
+- [x] **LINE main** — `final/line_main/main.png` (240x240 PNG, 42.8KB)
+- [x] **LINE tab** — `final/line_tab/tab.png` (96x74 PNG, 6.5KB)
+- [x] **WhatsApp tray** — `final/whatsapp_tray/tray_icon.webp` (96x96 WEBP, 4.0KB)
 
 ---
 
-## Phase 5: Pre-flight Checks
+## Phase 5: Pre-flight Checks (COMPLETE)
 
-- [ ] Run LINE preflight checker (strict mode) — must PASS
+- [x] Run LINE preflight checker (strict mode) — PASSED
   ```
   python scripts/line_preflight_check.py --pack-dir packs/cappy-capybara-3 --strict
   ```
-- [ ] Verify no guideline violations (especially rule 3.13 — no religious content)
-- [ ] Verify `pack_metadata.json` is complete and accurate
-- [ ] Verify sticker_count matches actual file count — 16
-- [ ] Verify all text is appropriate (no profanity, slang that could be misread)
+- [x] Verify no guideline violations (especially rule 3.13 — no religious content)
+- [x] Verify `pack_metadata.json` is complete and accurate
+- [x] Verify sticker_count matches actual file count — 16
+- [x] Verify all text is appropriate (no profanity, slang that could be misread)
 
 ---
 
-## Phase 6: Package for Distribution
+## Phase 6: Package for Distribution (LINE submitted; WhatsApp/Telegram/iMessage need manual action)
 
-### 6A: Print / Etsy
+### 6A: Print / Etsy (COMPLETE)
 
-- [ ] Confirmed `final/print_etsy/` has 16 PNGs (2048x2048)
-- [ ] Generate print sheets (US Letter 2550x3300 + A4 2480x3508 at 300 DPI)
-- [ ] Generate social preview (3000x3000)
-- [ ] Package as ZIP in `dist/`
+- [x] Confirmed `final/print_etsy/` has 16 PNGs (2048x2048)
+- [x] Generate print sheets (US Letter 2550x3300 + A4 2480x3508 at 300 DPI)
+- [x] Generate social preview (3000x3000)
+- [x] Package as ZIP in `dist/` — `cappy_the_chill_capybara_vol.3_digital_download.zip` (32.6MB)
 
-### 6B: LINE Creator Market
+### 6B: LINE Creator Market (COMPLETE — Waiting for Review)
 
-- [ ] Confirmed `final/line/` has exactly 16 PNGs (370x320, RGBA, all < 300KB)
-- [ ] Confirmed main image exists (240x240)
-- [ ] Confirmed tab image exists (96x74)
-- [ ] Upload to LINE Creator Studio
-- [ ] LINE metadata filled (title, description, category, price, style)
-- [ ] AI usage disclosed (LINE requirement)
-- [ ] Submitted for review
-- [ ] Sticker ID: _(fill after submission)_
+- [x] Confirmed `final/line/` has exactly 16 PNGs (370x320, RGBA, all < 300KB)
+- [x] Confirmed main image exists (240x240)
+- [x] Confirmed tab image exists (96x74)
+- [x] Upload to LINE Creator Studio
+- [x] LINE metadata filled (title, description, category, price, style)
+- [x] AI usage disclosed (LINE requirement)
+- [x] Submitted for review
+- [x] Sticker ID: **43221908**
+- [x] Status: **Waiting for Review** (submitted 2026-02-24)
+- [x] URL: https://creator.line.me/my/LQu3ADYzrcqp2KCs/sticker/43221908
 
-### 6C: WhatsApp (via Sticker.ly)
+### 6C: WhatsApp (via Sticker.ly) — PENDING MANUAL UPLOAD
 
-- [ ] Confirmed `final/whatsapp/` has 16 WEBPs (512x512, all < 100KB)
-- [ ] Confirmed tray icon exists (96x96, < 50KB)
+> **Requires**: Sticker.ly mobile app. No automation available.
+> Files are ready at `final/whatsapp/` (16 WEBPs) and `final/whatsapp_tray/tray_icon.webp`.
+
+- [x] Confirmed `final/whatsapp/` has 16 WEBPs (512x512, all < 100KB)
+- [x] Confirmed tray icon exists (96x96, < 50KB)
 - [ ] Upload via Sticker.ly app
 - [ ] Pack name, author, tags set
 - [ ] Published
 
-### 6D: Telegram
+### 6D: Telegram — PENDING CREDENTIALS
 
-- [ ] Confirmed `final/telegram/` has 16 WEBPs (512x512)
+> **Requires**: `TELEGRAM_BOT_TOKEN` and `TELEGRAM_USER_ID` environment variables.
+> Setup: Message @BotFather on Telegram -> /newbot -> get token;
+> message @userinfobot -> get numeric user ID.
+> Then run: `python3 scripts/telegram_publisher.py packs/cappy-capybara-3/final/telegram CappyChillV3_by_<BotName> "Cappy the Chill Capybara Vol.3"`
+
+- [x] Confirmed `final/telegram/` has 16 WEBPs (512x512)
+- [ ] Set TELEGRAM_BOT_TOKEN and TELEGRAM_USER_ID in .env
 - [ ] Run Telegram publisher or manual upload via @Stickers bot
 - [ ] Set sticker emojis from pack_config.py emoji field
 
-### 6E: iMessage
+### 6E: iMessage — PENDING APPLE DEVELOPER CREDENTIALS
 
-- [ ] Confirmed `final/imessage_large/` has 16 PNGs (618x618)
+> **Requires**: Xcode + Apple developer account + signing credentials.
+> Env vars needed: APPLE_ID, APPLE_TEAM_ID, APPLE_APP_SPECIFIC_PASSWORD,
+> MATCH_GIT_URL, MATCH_PASSWORD, BUNDLE_ID_PREFIX.
+
+- [x] Confirmed `final/imessage_large/` has 16 PNGs (618x618)
+- [ ] Configure Apple developer credentials in .env
 - [ ] Run iMessage preparer
 - [ ] Open Xcode project, configure signing, archive & submit to App Store
 
 ---
 
-## Phase 7: Final Verification
+## Phase 7: Final Verification (PARTIAL — blocked on platform uploads)
 
 - [ ] All 5 platforms uploaded / submitted
-- [ ] `pack_metadata.json` updated with submission status for all platforms
-- [ ] No temp files or duplicates left behind
-- [ ] All files committed to git
+  - [x] LINE — submitted (sticker ID 43221908, waiting for review)
+  - [x] Print/Etsy — dist ZIP ready (32.6MB)
+  - [ ] WhatsApp — pending manual Sticker.ly upload
+  - [ ] Telegram — pending bot credentials
+  - [ ] iMessage — pending Apple developer credentials
+- [x] `pack_metadata.json` updated with LINE submission status and sticker ID
+- [x] No temp files or duplicates left behind
+- [x] All files committed to git
 
 ---
 

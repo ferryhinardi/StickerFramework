@@ -130,7 +130,7 @@ class LineAuth:
 
     async def _check_session_valid(self, page: Page) -> bool:
         """Navigate to a protected page; return False if redirected to login."""
-        await page.goto(MY_STICKERS_URL, wait_until="domcontentloaded")
+        await page.goto(MY_STICKERS_URL, wait_until="domcontentloaded", timeout=90_000)
         await human_delay(1000, 2000)
         return "login" not in page.url.lower() and "access.line.me" not in page.url
 

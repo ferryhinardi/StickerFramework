@@ -57,6 +57,7 @@ class LineStickerUpload:
             await page.goto(
                 sticker_image_url(sticker_id),
                 wait_until="networkidle",
+                timeout=60_000,
             )
             await human_delay(1000, 2000)
 

@@ -84,32 +84,73 @@ class ComfyUIStickerGenerator:
                 f"Make sure ComfyUI is running.\n  Error: {e}"
             )
 
+    @staticmethod
+    def _extract_text_content(sticker: dict) -> str | None:
+        """
+        Extract the display text from a sticker's config.
+
+        Handles both forms:
+          - Simple:  "text": "NOTED!"
+          - Full:    "text": {"content": "NOTED!", "position": "top", ...}
+
+        Returns the text string, or None if no text is configured.
+        """
+        text_field = sticker.get("text")
+        if text_field is None:
+            return None
+        if isinstance(text_field, str):
+            return text_field
+        if isinstance(text_field, dict):
+            return text_field.get("content")
+        return None
+
     def build_prompt(self, character: dict, style: dict, sticker: dict) -> str:
         """
         Build a Stable Diffusion prompt from pack config components.
         Optimized for SDXL sticker generation.
 
+        When the sticker has a ``text`` field, the prompt switches to a
+        *painted sticker* style that integrates bold stylised lettering
+        into the composition (matching the chubby-mochi-cat benchmark).
+        Otherwise, the original flat-vector style is used.
+
         Prompt structure (SDXL attention order):
         1. Style/medium keywords (highest weight)
-        2. Subject + signature features (emphasized with parentheses)
+        2. Subject + signature features (emphasised with parentheses)
         3. Pose/action for this specific sticker
-        4. Technical/quality tokens
+        4. Text tokens (if applicable)
+        5. Technical/quality tokens
         """
-        # 1. Style tokens front-loaded — SDXL pays most attention to early tokens
-        #    AVOID "sticker" — it triggers circular badge/die-cut framing in SDXL.
-        style_prefix = (
-            "kawaii chibi character illustration, flat colors, no gradients, "
-            "vector art style, (solid pure white background:1.3), "
-            "single character centered, masterpiece, best quality"
-        )
+        text_content = self._extract_text_content(sticker)
 
+        # ------------------------------------------------------------------
+        # 1. Style prefix — differs based on whether text is present
+        # ------------------------------------------------------------------
+        if text_content:
+            # Painted sticker style with text — matches chubby-mochi-cat
+            style_prefix = (
+                "kawaii sticker illustration, semi-realistic painting style, "
+                "thick black outlines, (solid pure white background:1.3), "
+                "single character centered, dynamic expressive pose, "
+                "masterpiece, best quality"
+            )
+        else:
+            # Original flat-vector style (Vol.1/2 compatibility)
+            style_prefix = (
+                "kawaii chibi character illustration, flat colors, no gradients, "
+                "vector art style, (solid pure white background:1.3), "
+                "single character centered, masterpiece, best quality"
+            )
+
+        # ------------------------------------------------------------------
         # 2. Emotion FIRST, then character — front-load what matters most
-        #    "as hat" is the ONLY phrasing that reliably places the orange on head.
-        #    Keep orange description SHORT to preserve attention for expression.
+        #    "as hat" is the ONLY phrasing that reliably places the orange
+        #    on head. Keep orange description SHORT to preserve attention.
         #    See docs/12-sdxl-prompt-engineering.md for the full experiment log.
         #
-        #    NOTE: emotion & props are now DYNAMIC per-sticker (was hardcoded to
-        #    "sleepy" before — fixed for v2 multi-emotion packs).
+        #    NOTE: emotion & props are now DYNAMIC per-sticker (was hardcoded
+        #    to "sleepy" before — fixed for v2 multi-emotion packs).
+        # ------------------------------------------------------------------
         emotion_tag = sticker.get("emotion", "")
         props_tag = sticker.get("props", "")
 
@@ -122,23 +163,66 @@ class ComfyUIStickerGenerator:
             f"potato-shaped body, tiny stubby legs"
         )
 
+        # ------------------------------------------------------------------
         # 3. This sticker's specific pose + props (visual details)
+        # ------------------------------------------------------------------
         sticker_desc = f"({sticker['pose']}:1.2)"
         if props_tag:
             sticker_desc += f", ({props_tag}:1.1)"
 
-        # 4. Style reinforcement — keep minimal
-        style_suffix = (
-            "flat colors, thick dark outline, simple minimal design, "
-            "no text, no words, no letters"
+        # ------------------------------------------------------------------
+        # 4. Text tokens (only when sticker has text)
+        # ------------------------------------------------------------------
+        if text_content:
+            # Short bold text integrates well with SDXL when strongly weighted.
+            # Position "above character" keeps text readable and out of the body.
+            text_tokens = (
+                f'(bold stylized text "{text_content}" above character:1.4), '
+                f"colorful 3D text with thick dark outline, "
+                f"comic book lettering style"
+            )
+        else:
+            text_tokens = ""
+
+        # ------------------------------------------------------------------
+        # 5. Style reinforcement suffix
+        # ------------------------------------------------------------------
+        if text_content:
+            style_suffix = (
+                "thick dark outlines, expressive face, action effects, "
+                "dynamic composition"
+            )
+        else:
+            style_suffix = (
+                "flat colors, thick dark outline, simple minimal design, "
+                "no text, no words, no letters"
+            )
+
+        # Assemble — filter out empty sections
+        parts = [style_prefix, char_desc, sticker_desc]
+        if text_tokens:
+            parts.append(text_tokens)
+        parts.append(style_suffix)
+
+        return ", ".join(parts)
+
+    def build_negative_prompt(self, has_text: bool = False) -> str:
+        """
+        Standard negative prompt for sticker generation.
+
+        When *has_text* is True the anti-text tokens are **removed** so the
+        model is free to render bold stylised lettering.  When False (default)
+        the anti-text tokens stay to keep Vol.1/2 text-free output clean.
+        """
+        # Anti-text tokens — only included when the sticker has NO text
+        anti_text = (
+            "text, words, letters, numbers, alphabet, writing, caption, label, "
+            if not has_text
+            else ""
         )
 
-        return f"{style_prefix}, {char_desc}, {sticker_desc}, {style_suffix}"
-
-    def build_negative_prompt(self) -> str:
-        """Standard negative prompt for sticker generation."""
         return (
-            "text, words, letters, numbers, alphabet, writing, caption, label, "
+            f"{anti_text}"
             "watermark, signature, logo, "
             "sticker, die-cut sticker, circular frame, circular border, round frame, "
             "badge, emblem, stamp, die-cut border, sticker outline, "
@@ -333,14 +417,20 @@ class ComfyUIStickerGenerator:
         Returns:
             Path to saved image, or None on failure
         """
+        text_content = self._extract_text_content(sticker)
+        has_text = text_content is not None
+
         positive_prompt = self.build_prompt(character, style, sticker)
-        negative_prompt = self.build_negative_prompt()
+        negative_prompt = self.build_negative_prompt(has_text=has_text)
         output_path = Path(output_dir) / f"{sticker['id']}.png"
 
         if seed is None:
             seed = random.randint(0, 2**32 - 1)
 
-        print(f"  Generating: {sticker['id']} ({sticker['emotion']}) [seed={seed}]...")
+        text_info = f' text="{text_content}"' if has_text else ""
+        print(
+            f"  Generating: {sticker['id']} ({sticker['emotion']}{text_info}) [seed={seed}]..."
+        )
 
         for attempt in range(max_retries):
             try:
@@ -367,7 +457,15 @@ class ComfyUIStickerGenerator:
                     with open(prompt_file, "w") as f:
                         f.write(f"=== Positive Prompt ===\n{positive_prompt}\n\n")
                         f.write(f"=== Negative Prompt ===\n{negative_prompt}\n\n")
-                        f.write(f"=== Settings ===\n")
+                        f.write(f"=== Text ===\n")
+                        if has_text:
+                            f.write(f"Content: {text_content}\n")
+                            f.write(f"Style mode: painted sticker (text-enabled)\n")
+                        else:
+                            f.write(
+                                f"None (flat-vector style, anti-text tokens active)\n"
+                            )
+                        f.write(f"\n=== Settings ===\n")
                         f.write(f"Checkpoint: {self.checkpoint}\n")
                         f.write(f"Seed: {seed}\n")
                         f.write(f"Steps: {self.steps}\n")
