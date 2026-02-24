@@ -119,8 +119,36 @@ public class StickerPackListActivity extends AppCompatActivity {
             if (serverUrl != null && !serverUrl.isEmpty()) {
                 List<StickerPack> serverPacks = StickerPackLoader.fetchFromServer(serverUrl);
                 if (!serverPacks.isEmpty()) {
+                    // Download all sticker images + tray icons to cache
+                    for (StickerPack pack : serverPacks) {
+                        // Download tray icon
+                        if (pack.trayImageFile != null && !pack.trayImageFile.isEmpty()) {
+                            StickerPackLoader.downloadStickerToCache(
+                                    StickerPackListActivity.this,
+                                    serverUrl, pack.identifier, pack.trayImageFile);
+                        }
+                        // Download each sticker image
+                        if (pack.stickers != null) {
+                            for (Sticker sticker : pack.stickers) {
+                                StickerPackLoader.downloadStickerToCache(
+                                        StickerPackListActivity.this,
+                                        serverUrl, pack.identifier,
+                                        sticker.imageFileName);
+                            }
+                        }
+                    }
+
                     List<StickerPack> finalMerged = StickerPackLoader.mergePacks(
                             initialPacks, serverPacks);
+
+                    // Persist merged packs to cache so they survive app restarts
+                    StickerPackLoader.saveToCache(
+                            StickerPackListActivity.this, finalMerged);
+
+                    // Refresh the ContentProvider so WhatsApp can see new packs
+                    StickerContentProvider.refreshPacks(
+                            StickerPackListActivity.this);
+
                     mainHandler.post(() -> {
                         stickerPacks.clear();
                         stickerPacks.addAll(finalMerged);

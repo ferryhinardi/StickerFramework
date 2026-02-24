@@ -2,6 +2,7 @@ package com.bobastickers.whatsapp;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.UriMatcher;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
@@ -18,6 +19,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -90,17 +93,36 @@ public class StickerContentProvider extends ContentProvider {
             STICKER_EMOJI,
     };
 
-    private List<StickerPack> stickerPacks;
+    private static volatile List<StickerPack> stickerPacks = Collections.emptyList();
 
     @Override
     public boolean onCreate() {
         try {
-            stickerPacks = StickerPackLoader.loadFromAssets(getContext());
+            List<StickerPack> assetPacks = StickerPackLoader.loadFromAssets(getContext());
+            List<StickerPack> cachedPacks = StickerPackLoader.loadFromCache(getContext());
+            stickerPacks = StickerPackLoader.mergePacks(assetPacks, cachedPacks);
         } catch (Exception e) {
-            Log.e(TAG, "Failed to load sticker packs from assets", e);
-            stickerPacks = java.util.Collections.emptyList();
+            Log.e(TAG, "Failed to load sticker packs", e);
+            stickerPacks = new ArrayList<>();
         }
         return true;
+    }
+
+    /**
+     * Refresh the sticker packs list from assets + cache.
+     * Call this after downloading and caching new packs from the server
+     * so that WhatsApp can see newly added packs via the ContentProvider.
+     *
+     * @param context Application context.
+     */
+    public static void refreshPacks(Context context) {
+        try {
+            List<StickerPack> assetPacks = StickerPackLoader.loadFromAssets(context);
+            List<StickerPack> cachedPacks = StickerPackLoader.loadFromCache(context);
+            stickerPacks = StickerPackLoader.mergePacks(assetPacks, cachedPacks);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to refresh sticker packs", e);
+        }
     }
 
     @Nullable

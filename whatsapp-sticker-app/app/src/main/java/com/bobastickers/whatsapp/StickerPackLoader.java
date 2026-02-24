@@ -12,6 +12,7 @@ import com.google.gson.JsonParser;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -105,6 +106,74 @@ public class StickerPackLoader {
         } catch (IOException e) {
             Log.e(TAG, "Failed to load cached sticker packs", e);
             return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Save sticker packs to the cache directory as contents.json.
+     *
+     * This writes the pack list in the standard WhatsApp sticker_packs JSON
+     * schema so that {@link #loadFromCache(Context)} can read it back.
+     *
+     * @param context Application context for accessing cache directory.
+     * @param packs   The list of sticker packs to persist.
+     */
+    public static void saveToCache(Context context, List<StickerPack> packs) {
+        File cacheDir = new File(context.getCacheDir(), "stickers");
+        if (!cacheDir.exists() && !cacheDir.mkdirs()) {
+            Log.e(TAG, "Failed to create stickers cache directory");
+            return;
+        }
+
+        JsonObject root = new JsonObject();
+        JsonArray packsArray = new JsonArray();
+
+        for (StickerPack pack : packs) {
+            JsonObject packObj = new JsonObject();
+            packObj.addProperty("identifier", pack.identifier);
+            packObj.addProperty("name", pack.name);
+            packObj.addProperty("publisher", pack.publisher);
+            packObj.addProperty("tray_image_file", pack.trayImageFile);
+            packObj.addProperty("android_play_store_link",
+                    pack.androidPlayStoreLink != null ? pack.androidPlayStoreLink : "");
+            packObj.addProperty("ios_app_store_link",
+                    pack.iosAppStoreLink != null ? pack.iosAppStoreLink : "");
+            packObj.addProperty("publisher_website",
+                    pack.publisherWebsite != null ? pack.publisherWebsite : "");
+            packObj.addProperty("privacy_policy_website",
+                    pack.privacyPolicyWebsite != null ? pack.privacyPolicyWebsite : "");
+            packObj.addProperty("license_agreement_website",
+                    pack.licenseAgreementWebsite != null ? pack.licenseAgreementWebsite : "");
+            packObj.addProperty("image_data_version",
+                    pack.imageDataVersion != null ? pack.imageDataVersion : "1");
+            packObj.addProperty("avoid_cache", pack.avoidCache);
+
+            JsonArray stickersArray = new JsonArray();
+            if (pack.stickers != null) {
+                for (Sticker sticker : pack.stickers) {
+                    JsonObject stickerObj = new JsonObject();
+                    stickerObj.addProperty("image_file", sticker.imageFileName);
+                    JsonArray emojisArray = new JsonArray();
+                    if (sticker.emojis != null) {
+                        for (String emoji : sticker.emojis) {
+                            emojisArray.add(emoji);
+                        }
+                    }
+                    stickerObj.add("emojis", emojisArray);
+                    stickersArray.add(stickerObj);
+                }
+            }
+            packObj.add("stickers", stickersArray);
+            packsArray.add(packObj);
+        }
+
+        root.add("sticker_packs", packsArray);
+
+        File cacheContents = new File(cacheDir, ASSET_CONTENTS_FILE);
+        try (FileWriter writer = new FileWriter(cacheContents)) {
+            writer.write(root.toString());
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to save sticker packs to cache", e);
         }
     }
 

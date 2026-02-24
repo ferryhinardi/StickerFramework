@@ -105,6 +105,112 @@
           ]
         }
       ]
+    },
+    {
+      "identifier": "cappy-capybara-3",
+      "name": "Cappy the Chill Capybara Vol.3",
+      "publisher": "BobaStickers",
+      "tray_image_file": "tray_icon.webp",
+      "image_data_version": "1",
+      "avoid_cache": false,
+      "stickers": [
+        {
+          "image_file": "01_sup.webp",
+          "emojis": [
+            "\ud83d\udc4b"
+          ]
+        },
+        {
+          "image_file": "02_same.webp",
+          "emojis": [
+            "\ud83d\ude4f"
+          ]
+        },
+        {
+          "image_file": "03_nope.webp",
+          "emojis": [
+            "\ud83d\ude45"
+          ]
+        },
+        {
+          "image_file": "04_lets_go.webp",
+          "emojis": [
+            "\ud83d\udd25"
+          ]
+        },
+        {
+          "image_file": "05_why.webp",
+          "emojis": [
+            "\ud83d\ude15"
+          ]
+        },
+        {
+          "image_file": "06_food.webp",
+          "emojis": [
+            "\ud83c\udf5c"
+          ]
+        },
+        {
+          "image_file": "07_no_money.webp",
+          "emojis": [
+            "\ud83d\udcb8"
+          ]
+        },
+        {
+          "image_file": "08_on_my_way.webp",
+          "emojis": [
+            "\ud83d\udef5"
+          ]
+        },
+        {
+          "image_file": "09_chill.webp",
+          "emojis": [
+            "\u2728"
+          ]
+        },
+        {
+          "image_file": "10_ugh.webp",
+          "emojis": [
+            "\ud83d\ude24"
+          ]
+        },
+        {
+          "image_file": "11_slay.webp",
+          "emojis": [
+            "\ud83d\udc85"
+          ]
+        },
+        {
+          "image_file": "12_its_fine.webp",
+          "emojis": [
+            "\ud83d\udd25"
+          ]
+        },
+        {
+          "image_file": "13_pls.webp",
+          "emojis": [
+            "\ud83e\udd7a"
+          ]
+        },
+        {
+          "image_file": "14_wut.webp",
+          "emojis": [
+            "\ud83e\uddd0"
+          ]
+        },
+        {
+          "image_file": "15_ttyl.webp",
+          "emojis": [
+            "\ud83d\udc4b"
+          ]
+        },
+        {
+          "image_file": "16_mood.webp",
+          "emojis": [
+            "\ud83d\udecb\ufe0f"
+          ]
+        }
+      ]
     }
   ]
 }
