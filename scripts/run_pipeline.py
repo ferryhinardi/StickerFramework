@@ -47,18 +47,31 @@ REPO_ROOT = _SCRIPTS_DIR.parent
 from pack_config import PACK_CONFIG
 
 
-def stage_generate(config: dict, quality: str = "hd") -> list[Path]:
-    """Stage 1: Generate raw images via DALL-E 3."""
-    from image_generator import StickerGenerator
+def stage_generate(
+    config: dict, quality: str = "hd", engine: str = "dalle", seed: int | None = None
+) -> list[Path]:
+    """Stage 1: Generate raw images via DALL-E 3 or ComfyUI."""
+    if engine == "comfyui":
+        from comfyui_generator import ComfyUIStickerGenerator
 
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        print("ERROR: Set OPENAI_API_KEY environment variable")
-        print("  export OPENAI_API_KEY='sk-...'")
-        sys.exit(1)
+        comfyui_url = os.environ.get("COMFYUI_URL", "http://127.0.0.1:8000")
+        try:
+            generator = ComfyUIStickerGenerator(comfyui_url=comfyui_url)
+        except ConnectionError as e:
+            print(f"ERROR: {e}")
+            sys.exit(1)
+        return generator.generate_pack(config, seed=seed)
+    else:
+        from image_generator import StickerGenerator
 
-    generator = StickerGenerator(api_key=api_key)
-    return generator.generate_pack(config, quality=quality)
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            print("ERROR: Set OPENAI_API_KEY environment variable")
+            print("  export OPENAI_API_KEY='sk-...'")
+            sys.exit(1)
+
+        generator = StickerGenerator(api_key=api_key)
+        return generator.generate_pack(config, quality=quality)
 
 
 def stage_process(
@@ -357,6 +370,19 @@ Examples:
         help="Use standard quality ($0.04/image) instead of HD ($0.08/image)",
     )
     parser.add_argument(
+        "--engine",
+        type=str,
+        choices=["dalle", "comfyui"],
+        default="dalle",
+        help="Image generation engine: 'dalle' (cloud, paid) or 'comfyui' (local, free)",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Base seed for ComfyUI generation (for reproducibility)",
+    )
+    parser.add_argument(
         "--telegram",
         action="store_true",
         help="Also publish to Telegram",
@@ -380,10 +406,13 @@ Examples:
     # Stage 1: Generate
     if not args.process_only:
         print(f"\n{'=' * 60}")
-        print("STAGE 1: Generating sticker images via DALL-E 3")
+        engine_label = (
+            "ComfyUI (local, free)" if args.engine == "comfyui" else "DALL-E 3 (cloud)"
+        )
+        print(f"STAGE 1: Generating sticker images via {engine_label}")
         print(f"{'=' * 60}")
         quality = "standard" if args.standard else "hd"
-        stage_generate(config, quality=quality)
+        stage_generate(config, quality=quality, engine=args.engine, seed=args.seed)
 
     if args.generate_only:
         print("\n--generate-only: Stopping after generation.")
