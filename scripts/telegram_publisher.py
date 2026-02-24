@@ -29,6 +29,7 @@ Usage:
 """
 
 import argparse
+import importlib.util
 import json
 import os
 import sys
@@ -465,6 +466,10 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Delete the existing set with this name before creating",
     )
+    parser.add_argument(
+        "--pack-config",
+        help="Path to pack_config.py (auto-reads emojis per sticker)",
+    )
     return parser
 
 
@@ -500,17 +505,22 @@ if __name__ == "__main__":
     print(f"Found {len(sticker_files)} {sticker_format} sticker(s)")
 
     # Try to load emojis from pack config
-    try:
-        from pack_config import PACK_CONFIG
+    emojis = None
+    if args.pack_config:
+        cfg_path = Path(args.pack_config).resolve()
+        spec = importlib.util.spec_from_file_location("pack_config_dynamic", cfg_path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        emojis = load_emojis_from_config(mod.PACK_CONFIG)
 
-        emojis = load_emojis_from_config(PACK_CONFIG)
-        # Match count to actual files
-        if len(emojis) < len(sticker_files):
-            emojis.extend(["\U0001f60a"] * (len(sticker_files) - len(emojis)))
-        emojis = emojis[: len(sticker_files)]
-    except ImportError:
+    if emojis is None:
         # Default: use smiley for all
         emojis = ["\U0001f60a"] * len(sticker_files)
+
+    # Match count to actual files
+    if len(emojis) < len(sticker_files):
+        emojis.extend(["\U0001f60a"] * (len(sticker_files) - len(emojis)))
+    emojis = emojis[: len(sticker_files)]
 
     publisher = TelegramStickerPublisher()
 
