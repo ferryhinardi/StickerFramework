@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
 }
 
-val appId = "com.yourbrand.stickers"
+val appId = "com.bobastickers.whatsapp"
 
 android {
     namespace = appId

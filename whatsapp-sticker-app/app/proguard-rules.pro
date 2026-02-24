@@ -1,11 +1,11 @@
 # WhatsApp Sticker App ProGuard Rules
 
 # Keep ContentProvider (WhatsApp queries it by class name)
--keep class com.yourbrand.stickers.StickerContentProvider { *; }
+-keep class com.bobastickers.whatsapp.StickerContentProvider { *; }
 
 # Keep data models used by Gson
--keep class com.yourbrand.stickers.StickerPack { *; }
--keep class com.yourbrand.stickers.Sticker { *; }
+-keep class com.bobastickers.whatsapp.StickerPack { *; }
+-keep class com.bobastickers.whatsapp.Sticker { *; }
 
 # OkHttp
 -dontwarn okhttp3.**

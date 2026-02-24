@@ -1,4 +1,4 @@
-package com.yourbrand.stickers;
+package com.bobastickers.whatsapp;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;

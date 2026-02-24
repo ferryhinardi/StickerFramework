@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Sticker Packs</string>
+    <string name="app_name">BobaStickers</string>
     <string name="no_sticker_packs">No sticker packs available</string>
     <string name="add_to_whatsapp">Add to WhatsApp</string>
     <string name="tray_icon_desc">Sticker pack icon</string>

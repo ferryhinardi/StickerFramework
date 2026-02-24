@@ -1,4 +1,4 @@
-package com.yourbrand.stickers;
+package com.bobastickers.whatsapp;
 
 import android.content.Intent;
 import android.net.Uri;

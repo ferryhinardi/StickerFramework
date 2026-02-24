@@ -22,19 +22,31 @@
     },
     "telegram": {
       "enabled": true,
-      "submission_status": "not_started"
+      "submission_status": "live",
+      "pack_url": "https://t.me/addstickers/CappyChillCapybaraVol2_by_BobaStickersBot",
+      "bot_username": "@BobaStickersBot",
+      "published_date": "2026-02-24"
     },
     "whatsapp": {
       "enabled": true,
-      "submission_status": "not_started"
+      "submission_status": "apk_built",
+      "package_name": "com.bobastickers.whatsapp",
+      "apk_debug": "whatsapp-sticker-app/app/build/outputs/apk/debug/app-debug.apk",
+      "apk_release_unsigned": "whatsapp-sticker-app/app/build/outputs/apk/release/app-release-unsigned.apk",
+      "build_date": "2026-02-24"
     },
     "imessage": {
       "enabled": true,
-      "submission_status": "not_started"
+      "submission_status": "blocked",
+      "blocker": "Requires Apple Developer credentials (APPLE_ID, APPLE_TEAM_ID, BUNDLE_ID, MATCH_GIT_URL)",
+      "dry_run_completed": true
     },
     "print_etsy": {
       "enabled": true,
-      "submission_status": "not_started"
+      "submission_status": "zip_ready",
+      "distribution_zip": "dist/cappy_the_chill_capybara_vol.2_digital_download.zip",
+      "zip_size_mb": 29.8,
+      "build_date": "2026-02-24"
     }
   },
   "content_flags": {
