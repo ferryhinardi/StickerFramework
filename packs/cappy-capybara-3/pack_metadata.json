@@ -29,7 +29,11 @@
     },
     "whatsapp": {
       "enabled": true,
-      "submission_status": "not_started"
+      "submission_status": "apk_built",
+      "method": "android_app",
+      "app_package": "com.bobastickers.whatsapp",
+      "apk_path": "whatsapp-sticker-app/app/build/outputs/apk/debug/app-debug.apk",
+      "notes": "APK built with VOL 3 bundled in assets. Install on device and tap Add to WhatsApp."
     },
     "imessage": {
       "enabled": true,

@@ -3,7 +3,7 @@
 > **Purpose**: Resume-friendly checklist. If you hit `Request Entity Too Large`,
 > just pick up from the next unchecked `[ ]` item.
 >
-> **Last updated**: 2026-02-24 (LINE submitted; Telegram published; WhatsApp/iMessage pending manual setup)
+> **Last updated**: 2026-02-24 (LINE submitted; Telegram published; WhatsApp APK built; iMessage pending Apple credentials)
 
 ---
 
@@ -129,7 +129,7 @@
 
 ---
 
-## Phase 6: Package for Distribution (LINE submitted; Telegram published; WhatsApp/iMessage need manual action)
+## Phase 6: Package for Distribution (LINE submitted; Telegram published; WhatsApp APK built; iMessage needs Apple credentials)
 
 ### 6A: Print / Etsy (COMPLETE)
 
@@ -151,16 +151,23 @@
 - [x] Status: **Waiting for Review** (submitted 2026-02-24)
 - [x] URL: https://creator.line.me/my/LQu3ADYzrcqp2KCs/sticker/43221908
 
-### 6C: WhatsApp (via Sticker.ly) — PENDING MANUAL UPLOAD
+### 6C: WhatsApp (via Android App) — APK BUILT
 
-> **Requires**: Sticker.ly mobile app. No automation available.
-> Files are ready at `final/whatsapp/` (16 WEBPs) and `final/whatsapp_tray/tray_icon.webp`.
+> **Method**: Custom Android app (`whatsapp-sticker-app/`) with WhatsApp ContentProvider integration.
+> VOL 3 stickers bundled into app assets. Also supports dynamic loading from server.
+> APK: `whatsapp-sticker-app/app/build/outputs/apk/debug/app-debug.apk` (7.8MB)
 
 - [x] Confirmed `final/whatsapp/` has 16 WEBPs (512x512, all < 100KB)
 - [x] Confirmed tray icon exists (96x96, < 50KB)
-- [ ] Upload via Sticker.ly app
-- [ ] Pack name, author, tags set
-- [ ] Published
+- [x] VOL 3 stickers copied to `whatsapp-sticker-app/app/src/main/assets/cappy-capybara-3/`
+- [x] `contents.json` updated with VOL 3 pack entry and emoji mappings
+- [x] Fixed StickerContentProvider — loads from assets + cache, supports refresh
+- [x] Fixed StickerPackLoader — added saveToCache() for persistence
+- [x] Fixed StickerPackListActivity — downloads stickers after server fetch
+- [x] APK builds successfully (`./gradlew assembleDebug`)
+- [ ] Install APK on Android device/emulator
+- [ ] Verify VOL 2 + VOL 3 both appear in sticker list
+- [ ] Tap "Add to WhatsApp" — verify stickers load in WhatsApp
 
 ### 6D: Telegram (COMPLETE — Published)
 
@@ -184,12 +191,12 @@
 
 ---
 
-## Phase 7: Final Verification (PARTIAL — blocked on platform uploads)
+## Phase 7: Final Verification (PARTIAL — blocked on device testing + iMessage)
 
 - [ ] All 5 platforms uploaded / submitted
   - [x] LINE — submitted (sticker ID 43221908, waiting for review)
   - [x] Print/Etsy — dist ZIP ready (32.6MB)
-  - [ ] WhatsApp — pending manual Sticker.ly upload
+  - [x] WhatsApp — APK built, needs install + device test
   - [x] Telegram — published (https://t.me/addstickers/CappyChillV3_by_BobaStickersBot)
   - [ ] iMessage — pending Apple developer credentials
 - [x] `pack_metadata.json` updated with LINE submission status and sticker ID
