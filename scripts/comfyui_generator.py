@@ -104,12 +104,17 @@ class ComfyUIStickerGenerator:
         )
 
         # 2. Emotion FIRST, then character — front-load what matters most
-        #    Attempt #10 (seed 88) is the proven best result.
         #    "as hat" is the ONLY phrasing that reliably places the orange on head.
         #    Keep orange description SHORT to preserve attention for expression.
         #    See docs/12-sdxl-prompt-engineering.md for the full experiment log.
+        #
+        #    NOTE: emotion & props are now DYNAMIC per-sticker (was hardcoded to
+        #    "sleepy" before — fixed for v2 multi-emotion packs).
+        emotion_tag = sticker.get("emotion", "")
+        props_tag = sticker.get("props", "")
+
         char_desc = (
-            f"(closed eyes yawning:1.5), (drowsy sleepy face:1.4), "
+            f"({emotion_tag}:1.5), "
             f"(cute round chubby {character['species']}:1.3), "
             f"(wearing tiny orange fruit as hat on head:1.4), "
             f"warm brown fur, soft pink cheeks, "
@@ -117,8 +122,10 @@ class ComfyUIStickerGenerator:
             f"potato-shaped body, tiny stubby legs"
         )
 
-        # 3. This sticker's specific pose
+        # 3. This sticker's specific pose + props (visual details)
         sticker_desc = f"({sticker['pose']}:1.2)"
+        if props_tag:
+            sticker_desc += f", ({props_tag}:1.1)"
 
         # 4. Style reinforcement — keep minimal
         style_suffix = (
@@ -150,8 +157,6 @@ class ComfyUIStickerGenerator:
             "two oranges, multiple oranges, second orange, "
             "large orange, big orange, orange covering head, "
             "floating orange, orange above head, orange in air, "
-            "(wide open eyes:1.3), (open eyes:1.2), awake, alert, energetic, staring, surprised look, "
-            "tongue out, playful, "
             "orange helmet, orange hat covering head, orange hat with brim, hat brim, cap brim, visor, "
             "knit hat, beanie, winter hat, bucket hat, "
             "nsfw, violence"

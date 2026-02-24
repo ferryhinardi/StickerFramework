@@ -5,9 +5,15 @@ Master Pipeline Orchestrator - End-to-end sticker pack creation.
 Runs the complete pipeline:
     1. Generate raw images via DALL-E 3 (or skip if images exist)
     2. Process images (background removal, outline, resize, convert)
+    2b. (Optional) Create animated TGS / video WebM variants
     3. Generate platform metadata
     4. Create print sheets and distribution packages
-    5. Optionally publish to Telegram
+    5. Optionally publish static stickers to Telegram
+    6b. Optionally publish animated stickers to Telegram (TGS)
+    6c. Optionally publish video stickers to Telegram (WebM)
+    7. Optionally prepare iMessage Xcode project
+    8. Optionally build & submit iMessage app to App Store via Fastlane
+    9. Optionally export stickers for WhatsApp native Android app
 
 Usage:
     # Full pipeline (generate + process + package):
@@ -28,6 +34,18 @@ Usage:
 
     # Publish to Telegram after processing:
     python run_pipeline.py --process-only --telegram
+
+    # Create and publish animated Telegram stickers:
+    python run_pipeline.py --process-only --telegram-animated --animation-preset bounce
+
+    # Create and publish video Telegram stickers:
+    python run_pipeline.py --process-only --telegram-video
+
+    # Build & submit iMessage sticker app to App Store:
+    python run_pipeline.py --process-only --imessage --imessage-publish
+
+    # Export stickers for WhatsApp native Android app:
+    python run_pipeline.py --process-only --whatsapp-native
 """
 
 import argparse
@@ -311,6 +329,171 @@ def stage_imessage(config: dict):
     )
 
 
+def stage_imessage_publish(
+    config: dict, dry_run: bool = False, skip_submit: bool = False
+):
+    """Stage 8 (optional): Build & submit iMessage app to App Store via Fastlane."""
+    from imessage_publisher import IMessagePublisher
+
+    pack_id = config["pack_id"]
+    sticker_dir = str(REPO_ROOT / "packs" / pack_id / "final" / "imessage_large")
+
+    if not Path(sticker_dir).exists():
+        print(f"  iMessage stickers not found in {sticker_dir}")
+        print("  Run with --imessage first to prepare the Xcode project.")
+        return
+
+    publisher = IMessagePublisher(
+        pack_config=config,
+        sticker_dir=sticker_dir,
+        output_dir=str(REPO_ROOT / "packs" / pack_id / "xcode"),
+    )
+    publisher.publish(dry_run=dry_run, skip_submit=skip_submit)
+
+
+def stage_whatsapp_export(config: dict, server_url: str | None = None):
+    """Stage 9 (optional): Export stickers for WhatsApp native app.
+
+    Converts processed stickers to WhatsApp-native format (512x512 WebP,
+    96x96 tray icon) and optionally pushes them to the WhatsApp sticker server.
+
+    Args:
+        config: Pack configuration dict.
+        server_url: Optional server URL to push the pack to.
+    """
+    from whatsapp_exporter import WhatsAppExporter
+
+    pack_id = config["pack_id"]
+    # Use processed whatsapp_native stickers if available, else fall back to telegram
+    whatsapp_dir = REPO_ROOT / "packs" / pack_id / "final" / "whatsapp_native"
+    telegram_dir = REPO_ROOT / "packs" / pack_id / "final" / "telegram"
+
+    if whatsapp_dir.exists() and list(whatsapp_dir.glob("*.webp")):
+        sticker_dir = str(whatsapp_dir)
+    elif telegram_dir.exists():
+        sticker_dir = str(telegram_dir)
+    else:
+        print(f"  Source stickers not found.")
+        print("  Run processing stage first (needs 'telegram' in platforms).")
+        return
+
+    output_dir = str(REPO_ROOT / "packs" / pack_id / "final" / "whatsapp_native_export")
+
+    exporter = WhatsAppExporter()
+    try:
+        pack_dir = exporter.export_pack(
+            pack_config=config,
+            sticker_dir=sticker_dir,
+            output_dir=output_dir,
+        )
+    except (FileNotFoundError, ValueError) as e:
+        print(f"  WhatsApp export failed: {e}")
+        return
+
+    # Validate the exported pack
+    errors = exporter.validate_pack(str(pack_dir))
+    if errors:
+        print(f"  WARNING: Exported pack has {len(errors)} validation issue(s):")
+        for err in errors:
+            print(f"    - {err}")
+
+    # Optionally push to server
+    push_url = server_url or os.environ.get("WHATSAPP_SERVER_URL")
+    if push_url:
+        api_key = os.environ.get("WHATSAPP_SERVER_API_KEY")
+        print(f"\n  Pushing pack to server at {push_url} ...")
+        exporter.push_to_server(str(pack_dir), push_url, api_key=api_key)
+    else:
+        print(
+            "\n  Set WHATSAPP_SERVER_URL or --whatsapp-server-url to auto-push packs."
+        )
+
+
+def stage_process_animated(
+    config: dict, formats: list[str] | None = None, animation_type: str = "bounce"
+):
+    """Stage 2b: Create animated/video versions of processed stickers.
+
+    Converts processed PNGs into TGS (animated) and/or WebM (video) files
+    for Telegram animated sticker publishing.
+
+    Args:
+        config: Pack configuration dict.
+        formats: List of formats to generate, e.g. ["tgs", "webm"].
+                 Defaults to both.
+        animation_type: Animation preset name (e.g. "bounce", "pulse", "pop_in").
+    """
+    from sticker_processor import StickerProcessor
+
+    if formats is None:
+        formats = ["tgs", "webm"]
+
+    pack_id = config["pack_id"]
+    # Use the base telegram processed PNGs as source
+    telegram_dir = str(REPO_ROOT / "packs" / pack_id / "final" / "telegram")
+
+    if not Path(telegram_dir).exists():
+        print(f"  Telegram stickers not found in {telegram_dir}")
+        print("  Run processing stage first (needs 'telegram' in platforms).")
+        return
+
+    processor = StickerProcessor()
+    processor.process_batch_animated(
+        input_dir=telegram_dir,
+        animation_type=animation_type,
+        formats=formats,
+    )
+
+
+def stage_telegram_animated(config: dict, sticker_format: str = "animated"):
+    """Stage 6b: Publish animated/video stickers to Telegram.
+
+    Args:
+        config: Pack configuration dict.
+        sticker_format: "animated" for TGS or "video" for WebM.
+    """
+    from telegram_publisher import TelegramStickerPublisher, load_emojis_from_config
+
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    user_id = os.environ.get("TELEGRAM_USER_ID")
+
+    if not bot_token or not user_id:
+        print("\n  Telegram publishing skipped.")
+        print("  Set TELEGRAM_BOT_TOKEN and TELEGRAM_USER_ID to enable.")
+        return
+
+    pack_id = config["pack_id"]
+    # Determine directory based on format
+    if sticker_format == "animated":
+        tg_dir = str(REPO_ROOT / "packs" / pack_id / "final" / "telegram_animated")
+    else:
+        tg_dir = str(REPO_ROOT / "packs" / pack_id / "final" / "telegram_video")
+
+    if not Path(tg_dir).exists():
+        print(f"  {sticker_format.title()} stickers not found in {tg_dir}")
+        print(
+            "  Run with --telegram-animated or --telegram-video to generate them first."
+        )
+        return
+
+    emojis = load_emojis_from_config(config)
+
+    publisher = TelegramStickerPublisher(bot_token)
+    # Use a distinct pack name to avoid colliding with the static set
+    pack_name = f"{pack_id.replace('-', '_')}_{sticker_format}"
+    title_suffix = "Animated" if sticker_format == "animated" else "Video"
+    title = f"{config['pack_name']} ({title_suffix})"
+
+    publisher.create_animated_sticker_set(
+        user_id=int(user_id),
+        name=pack_name,
+        title=title,
+        sticker_dir=tg_dir,
+        emojis_list=emojis,
+        sticker_format=sticker_format,
+    )
+
+
 # =============================================================================
 # MAIN
 # =============================================================================
@@ -339,8 +522,32 @@ Examples:
   # Also publish to Telegram:
   python run_pipeline.py --telegram
 
+  # Create and publish animated Telegram stickers (TGS):
+  python run_pipeline.py --telegram-animated
+
+  # Create and publish video Telegram stickers (WebM):
+  python run_pipeline.py --telegram-video
+
+  # Use a specific animation preset:
+  python run_pipeline.py --telegram-animated --animation-preset pop_in
+
+  # All Telegram formats at once:
+  python run_pipeline.py --telegram --telegram-animated --telegram-video
+
   # Also create iMessage Xcode project:
   python run_pipeline.py --imessage
+
+  # Build & submit iMessage app to App Store:
+  python run_pipeline.py --imessage-publish
+
+  # Dry-run iMessage publish (no actual Fastlane):
+  python run_pipeline.py --imessage-publish --imessage-dry-run
+
+  # Export stickers for WhatsApp native Android app:
+  python run_pipeline.py --process-only --whatsapp-native
+
+  # Export and push to WhatsApp sticker server:
+  python run_pipeline.py --process-only --whatsapp-native --whatsapp-server-url http://localhost:8080
 """,
     )
     parser.add_argument(
@@ -392,6 +599,49 @@ Examples:
         action="store_true",
         help="Also prepare iMessage Xcode project",
     )
+    parser.add_argument(
+        "--telegram-animated",
+        action="store_true",
+        help="Also create and publish animated Telegram stickers (TGS/Lottie)",
+    )
+    parser.add_argument(
+        "--telegram-video",
+        action="store_true",
+        help="Also create and publish video Telegram stickers (WebM VP9)",
+    )
+    parser.add_argument(
+        "--animation-preset",
+        type=str,
+        default="bounce",
+        help="Animation preset for animated/video stickers (default: bounce). "
+        "Options: bounce, shake, pulse, pop_in, spin, wave, float",
+    )
+    parser.add_argument(
+        "--imessage-publish",
+        action="store_true",
+        help="Build & submit iMessage sticker app to App Store via Fastlane",
+    )
+    parser.add_argument(
+        "--imessage-dry-run",
+        action="store_true",
+        help="iMessage publish dry run (prepare everything but skip Fastlane)",
+    )
+    parser.add_argument(
+        "--imessage-skip-submit",
+        action="store_true",
+        help="iMessage publish: build & upload but skip App Store submission",
+    )
+    parser.add_argument(
+        "--whatsapp-native",
+        action="store_true",
+        help="Export stickers for WhatsApp native Android app (512x512 WebP)",
+    )
+    parser.add_argument(
+        "--whatsapp-server-url",
+        type=str,
+        default=None,
+        help="WhatsApp sticker server URL to push packs to (e.g. http://localhost:8080)",
+    )
     args = parser.parse_args()
 
     config = PACK_CONFIG
@@ -424,6 +674,20 @@ Examples:
     print(f"{'=' * 60}")
     stage_process(config, input_dir=args.input, skip_bg=args.skip_bg)
 
+    # Stage 2b: Animated/video conversion (optional)
+    if args.telegram_animated or args.telegram_video:
+        print(f"\n{'=' * 60}")
+        print("STAGE 2b: Creating animated/video sticker variants")
+        print(f"{'=' * 60}")
+        formats = []
+        if args.telegram_animated:
+            formats.append("tgs")
+        if args.telegram_video:
+            formats.append("webm")
+        stage_process_animated(
+            config, formats=formats, animation_type=args.animation_preset
+        )
+
     # Stage 3: Tray icons
     print(f"\n{'=' * 60}")
     print("STAGE 3: Creating tray/tab icons")
@@ -449,12 +713,44 @@ Examples:
         print(f"{'=' * 60}")
         stage_telegram(config)
 
+    # Stage 6b: Telegram Animated (optional)
+    if args.telegram_animated:
+        print(f"\n{'=' * 60}")
+        print("STAGE 6b: Publishing animated stickers to Telegram (TGS)")
+        print(f"{'=' * 60}")
+        stage_telegram_animated(config, sticker_format="animated")
+
+    # Stage 6c: Telegram Video (optional)
+    if args.telegram_video:
+        print(f"\n{'=' * 60}")
+        print("STAGE 6c: Publishing video stickers to Telegram (WebM)")
+        print(f"{'=' * 60}")
+        stage_telegram_animated(config, sticker_format="video")
+
     # Stage 7: iMessage (optional)
     if args.imessage:
         print(f"\n{'=' * 60}")
         print("STAGE 7: Preparing iMessage Xcode project")
         print(f"{'=' * 60}")
         stage_imessage(config)
+
+    # Stage 8: iMessage Publish (optional)
+    if args.imessage_publish:
+        print(f"\n{'=' * 60}")
+        print("STAGE 8: Building & submitting iMessage app to App Store")
+        print(f"{'=' * 60}")
+        stage_imessage_publish(
+            config,
+            dry_run=args.imessage_dry_run,
+            skip_submit=args.imessage_skip_submit,
+        )
+
+    # Stage 9: WhatsApp Native Export (optional)
+    if args.whatsapp_native:
+        print(f"\n{'=' * 60}")
+        print("STAGE 9: Exporting stickers for WhatsApp native app")
+        print(f"{'=' * 60}")
+        stage_whatsapp_export(config, server_url=args.whatsapp_server_url)
 
     # Final summary
     pack_id = config["pack_id"]
@@ -466,6 +762,12 @@ Examples:
     print(f"  ├── final/        - Processed platform-ready stickers")
     for p in config["platforms"]:
         print(f"  │   ├── {p}/")
+    if args.telegram_animated:
+        print(f"  │   ├── telegram_animated/   - TGS animated stickers")
+    if args.telegram_video:
+        print(f"  │   ├── telegram_video/      - WebM video stickers")
+    if args.whatsapp_native:
+        print(f"  │   ├── whatsapp_native/     - WhatsApp 512x512 WebP stickers")
     print(f"  ├── metadata/     - Platform metadata files")
     print(f"  ├── dist/         - Distribution packages (ZIP, sheets)")
     if args.imessage:
@@ -476,8 +778,16 @@ Examples:
     print("  2. Publish on LINE, Etsy, Gumroad (see guides/distribution_guide.md)")
     if not args.telegram:
         print("  3. Publish to Telegram: python run_pipeline.py --telegram")
+    if not args.telegram_animated:
+        print("  4. Animated Telegram: python run_pipeline.py --telegram-animated")
+    if not args.telegram_video:
+        print("  5. Video Telegram: python run_pipeline.py --telegram-video")
     if not args.imessage:
-        print("  4. iMessage project: python run_pipeline.py --imessage")
+        print("  6. iMessage project: python run_pipeline.py --imessage")
+    if not args.imessage_publish:
+        print("  7. iMessage App Store: python run_pipeline.py --imessage-publish")
+    if not args.whatsapp_native:
+        print("  8. WhatsApp native:   python run_pipeline.py --whatsapp-native")
     print()
 
 

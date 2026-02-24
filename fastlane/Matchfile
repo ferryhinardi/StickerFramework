@@ -1,0 +1,9 @@
+git_url ENV["MATCH_GIT_URL"]
+storage_mode "git"
+type "appstore"
+app_identifier [
+  ENV["BUNDLE_ID"] || "com.yourbrand.stickers",
+  "#{ENV['BUNDLE_ID'] || 'com.yourbrand.stickers'}.StickerPackExtension"
+]
+username ENV["APPLE_ID"]
+team_id ENV["APPLE_TEAM_ID"]

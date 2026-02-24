@@ -3,6 +3,7 @@
 Telegram Sticker Publisher - Automate sticker set creation via Telegram Bot API.
 
 Telegram is the MOST automatable sticker platform - full Bot API support.
+Supports static (WebP/PNG), animated (TGS/Lottie), and video (WebM VP9) formats.
 
 Setup:
     1. Message @BotFather on Telegram -> /newbot -> get your bot token
@@ -12,13 +13,23 @@ Setup:
        export TELEGRAM_USER_ID="987654321"
 
 Usage:
-    python telegram_publisher.py <sticker_dir> <pack_name> <pack_title>
+    python telegram_publisher.py <sticker_dir> <pack_name> <pack_title> [--format FORMAT]
 
-    # Example:
+    # Static stickers (default):
     python telegram_publisher.py pack01_emotions_v1/final/telegram \\
         MochiEmotions_by_YourBot "Mochi Emotions Vol. 1"
+
+    # Animated TGS stickers:
+    python telegram_publisher.py pack01_emotions_v1/final/telegram_animated \\
+        MochiAnimated_by_YourBot "Mochi Animated Vol. 1" --format animated
+
+    # Video WebM stickers:
+    python telegram_publisher.py pack01_emotions_v1/final/telegram_video \\
+        MochiVideo_by_YourBot "Mochi Video Vol. 1" --format video
 """
 
+import argparse
+import json
 import os
 import sys
 import time
@@ -31,9 +42,116 @@ if str(_SCRIPTS_DIR) not in sys.path:
 
 import requests
 
+# ---------------------------------------------------------------------------
+# Format constants and limits
+# ---------------------------------------------------------------------------
+# Telegram Bot API sticker format identifiers
+FORMAT_STATIC = "static"
+FORMAT_ANIMATED = "animated"
+FORMAT_VIDEO = "video"
+
+# File extensions per format
+FORMAT_EXTENSIONS = {
+    FORMAT_STATIC: (".webp", ".png"),
+    FORMAT_ANIMATED: (".tgs",),
+    FORMAT_VIDEO: (".webm",),
+}
+
+# Maximum file sizes (bytes) per Telegram documentation
+FORMAT_MAX_SIZE = {
+    FORMAT_STATIC: 512_000,  # 512 KB for static WebP/PNG
+    FORMAT_ANIMATED: 64_000,  # 64 KB for TGS
+    FORMAT_VIDEO: 256_000,  # 256 KB for WebM
+}
+
+# MIME types for correct file upload
+FORMAT_MIME = {
+    ".webp": "image/webp",
+    ".png": "image/png",
+    ".tgs": "application/x-tgs",
+    ".webm": "video/webm",
+}
+
+
+def detect_sticker_format(file_path: str) -> str:
+    """Detect sticker format from file extension.
+
+    Args:
+        file_path: Path to a sticker file.
+
+    Returns:
+        One of "static", "animated", or "video".
+
+    Raises:
+        ValueError: If the extension is not a recognized sticker format.
+    """
+    ext = Path(file_path).suffix.lower()
+    for fmt, extensions in FORMAT_EXTENSIONS.items():
+        if ext in extensions:
+            return fmt
+    raise ValueError(
+        f"Unrecognized sticker file extension '{ext}'. "
+        f"Expected one of: {', '.join(e for exts in FORMAT_EXTENSIONS.values() for e in exts)}"
+    )
+
+
+def validate_sticker_file(file_path: str, sticker_format: str | None = None) -> None:
+    """Validate a sticker file's size against Telegram limits.
+
+    Args:
+        file_path: Path to the sticker file.
+        sticker_format: Format string; auto-detected if None.
+
+    Raises:
+        FileNotFoundError: If the file does not exist.
+        ValueError: If the file exceeds the size limit for its format.
+    """
+    path = Path(file_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Sticker file not found: {file_path}")
+
+    if sticker_format is None:
+        sticker_format = detect_sticker_format(file_path)
+
+    max_size = FORMAT_MAX_SIZE.get(sticker_format)
+    if max_size is None:
+        return  # unknown format, skip validation
+
+    actual_size = path.stat().st_size
+    if actual_size > max_size:
+        raise ValueError(
+            f"Sticker file too large for '{sticker_format}' format: "
+            f"{actual_size:,} bytes > {max_size:,} bytes limit — {path.name}"
+        )
+
+
+def find_sticker_files(
+    directory: str, sticker_format: str = FORMAT_STATIC
+) -> list[Path]:
+    """Find sticker files in a directory matching the given format.
+
+    Args:
+        directory: Directory to search.
+        sticker_format: One of "static", "animated", "video".
+
+    Returns:
+        Sorted list of matching file paths.
+    """
+    dir_path = Path(directory)
+    extensions = FORMAT_EXTENSIONS.get(sticker_format, FORMAT_EXTENSIONS[FORMAT_STATIC])
+    files = []
+    for ext in extensions:
+        files.extend(dir_path.glob(f"*{ext}"))
+    return sorted(set(files))
+
 
 class TelegramStickerPublisher:
-    """Publish sticker packs to Telegram via Bot API."""
+    """Publish sticker packs to Telegram via Bot API.
+
+    Supports static (WebP/PNG), animated (TGS), and video (WebM) sticker
+    formats.  Format is auto-detected from file extensions when not explicitly
+    specified.
+    """
 
     def __init__(self, bot_token: str | None = None):
         """
@@ -84,9 +202,13 @@ class TelegramStickerPublisher:
             name: Short name for the set (alphanumeric + underscore).
                   MUST end with _by_<botname>
             title: Display title of the sticker pack
-            sticker_paths: List of WebP/PNG file paths (512px on one side)
+            sticker_paths: List of sticker file paths.
+                  Static: WebP/PNG (512px on one side, ≤512KB)
+                  Animated: TGS (≤64KB)
+                  Video: WebM VP9 (≤256KB)
             emojis_list: List of emoji strings for each sticker
-            sticker_format: "static", "animated", or "video"
+            sticker_format: "static", "animated", or "video".
+                  Auto-detected from first file if set to "auto".
 
         Returns:
             URL to the sticker pack: https://t.me/addstickers/<name>
@@ -99,6 +221,17 @@ class TelegramStickerPublisher:
         if not sticker_paths:
             raise ValueError("Need at least 1 sticker")
 
+        # Auto-detect format from file extension if requested
+        if sticker_format == "auto":
+            sticker_format = detect_sticker_format(sticker_paths[0])
+
+        # Validate all files before starting upload
+        print(
+            f"\n  Validating {len(sticker_paths)} sticker files ({sticker_format})..."
+        )
+        for path in sticker_paths:
+            validate_sticker_file(path, sticker_format)
+
         # Verify bot info to get bot username
         bot_info = self.get_bot_info()
         bot_username = bot_info["username"]
@@ -110,11 +243,11 @@ class TelegramStickerPublisher:
 
         print(f"\nCreating Telegram sticker set: {title}")
         print(f"  Name: {name}")
+        print(f"  Format: {sticker_format}")
         print(f"  Stickers: {len(sticker_paths)}")
         print(f"  Bot: @{bot_username}")
 
         # Build stickers array for the API
-        # First, create the set with all stickers using createNewStickerSet
         stickers_json = []
         files_dict = {}
 
@@ -122,15 +255,17 @@ class TelegramStickerPublisher:
             file_key = f"sticker_{i}"
             sticker_entry = {
                 "sticker": f"attach://{file_key}",
-                "emoji_list": list(emojis) if len(emojis) > 1 else [emojis],
+                "emoji_list": emojis if isinstance(emojis, list) else [emojis],
                 "format": sticker_format,
             }
             stickers_json.append(sticker_entry)
-            files_dict[file_key] = open(path, "rb")
+
+            # Open file with correct MIME type for Telegram
+            p = Path(path)
+            mime = FORMAT_MIME.get(p.suffix.lower(), "application/octet-stream")
+            files_dict[file_key] = (p.name, open(path, "rb"), mime)
 
         try:
-            import json
-
             self._api_call(
                 "createNewStickerSet",
                 data={
@@ -145,18 +280,19 @@ class TelegramStickerPublisher:
             # If batch fails, fall back to one-by-one creation
             if "too many" in str(e).lower() or "STICKER_PNG_NOPNG" in str(e):
                 print(f"  Batch creation failed ({e}), trying one-by-one...")
-                for f in files_dict.values():
-                    f.close()
+                for _, fobj, _ in files_dict.values():
+                    fobj.close()
                 return self._create_set_sequential(
                     user_id, name, title, sticker_paths, emojis_list, sticker_format
                 )
-            for f in files_dict.values():
-                f.close()
+            for _, fobj, _ in files_dict.values():
+                fobj.close()
             raise
         finally:
-            for f in files_dict.values():
-                if not f.closed:
-                    f.close()
+            for val in files_dict.values():
+                fobj = val[1] if isinstance(val, tuple) else val
+                if not fobj.closed:
+                    fobj.close()
 
         pack_url = f"https://t.me/addstickers/{name}"
         print(f"\n  Pack created successfully!")
@@ -173,9 +309,10 @@ class TelegramStickerPublisher:
         sticker_format: str,
     ) -> str:
         """Fallback: create set with first sticker, then add rest one by one."""
-        import json
 
         # Create set with first sticker
+        first_path = Path(sticker_paths[0])
+        mime = FORMAT_MIME.get(first_path.suffix.lower(), "application/octet-stream")
         with open(sticker_paths[0], "rb") as f:
             sticker_data = {
                 "sticker": "attach://sticker",
@@ -190,7 +327,7 @@ class TelegramStickerPublisher:
                     "title": title,
                     "stickers": json.dumps([sticker_data]),
                 },
-                files={"sticker": f},
+                files={"sticker": (first_path.name, f, mime)},
             )
 
         print(f"  Created set with first sticker")
@@ -199,6 +336,8 @@ class TelegramStickerPublisher:
         for i in range(1, len(sticker_paths)):
             path = sticker_paths[i]
             emoji = emojis_list[i]
+            p = Path(path)
+            mime = FORMAT_MIME.get(p.suffix.lower(), "application/octet-stream")
 
             with open(path, "rb") as f:
                 sticker_data = {
@@ -214,17 +353,65 @@ class TelegramStickerPublisher:
                             "name": name,
                             "sticker": json.dumps(sticker_data),
                         },
-                        files={"sticker": f},
+                        files={"sticker": (p.name, f, mime)},
                     )
-                    print(f"  Added [{i + 1}/{len(sticker_paths)}]: {Path(path).name}")
+                    print(f"  Added [{i + 1}/{len(sticker_paths)}]: {p.name}")
                 except RuntimeError as e:
-                    print(f"  FAILED [{i + 1}]: {Path(path).name} - {e}")
+                    print(f"  FAILED [{i + 1}]: {p.name} - {e}")
 
             time.sleep(0.5)  # Rate limit safety
 
         pack_url = f"https://t.me/addstickers/{name}"
         print(f"\n  Pack URL: {pack_url}")
         return pack_url
+
+    def create_animated_sticker_set(
+        self,
+        user_id: int,
+        name: str,
+        title: str,
+        sticker_dir: str,
+        emojis_list: list[str],
+        sticker_format: str = "animated",
+    ) -> str:
+        """Create an animated or video sticker set from a directory.
+
+        Convenience wrapper around :meth:`create_sticker_set` that discovers
+        TGS or WebM files automatically.
+
+        Args:
+            user_id: Telegram numeric user ID.
+            name: Short name for the set (will have ``_by_<bot>`` appended).
+            title: Display title of the sticker pack.
+            sticker_dir: Directory containing ``.tgs`` or ``.webm`` files.
+            emojis_list: Emoji strings (one per sticker).
+            sticker_format: ``"animated"`` for TGS or ``"video"`` for WebM.
+
+        Returns:
+            URL to the sticker pack.
+        """
+        sticker_files = find_sticker_files(sticker_dir, sticker_format)
+        if not sticker_files:
+            ext = ", ".join(FORMAT_EXTENSIONS.get(sticker_format, ()))
+            raise FileNotFoundError(
+                f"No {sticker_format} sticker files ({ext}) found in {sticker_dir}"
+            )
+
+        # Trim or pad emojis to match file count
+        if len(emojis_list) < len(sticker_files):
+            emojis_list = emojis_list + ["\U0001f60a"] * (
+                len(sticker_files) - len(emojis_list)
+            )
+        emojis_list = emojis_list[: len(sticker_files)]
+
+        return self.create_sticker_set(
+            user_id=user_id,
+            name=name,
+            title=title,
+            sticker_paths=[str(f) for f in sticker_files],
+            emojis_list=emojis_list,
+            sticker_format=sticker_format,
+        )
 
     def delete_sticker_set(self, name: str) -> bool:
         """Delete an entire sticker set (useful for re-creating)."""
@@ -245,38 +432,72 @@ def load_emojis_from_config(pack_config: dict) -> list[str]:
 # =============================================================================
 # CLI ENTRY POINT
 # =============================================================================
-if __name__ == "__main__":
-    if len(sys.argv) < 4:
-        print(
-            "Usage: python telegram_publisher.py <sticker_dir> <pack_name> <pack_title>"
-        )
-        print()
-        print("Environment variables required:")
-        print("  TELEGRAM_BOT_TOKEN  - Get from @BotFather")
-        print("  TELEGRAM_USER_ID    - Get from @userinfobot")
-        print()
-        print("Example:")
-        print("  python telegram_publisher.py pack01_emotions_v1/final/telegram \\")
-        print('    MochiEmotions "Mochi Emotions Vol. 1"')
-        sys.exit(1)
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Publish sticker packs to Telegram via Bot API.",
+        epilog=(
+            "Examples:\n"
+            "  # Static stickers (default):\n"
+            "  python telegram_publisher.py pack01/final/telegram MyPack 'My Pack'\n\n"
+            "  # Animated TGS stickers:\n"
+            "  python telegram_publisher.py pack01/final/telegram_animated "
+            "MyAnimated 'Animated Pack' --format animated\n\n"
+            "  # Video WebM stickers:\n"
+            "  python telegram_publisher.py pack01/final/telegram_video "
+            "MyVideo 'Video Pack' --format video\n\n"
+            "  # Delete an existing set first, then recreate:\n"
+            "  python telegram_publisher.py pack01/final/telegram MyPack 'My Pack' "
+            "--delete-existing\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("sticker_dir", help="Directory containing sticker files")
+    parser.add_argument("pack_name", help="Short name for the sticker set")
+    parser.add_argument("pack_title", help="Display title of the sticker pack")
+    parser.add_argument(
+        "--format",
+        choices=["static", "animated", "video", "auto"],
+        default="auto",
+        help="Sticker format (default: auto-detect from files)",
+    )
+    parser.add_argument(
+        "--delete-existing",
+        action="store_true",
+        help="Delete the existing set with this name before creating",
+    )
+    return parser
 
-    sticker_dir = sys.argv[1]
-    pack_name = sys.argv[2]
-    pack_title = sys.argv[3]
+
+if __name__ == "__main__":
+    parser = _build_parser()
+    args = parser.parse_args()
 
     user_id = os.environ.get("TELEGRAM_USER_ID")
     if not user_id:
         print("Error: Set TELEGRAM_USER_ID environment variable")
         sys.exit(1)
 
+    # Determine format
+    sticker_format = args.format
+    if sticker_format == "auto":
+        # Probe directory for file types
+        dir_path = Path(args.sticker_dir)
+        if list(dir_path.glob("*.tgs")):
+            sticker_format = FORMAT_ANIMATED
+        elif list(dir_path.glob("*.webm")):
+            sticker_format = FORMAT_VIDEO
+        else:
+            sticker_format = FORMAT_STATIC
+
     # Find sticker files
-    sticker_files = sorted(
-        list(Path(sticker_dir).glob("*.webp")) + list(Path(sticker_dir).glob("*.png"))
-    )
+    sticker_files = find_sticker_files(args.sticker_dir, sticker_format)
 
     if not sticker_files:
-        print(f"No sticker files found in {sticker_dir}")
+        exts = ", ".join(FORMAT_EXTENSIONS.get(sticker_format, ()))
+        print(f"No sticker files ({exts}) found in {args.sticker_dir}")
         sys.exit(1)
+
+    print(f"Found {len(sticker_files)} {sticker_format} sticker(s)")
 
     # Try to load emojis from pack config
     try:
@@ -292,10 +513,20 @@ if __name__ == "__main__":
         emojis = ["\U0001f60a"] * len(sticker_files)
 
     publisher = TelegramStickerPublisher()
+
+    if args.delete_existing:
+        bot_info = publisher.get_bot_info()
+        full_name = args.pack_name
+        suffix = f"_by_{bot_info['username']}"
+        if not full_name.endswith(suffix):
+            full_name = f"{full_name}{suffix}"
+        publisher.delete_sticker_set(full_name)
+
     publisher.create_sticker_set(
         user_id=int(user_id),
-        name=pack_name,
-        title=pack_title,
+        name=args.pack_name,
+        title=args.pack_title,
         sticker_paths=[str(f) for f in sticker_files],
         emojis_list=emojis,
+        sticker_format=sticker_format,
     )

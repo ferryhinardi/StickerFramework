@@ -1,0 +1,11 @@
+{
+  "app_name": "{pack_name} Stickers",
+  "subtitle": "Cute sticker pack for iMessage",
+  "description": "Express yourself with {sticker_count} adorable {character_name} stickers! Perfect for everyday conversations.\n\nFeatures:\n• {sticker_count} unique stickers\n• Transparent backgrounds\n• Works in iMessage conversations\n• High-quality PNG format",
+  "keywords": "stickers,imessage,cute,kawaii,emoji,chat,{character_name}",
+  "category": "Stickers",
+  "price_tier": "0",
+  "primary_locale": "en-US",
+  "privacy_url": "https://yourdomain.com/privacy",
+  "support_url": "https://yourdomain.com/support"
+}

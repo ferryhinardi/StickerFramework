@@ -39,6 +39,8 @@ output/
 packs/*/sticker_pack.png
 packs/*/split/
 packs/*/final/
+packs/*/raw/
+packs/*/dist/
 packs/*/line_output/
 
 # Playwright automation state
@@ -51,3 +53,20 @@ reference/line-creator/*.pdf
 reference/cartoon-faces/
 reference/stickers/
 reference/stickers-gen/
+
+# Phase 1: iMessage / Fastlane build artifacts
+fastlane/report.xml
+fastlane/README.md
+fastlane/test_output/
+*.ipa
+*.dSYM.zip
+
+# Phase 3: WhatsApp Android app build artifacts
+whatsapp-sticker-app/build/
+whatsapp-sticker-app/.gradle/
+whatsapp-sticker-app/app/build/
+whatsapp-sticker-app/local.properties
+server/__pycache__/
+
+# OpenCode tool state
+.opencode/

@@ -19,7 +19,7 @@ import io
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
 
 class StickerProcessor:
@@ -85,6 +85,32 @@ class StickerProcessor:
             "size": (2048, 2048),
             "format": "PNG",
             "max_kb": None,
+            "ext": ".png",
+        },
+        # Phase 2: Telegram animated (Lottie/TGS) and video (WebM VP9) stickers
+        "telegram_animated": {
+            "size": (512, 512),
+            "format": "TGS",  # Lottie JSON gzipped
+            "max_kb": 64,
+            "ext": ".tgs",
+        },
+        "telegram_video": {
+            "size": (512, 512),
+            "format": "WEBM",  # VP9, no audio
+            "max_kb": 256,
+            "ext": ".webm",
+        },
+        # Phase 3: WhatsApp native app (stricter limits than Sticker.ly)
+        "whatsapp_native": {
+            "size": (512, 512),
+            "format": "WEBP",
+            "max_kb": 100,
+            "ext": ".webp",
+        },
+        "whatsapp_native_tray": {
+            "size": (96, 96),
+            "format": "PNG",  # WhatsApp native app uses PNG tray
+            "max_kb": 50,
             "ext": ".png",
         },
     }
@@ -182,6 +208,157 @@ class StickerProcessor:
         # Paste original character on top of the white outline
         outline_layer.paste(img, (0, 0), img)
         return outline_layer
+
+    # -------------------------------------------------------------------------
+    # Font resolution for text overlay
+    # -------------------------------------------------------------------------
+    # Bundled fonts ship in the repo's fonts/ directory for portability.
+    # Fallback chain: bundled → system → PIL default bitmap font.
+    _FONTS_DIR = Path(__file__).resolve().parent.parent / "fonts"
+    _FONT_PATHS = {
+        "bold": [
+            _FONTS_DIR / "ArialRoundedBold.ttf",  # bundled — bubbly, thick
+            Path("/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf"),
+            _FONTS_DIR / "MarkerFelt.ttc",  # bundled — casual handwritten
+        ],
+        "regular": [
+            _FONTS_DIR / "ArialRoundedBold.ttf",  # still looks good at regular weight
+            Path("/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf"),
+        ],
+    }
+
+    @classmethod
+    def _resolve_font(
+        cls, style: str = "bold", size: int = 72
+    ) -> ImageFont.FreeTypeFont:
+        """Resolve a TrueType font from the fallback chain.
+
+        Args:
+            style: "bold" or "regular"
+            size:  Point size
+
+        Returns:
+            ImageFont.FreeTypeFont, or PIL's default bitmap font as last resort.
+        """
+        for path in cls._FONT_PATHS.get(style, cls._FONT_PATHS["bold"]):
+            if path.exists():
+                try:
+                    # .ttc files may have multiple faces; index=0 is the default
+                    return ImageFont.truetype(str(path), size, index=0)
+                except Exception:
+                    continue
+        # Last resort — PIL built-in (small bitmap, not great but won't crash)
+        print("    WARNING: No TrueType font found, using PIL default bitmap font")
+        return ImageFont.load_default()
+
+    # -------------------------------------------------------------------------
+    # Text overlay
+    # -------------------------------------------------------------------------
+    def add_text_overlay(
+        self,
+        img: Image.Image,
+        text_config: dict | str,
+    ) -> Image.Image:
+        """
+        Render text on top of a processed sticker image.
+
+        Called AFTER add_white_outline() and BEFORE resize_to_spec(), so text
+        is rendered at full resolution (typically 1024×1024) and scales cleanly
+        for every target platform.
+
+        Args:
+            img:         RGBA image with outline already applied.
+            text_config: Either a plain string (uses all defaults) or a dict:
+                {
+                    "content":      str,            # required — the text to show
+                    "position":     str,            # "top" | "bottom" | "center" (default "bottom")
+                    "font_size":    "auto" | int,   # "auto" fits ~80% width (default "auto")
+                    "color":        str,            # hex fill color (default "#FFFFFF")
+                    "stroke_color": str,            # hex stroke color (default "#4A3728")
+                    "stroke_width": int,            # stroke px at render resolution (default 8)
+                    "style":        str,            # "bold" | "regular" (default "bold")
+                }
+
+        Returns:
+            New RGBA image with text composited on top.
+        """
+        # --- Normalize config ---------------------------------------------------
+        if isinstance(text_config, str):
+            text_config = {"content": text_config}
+
+        content = text_config.get("content", "").strip()
+        if not content:
+            return img  # nothing to render
+
+        position = text_config.get("position", "bottom")
+        font_size_cfg = text_config.get("font_size", "auto")
+        fill_color = text_config.get("color", "#FFFFFF")
+        stroke_color = text_config.get("stroke_color", "#4A3728")
+        stroke_width = int(text_config.get("stroke_width", 8))
+        style = text_config.get("style", "bold")
+
+        w, h = img.size
+
+        # --- Resolve font size ---------------------------------------------------
+        if font_size_cfg == "auto":
+            # Binary-search for largest font size that fits ~80% of image width
+            target_width = int(w * 0.80)
+            lo, hi = 20, 300
+            best_size = lo
+            while lo <= hi:
+                mid = (lo + hi) // 2
+                test_font = self._resolve_font(style, mid)
+                # Use textbbox for accurate measurement (Pillow ≥ 8.0)
+                dummy_draw = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+                bbox = dummy_draw.textbbox(
+                    (0, 0), content, font=test_font, stroke_width=stroke_width
+                )
+                text_w = bbox[2] - bbox[0]
+                if text_w <= target_width:
+                    best_size = mid
+                    lo = mid + 1
+                else:
+                    hi = mid - 1
+            font_size = best_size
+        else:
+            font_size = int(font_size_cfg)
+
+        font = self._resolve_font(style, font_size)
+
+        # --- Compute text position -----------------------------------------------
+        draw = ImageDraw.Draw(img)
+        bbox = draw.textbbox((0, 0), content, font=font, stroke_width=stroke_width)
+        text_w = bbox[2] - bbox[0]
+        text_h = bbox[3] - bbox[1]
+
+        # Center horizontally
+        tx = (w - text_w) // 2
+
+        # Vertical placement
+        if position == "top":
+            ty = int(h * 0.05)
+        elif position == "center":
+            ty = (h - text_h) // 2
+        else:  # "bottom" (default)
+            ty = int(h * 0.82) - text_h // 2
+
+        # Clamp to stay inside the image
+        ty = max(4, min(ty, h - text_h - 4))
+
+        # --- Render text onto the image ------------------------------------------
+        # Draw stroke (outline) first, then fill — gives clean bordered text
+        draw.text(
+            (tx, ty),
+            content,
+            font=font,
+            fill=fill_color,
+            stroke_width=stroke_width,
+            stroke_fill=stroke_color,
+            anchor=None,
+        )
+
+        print(f'    Text overlay: "{content}" @ {position} (size={font_size})')
+        return img
 
     def normalize_colors(
         self,
@@ -335,21 +512,26 @@ class StickerProcessor:
         output_dir: str,
         platforms: list[str],
         skip_bg_removal: bool = False,
+        sticker_config: dict | None = None,
     ) -> dict[str, Path]:
         """
         Full pipeline for a single sticker image.
 
         Steps:
-            1. Background removal (rembg)
+            1. Background removal (flood-fill from corners)
             2. Color normalization
             3. White outline addition
-            4. Resize + save for each platform
+            4. Text overlay (optional — only if sticker_config has "text" key)
+            5. Resize + save for each platform
 
         Args:
             input_path: Path to raw image (PNG/JPG)
             output_dir: Base output directory
             platforms: List of platform keys (from SPECS)
             skip_bg_removal: Set True if image already has transparent bg
+            sticker_config: Optional per-sticker config dict. If it contains a
+                "text" key (str or dict), text will be rendered on the sticker
+                after the white outline step.
 
         Returns:
             Dict of {platform: output_path}
@@ -373,7 +555,12 @@ class StickerProcessor:
         print("    Adding white outline...")
         img = self.add_white_outline(img)
 
-        # Step 4: Resize and save for each platform
+        # Step 4: Text overlay (optional)
+        text_cfg = (sticker_config or {}).get("text")
+        if text_cfg:
+            img = self.add_text_overlay(img, text_cfg)
+
+        # Step 5: Resize and save for each platform
         results = {}
         for platform in platforms:
             if platform not in self.SPECS:
@@ -395,6 +582,7 @@ class StickerProcessor:
         output_dir: str,
         platforms: list[str],
         skip_bg_removal: bool = False,
+        sticker_configs: list[dict] | None = None,
     ) -> list[dict]:
         """
         Process all images in a directory.
@@ -404,6 +592,10 @@ class StickerProcessor:
             output_dir: Base output directory (subdirs per platform)
             platforms: List of platform keys
             skip_bg_removal: Set True if images already have transparent bg
+            sticker_configs: Optional list of per-sticker config dicts (one per
+                image, matched by sorted filename order). Each dict may contain
+                a "text" key to enable text overlay. If None or shorter than the
+                image list, missing entries default to no text overlay.
 
         Returns:
             List of result dicts per image
@@ -420,18 +612,28 @@ class StickerProcessor:
             print(f"No images found in {input_dir}")
             return []
 
+        configs = sticker_configs or []
+        text_count = sum(1 for c in configs if c.get("text"))
+
         print(f"\n{'=' * 60}")
         print(f"Processing {len(images)} images for {len(platforms)} platforms")
         print(f"Input:  {input_dir}")
         print(f"Output: {output_dir}")
         print(f"Platforms: {', '.join(platforms)}")
+        if text_count:
+            print(f"Text overlays: {text_count} stickers have text configured")
         print(f"{'=' * 60}")
 
         all_results = []
         for i, img_path in enumerate(images):
             print(f"\n[{i + 1}/{len(images)}]", end="")
+            cfg = configs[i] if i < len(configs) else None
             result = self.process_single(
-                str(img_path), output_dir, platforms, skip_bg_removal
+                str(img_path),
+                output_dir,
+                platforms,
+                skip_bg_removal,
+                sticker_config=cfg,
             )
             all_results.append({"source": str(img_path), "outputs": result})
 
@@ -443,6 +645,146 @@ class StickerProcessor:
             if out_dir.exists():
                 count = len(list(out_dir.iterdir()))
                 print(f"  {platform}: {count} files in {out_dir}")
+        print(f"{'=' * 60}")
+
+        return all_results
+
+    def process_animated(
+        self,
+        input_path: str,
+        output_dir: str,
+        animation_type: str = "bounce",
+        formats: list[str] | None = None,
+    ) -> dict[str, Path]:
+        """
+        Create animated/video stickers from a static (already processed) image.
+
+        This runs AFTER the normal static processing pipeline, using the
+        processed 512x512 PNG as input.
+
+        Steps:
+            1. Load processed sticker (transparent bg, outline already applied)
+            2. Resize to 512x512 if needed
+            3. Convert to TGS (animated Lottie) if "tgs" in formats
+            4. Convert to WebM VP9 (video sticker) if "webm" in formats
+
+        Args:
+            input_path:      Path to a processed sticker PNG (512x512 preferred).
+            output_dir:      Base output directory (subdirs per format).
+            animation_type:  Preset name from animation_presets module.
+            formats:         List of output formats: ["tgs", "webm"]. Default: both.
+
+        Returns:
+            Dict mapping format key to output Path, e.g.
+            {"telegram_animated": Path(...), "telegram_video": Path(...)}.
+        """
+        from animated_converter import LottieAnimator, VideoConverter
+
+        if formats is None:
+            formats = ["tgs", "webm"]
+
+        name = Path(input_path).stem
+        results: dict[str, Path] = {}
+
+        if "tgs" in formats:
+            tgs_dir = Path(output_dir) / "telegram_animated"
+            tgs_dir.mkdir(parents=True, exist_ok=True)
+            tgs_out = tgs_dir / f"{name}.tgs"
+            try:
+                animator = LottieAnimator()
+                animator.png_to_tgs(
+                    input_path,
+                    str(tgs_out),
+                    animation_type=animation_type,
+                )
+                results["telegram_animated"] = tgs_out
+                print(
+                    f"    {tgs_out.name}: {tgs_out.stat().st_size / 1024:.1f}KB (TGS)"
+                )
+            except Exception as exc:
+                print(f"    WARNING: TGS conversion failed for {name}: {exc}")
+
+        if "webm" in formats:
+            webm_dir = Path(output_dir) / "telegram_video"
+            webm_dir.mkdir(parents=True, exist_ok=True)
+            webm_out = webm_dir / f"{name}.webm"
+            try:
+                converter = VideoConverter()
+                converter.png_to_webm(
+                    input_path,
+                    str(webm_out),
+                    animation_type=animation_type,
+                )
+                results["telegram_video"] = webm_out
+                print(
+                    f"    {webm_out.name}: {webm_out.stat().st_size / 1024:.1f}KB (WebM)"
+                )
+            except Exception as exc:
+                print(f"    WARNING: WebM conversion failed for {name}: {exc}")
+
+        return results
+
+    def process_batch_animated(
+        self,
+        input_dir: str,
+        output_dir: str,
+        animation_type: str = "bounce",
+        formats: list[str] | None = None,
+    ) -> list[dict]:
+        """
+        Generate animated/video stickers for all processed images in a directory.
+
+        Expects input_dir to contain already-processed 512x512 PNGs
+        (typically from the telegram/ output subdirectory, or any static
+        processed output).
+
+        Args:
+            input_dir:       Directory of processed sticker PNGs.
+            output_dir:      Base output directory.
+            animation_type:  Animation preset name.
+            formats:         ["tgs", "webm"] or subset.
+
+        Returns:
+            List of result dicts per image.
+        """
+        if formats is None:
+            formats = ["tgs", "webm"]
+
+        input_path = Path(input_dir)
+        images = sorted(
+            list(input_path.glob("*.png")) + list(input_path.glob("*.webp"))
+        )
+
+        if not images:
+            print(f"No processed images found in {input_dir}")
+            return []
+
+        fmt_labels = ", ".join(f.upper() for f in formats)
+        print(f"\n{'=' * 60}")
+        print(f"Generating animated stickers: {len(images)} images")
+        print(f"Animation preset: {animation_type}")
+        print(f"Output formats: {fmt_labels}")
+        print(f"{'=' * 60}")
+
+        all_results = []
+        for i, img_path in enumerate(images):
+            print(f"\n[{i + 1}/{len(images)}] Animating: {img_path.stem}")
+            result = self.process_animated(
+                str(img_path),
+                output_dir,
+                animation_type=animation_type,
+                formats=formats,
+            )
+            all_results.append({"source": str(img_path), "outputs": result})
+
+        # Summary
+        print(f"\n{'=' * 60}")
+        print(f"Animated generation complete: {len(all_results)} stickers")
+        for fmt_key in ["telegram_animated", "telegram_video"]:
+            out_dir = Path(output_dir) / fmt_key
+            if out_dir.exists():
+                count = len(list(out_dir.iterdir()))
+                print(f"  {fmt_key}: {count} files in {out_dir}")
         print(f"{'=' * 60}")
 
         return all_results
@@ -471,6 +813,8 @@ class StickerProcessor:
 # CLI ENTRY POINT
 # =============================================================================
 if __name__ == "__main__":
+    import importlib.util
+
     if len(sys.argv) < 2:
         print(
             "Usage: python sticker_processor.py <input_dir> [output_dir] [platforms...]"
@@ -480,6 +824,9 @@ if __name__ == "__main__":
         print("  python sticker_processor.py pack01_emotions_v1/raw")
         print("  python sticker_processor.py stickers/ output/ whatsapp telegram")
         print("  python sticker_processor.py stickers/ output/ --skip-bg")
+        print(
+            "  python sticker_processor.py stickers/ output/ --pack-config path/to/pack_config.py"
+        )
         print()
         print("Available platforms:", ", ".join(StickerProcessor.SPECS.keys()))
         sys.exit(1)
@@ -499,5 +846,37 @@ if __name__ == "__main__":
     if not platforms:
         platforms = ["whatsapp", "telegram", "imessage_large", "line", "print_etsy"]
 
+    # Load sticker configs from pack_config.py if --pack-config is specified
+    sticker_configs = None
+    if "--pack-config" in sys.argv:
+        idx = sys.argv.index("--pack-config")
+        if idx + 1 < len(sys.argv):
+            config_path = sys.argv[idx + 1]
+            spec = importlib.util.spec_from_file_location("pack_config", config_path)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            pack_cfg = getattr(mod, "PACK_CONFIG", None) or getattr(
+                mod, "STICKER_PACK", None
+            )
+            if pack_cfg and "stickers" in pack_cfg:
+                sticker_configs = pack_cfg["stickers"]
+                text_count = sum(1 for s in sticker_configs if s.get("text"))
+                print(
+                    f"Loaded {len(sticker_configs)} sticker configs from {config_path}"
+                )
+                if text_count:
+                    print(f"  {text_count} stickers have text overlay configured")
+            else:
+                print(f"WARNING: No PACK_CONFIG['stickers'] found in {config_path}")
+        else:
+            print("ERROR: --pack-config requires a path argument")
+            sys.exit(1)
+
     processor = StickerProcessor(outline_width=10)
-    processor.process_batch(input_dir, output_dir, platforms, skip_bg_removal=skip_bg)
+    processor.process_batch(
+        input_dir,
+        output_dir,
+        platforms,
+        skip_bg_removal=skip_bg,
+        sticker_configs=sticker_configs,
+    )

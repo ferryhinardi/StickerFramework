@@ -94,23 +94,74 @@ class LineCreateSubmission:
             )
             await self._check_radio(page, SEL_AUTO_RELEASE, auto_val)
 
-            # ── Category selects (positional — no name attrs) ──
-            selects = page.locator("select")
-            count = await selects.count()
-
-            if count >= 2:
-                style_key = config.get("style_category", DEFAULTS["style_category"])
+            # ── Category selects ──
+            # Prefer data-test selectors (robust); fall back to positional.
+            style_key = config.get("style_category", DEFAULTS["style_category"])
+            style_sel = page.locator('select[data-test="select-style-category"]')
+            if await style_sel.count() > 0:
                 style_val = STYLE_CATEGORIES.get(style_key, style_key)
-                await selects.nth(1).select_option(style_val)
-                await human_delay(200, 400)
+                await style_sel.select_option(style_val)
+            else:
+                selects = page.locator("select")
+                if await selects.count() >= 2:
+                    style_val = STYLE_CATEGORIES.get(style_key, style_key)
+                    await selects.nth(1).select_option(style_val)
+            await human_delay(200, 400)
 
-            if count >= 3:
-                char_key = config.get(
-                    "character_category", DEFAULTS["character_category"]
+            char_key = config.get("character_category", DEFAULTS["character_category"])
+            char_label = CHARACTER_CATEGORIES.get(char_key, char_key)
+
+            # Try data-test selector first, then positional fallback
+            char_sel = page.locator('select[data-test="select-character-category"]')
+            if await char_sel.count() == 0:
+                # Fallback: 3rd <select> on the page
+                selects = page.locator("select")
+                if await selects.count() >= 3:
+                    char_sel = selects.nth(2)
+                else:
+                    print("  ⚠ Could not find character category <select>")
+                    char_sel = None
+
+            if char_sel is not None:
+                # Dump all options for debugging
+                options = await char_sel.evaluate(
+                    """el => Array.from(el.options).map(o => ({
+                        value: o.value, text: o.textContent.trim(), label: o.label
+                    }))"""
                 )
-                char_val = CHARACTER_CATEGORIES.get(char_key, char_key)
-                await selects.nth(2).select_option(char_val)
-                await human_delay(200, 400)
+                print(f"  DEBUG character category options: {options}")
+
+                # Try exact label match first
+                matched = False
+                for opt in options:
+                    if opt["text"] == char_label or opt["label"] == char_label:
+                        await char_sel.select_option(value=opt["value"])
+                        matched = True
+                        print(
+                            f"  ✓ Selected character category: {opt['text']} (value={opt['value']})"
+                        )
+                        break
+
+                if not matched:
+                    # Try case-insensitive partial match
+                    target = char_label.lower()
+                    for opt in options:
+                        if (
+                            target in opt["text"].lower()
+                            or target in opt["label"].lower()
+                        ):
+                            await char_sel.select_option(value=opt["value"])
+                            matched = True
+                            print(
+                                f"  ✓ Selected character category (fuzzy): {opt['text']} (value={opt['value']})"
+                            )
+                            break
+
+                if not matched:
+                    print(
+                        f"  ⚠ Could not match character category '{char_label}'. Available: {[o['text'] for o in options]}"
+                    )
+            await human_delay(200, 400)
 
             # ── Click Save ──
             await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")

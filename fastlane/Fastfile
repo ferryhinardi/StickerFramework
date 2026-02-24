@@ -1,0 +1,66 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Sync code signing certificates via match"
+  lane :certs do
+    match(type: "appstore", readonly: true)
+  end
+
+  desc "Build the iMessage sticker pack"
+  lane :build do |options|
+    project_path = options[:project] || ENV["XCODE_PROJECT"]
+
+    unless project_path
+      UI.user_error!("Pass project: path or set XCODE_PROJECT env var")
+    end
+
+    match(type: "appstore", readonly: true)
+
+    gym(
+      project: project_path,
+      scheme: File.basename(project_path, ".xcodeproj"),
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "StickerPack.ipa",
+      clean: true,
+      xcargs: "-allowProvisioningUpdates"
+    )
+  end
+
+  desc "Upload to App Store Connect (without submitting for review)"
+  lane :upload do
+    deliver(
+      ipa: "./build/StickerPack.ipa",
+      skip_metadata: false,
+      skip_screenshots: false,
+      force: true,                      # Skip HTML report verification
+      submit_for_review: false,         # Upload only, don't submit
+      automatic_release: false,
+      precheck_include_in_app_purchases: false,
+      metadata_path: "./fastlane/metadata",
+      screenshots_path: "./fastlane/screenshots"
+    )
+  end
+
+  desc "Submit for App Store review"
+  lane :submit do
+    deliver(
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: true,
+      submit_for_review: true,
+      automatic_release: true,
+      submission_information: {
+        add_id_info_uses_idfa: false
+      }
+    )
+  end
+
+  desc "Full pipeline: certs -> build -> upload -> submit"
+  lane :publish do |options|
+    certs
+    build(options)
+    upload
+    submit
+  end
+end

@@ -9,9 +9,12 @@ Detailed technical requirements and distribution information for each supported 
 | Platform | Format | Sticker Size | Max File Size | Pack Size | Revenue | Automation |
 |----------|--------|-------------|---------------|-----------|---------|------------|
 | WhatsApp (Sticker.ly) | WEBP | 512x512 | 100 KB | 3-30 | Free (marketing) | Manual upload |
-| Telegram | WEBP | 512x512 | 256 KB | 1-120 | Free (marketing) | Fully automated |
+| WhatsApp (Native) | WEBP | 512x512 | 100 KB | 3-30 | Free (marketing) | Android app + server |
+| Telegram (static) | WEBP | 512x512 | 256 KB | 1-120 | Free (marketing) | Fully automated |
+| Telegram (animated) | TGS | 512x512 | 64 KB | 1-120 | Free (marketing) | Fully automated |
+| Telegram (video) | WEBM | 512x512 | 256 KB | 1-120 | Free (marketing) | Fully automated |
 | LINE | PNG | 370x320 | 1 MB | 8-40 | 35-50% revenue | Manual submission |
-| iMessage | PNG | 618x618 | 500 KB | 1-unlimited | 70% revenue | Xcode + App Store |
+| iMessage | PNG | 618x618 | 500 KB | 1-unlimited | 70% revenue | Fastlane + App Store |
 | Etsy | PNG | 2048x2048 | Unlimited | Any | 93.5% revenue | Manual listing |
 | Gumroad | PNG | 2048x2048 | Unlimited | Any | 90-95% revenue | Manual listing |
 
@@ -49,22 +52,174 @@ Detailed technical requirements and distribution information for each supported 
 
 ---
 
-## Telegram
+## WhatsApp (Native Integration)
+
+A custom Android app + server API that lets users add sticker packs directly into WhatsApp via the native `WAStickers` ContentProvider protocol — no third-party app required.
 
 ### Technical Specs
 
 | Property | Requirement |
 |----------|-------------|
-| **Format** | WEBP (static), TGS (animated), WEBM (video) |
-| **Dimensions** | 512x512 pixels (one side must be exactly 512) |
-| **Max File Size** | 256 KB (static), 64 KB (animated), 256 KB (video) |
+| **Format** | WEBP |
+| **Dimensions** | 512x512 pixels |
+| **Max File Size** | 100 KB per sticker |
 | **Background** | Transparent |
-| **Pack Size** | 1-120 stickers |
-| **Set Name** | Must end with `_by_<botname>` |
+| **Tray Icon** | 96x96 WEBP, <50 KB |
+| **Pack Size** | Minimum 3, Maximum 30 stickers |
+| **Margin** | 16px margin recommended |
+
+### Architecture
+
+The native integration consists of three components:
+
+1. **`scripts/whatsapp_exporter.py`** — Python exporter that validates stickers, generates tray icons, creates `contents.json` manifests, and optionally pushes packs to the server API
+2. **`server/whatsapp_api.py`** — FastAPI server that serves sticker pack metadata and assets to the Android app via REST endpoints
+3. **`whatsapp-sticker-app/`** — Android app with a `ContentProvider` that bridges WhatsApp's native sticker protocol
+
+### ContentProvider URIs
+
+WhatsApp queries the app's `ContentProvider` at these URI paths:
+
+| URI | Returns |
+|-----|---------|
+| `content://<authority>/metadata` | List of all available sticker packs |
+| `content://<authority>/metadata/<pack_id>` | Metadata for a specific pack |
+| `content://<authority>/stickers/<pack_id>` | List of stickers in a pack |
+| `content://<authority>/stickers_asset/<pack_id>/<name>` | Individual sticker image data |
+
+### `contents.json` Format
+
+Each sticker pack directory contains a `contents.json` manifest:
+
+```json
+{
+  "identifier": "pack-name-1",
+  "name": "My Sticker Pack",
+  "publisher": "Your Brand",
+  "tray_image_file": "tray_icon.webp",
+  "stickers": [
+    {
+      "image_file": "01_happy.webp",
+      "emojis": ["😊"]
+    }
+  ],
+  "publisher_website": "https://example.com",
+  "privacy_policy_website": "https://example.com/privacy",
+  "license_agreement_website": "https://example.com/license"
+}
+```
+
+URL fields (`publisher_website`, `privacy_policy_website`, `license_agreement_website`) are only included when the pack config provides real values.
+
+### Exporter Usage
+
+```bash
+# Export sticker pack for WhatsApp native
+python scripts/whatsapp_exporter.py \
+    --pack-dir packs/my-pack/final \
+    --output-dir packs/my-pack/final/whatsapp_native
+
+# Export and push to server
+python scripts/whatsapp_exporter.py \
+    --pack-dir packs/my-pack/final \
+    --push --server-url http://your-server:8000 \
+    --api-key your-api-key
+```
+
+### Server API
+
+The FastAPI server (`server/whatsapp_api.py`) provides:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/packs` | GET | List all available sticker packs |
+| `/packs/{pack_id}` | GET | Get pack metadata |
+| `/packs/{pack_id}/stickers/{name}` | GET | Download sticker image |
+| `/upload` | POST | Upload a new sticker pack (API key required) |
+| `/health` | GET | Health check |
+
+Security features:
+- API key authentication via `Depends()` for upload endpoint
+- Path traversal validation on all file-serving routes
+- Content-type validation for uploaded files
+- Dockerized deployment with volume mount for sticker data
+
+```bash
+# Run server locally
+cd server && uvicorn whatsapp_api:app --host 0.0.0.0 --port 8000
+
+# Or via Docker
+docker build -t whatsapp-stickers server/
+docker run -p 8000:8000 -e API_KEY=secret \
+    -v ./packs:/app/sticker_packs whatsapp-stickers
+```
+
+### Android App
+
+The Android app (`whatsapp-sticker-app/`) is a Java-based application that:
+- Fetches sticker pack data from the server API
+- Implements WhatsApp's `ContentProvider` contract for native integration
+- Provides a UI for browsing and adding packs to WhatsApp
+- Targets Android 14 (API 34), minimum SDK 21
+
+Build with:
+```bash
+cd whatsapp-sticker-app
+./gradlew assembleRelease
+```
+
+### Distribution
+- Self-hosted: deploy server + distribute APK
+- Optionally publish Android app on Google Play Store
+- No third-party app (Sticker.ly) required
+
+---
+
+## Telegram
+
+### Technical Specs
+
+| Property | Static | Animated (TGS) | Video (WEBM) |
+|----------|--------|-----------------|---------------|
+| **Format** | WEBP | TGS (gzipped Lottie JSON) | WEBM (VP9 codec) |
+| **Dimensions** | 512x512 | 512x512 | 512x512 |
+| **Max File Size** | 256 KB | 64,000 bytes | 256,000 bytes |
+| **Background** | Transparent | Transparent | Transparent (alpha) |
+| **Duration** | N/A | Up to 3 seconds | Up to 3 seconds |
+| **Frame Rate** | N/A | 30 or 60 fps | Up to 30 fps |
+| **Pack Size** | 1-120 | 1-50 | 1-50 |
+| **Set Name** | Must end with `_by_<botname>` | Same | Same |
+
+### Sticker Types
+
+**Static (WEBP)** — Standard still stickers. One dimension must be exactly 512px.
+
+**Animated (TGS)** — Lottie-based vector animations compressed with gzip. Generated from static stickers using `animated_converter.py` with animation presets (bounce, wiggle, pulse, spin, etc.). Strict 64,000-byte limit requires careful optimization of keyframe counts and precision.
+
+**Video (WEBM)** — VP9-encoded video stickers with alpha transparency. Generated from static stickers by converting Lottie animations to video via headless Chromium rendering + ffmpeg encoding. 256,000-byte limit with CRF-based quality optimization and automatic retry at lower quality if oversized.
+
+### Animation Presets (for TGS and WEBM)
+
+| Preset | Description |
+|--------|-------------|
+| `bounce` | Vertical bouncing motion |
+| `wiggle` | Horizontal oscillation |
+| `pulse` | Scale pulsation |
+| `spin` | Full 360-degree rotation |
+| `shake` | Rapid horizontal shake |
+| `float` | Gentle floating motion |
+| `peek` | Peek-in from side |
+| `jelly` | Elastic squash/stretch |
+| `nod` | Nodding rotation |
+| `tada` | Celebratory scale + rotation |
+
+Presets are defined in `scripts/animation_presets.py` and applied by `scripts/animated_converter.py`.
 
 ### Processing Notes
-- More generous file size limit (256 KB) than WhatsApp
-- Static stickers only -- animated/video stickers not currently supported by the pipeline
+- Static stickers use the same WEBP conversion as WhatsApp but with a 256 KB limit
+- TGS files are Lottie JSON compressed with gzip; the pipeline builds Lottie structures programmatically
+- WEBM files use VP9 codec with alpha channel; rendered via headless Chromium → ffmpeg pipeline
+- ffmpeg/ffprobe must be installed for video sticker generation
 - Set names have strict format: alphanumeric + underscores, ending with bot suffix
 
 ### Distribution
@@ -72,6 +227,7 @@ Detailed technical requirements and distribution information for each supported 
 - Requires a Telegram Bot token from `@BotFather`
 - Requires the user's numeric Telegram ID
 - Bot creates the sticker set and adds all stickers programmatically
+- Supports all three sticker types (static, animated, video) with automatic format detection
 
 ### Automation Details
 ```bash
@@ -79,15 +235,28 @@ Detailed technical requirements and distribution information for each supported 
 export TELEGRAM_BOT_TOKEN="123456:ABC-DEF..."
 export TELEGRAM_USER_ID="987654321"
 
-# Run with --telegram flag
+# Static stickers (default)
 python run_pipeline.py --telegram
+
+# Animated TGS stickers
+python scripts/animated_converter.py --pack-dir packs/my-pack/final \
+    --format tgs --preset bounce
+
+# Video WEBM stickers
+python scripts/animated_converter.py --pack-dir packs/my-pack/final \
+    --format webm --preset wiggle
+
+# Publish animated/video sets
+python scripts/telegram_publisher.py --pack-dir packs/my-pack/final \
+    --format animated   # or --format video
 ```
 
 The publisher:
 1. Validates bot credentials
-2. Creates a new sticker set with the first sticker
+2. Creates a new sticker set with the first sticker (detecting format: static/animated/video)
 3. Adds remaining stickers one-by-one (with rate limit delays)
-4. Returns the sticker set URL: `https://t.me/addstickers/<set_name>`
+4. Handles emoji assignment per sticker (multi-codepoint aware)
+5. Returns the sticker set URL: `https://t.me/addstickers/<set_name>`
 
 ### Monetization
 - Free platform (no direct revenue)
@@ -418,8 +587,45 @@ Themes customize the entire LINE app appearance: chat backgrounds, menu buttons,
 
 ### Distribution
 - Requires Apple Developer account ($99/year)
-- Pipeline generates complete Xcode project structure
-- Manual steps: open in Xcode, add icons, configure signing, archive, submit
+- Pipeline generates complete Xcode project structure via `xcodegen`
+- **Fastlane automation** handles code signing, building, and App Store submission
+- Manual fallback: open in Xcode, configure signing, archive, submit
+
+### Fastlane Automation
+
+The `fastlane/` directory provides automated App Store submission:
+
+```bash
+# One-command build + upload
+cd fastlane && bundle exec fastlane release
+
+# Or step-by-step
+bundle exec fastlane match appstore    # Fetch signing certificates
+bundle exec fastlane build             # Build .ipa
+bundle exec fastlane upload            # Upload to App Store Connect
+```
+
+**Fastlane lanes:**
+- `match` — Code signing via `fastlane match` (Git-based certificate storage)
+- `build` — Build the iMessage sticker extension via `gym`
+- `upload` — Upload to App Store Connect via `deliver`
+- `release` — Full pipeline: match → build → upload
+
+**Configuration files:**
+| File | Purpose |
+|------|---------|
+| `fastlane/Appfile` | App identifier + Apple ID |
+| `fastlane/Matchfile` | Code signing repo + type |
+| `fastlane/Fastfile` | Lane definitions |
+| `fastlane/Gemfile` | Ruby dependencies |
+| `fastlane/metadata/en-US/` | App Store metadata templates |
+
+**iMessage Publisher (`scripts/imessage_publisher.py`):**
+- Generates app icon set from sticker art (all required sizes with gradients)
+- Creates `xcodegen` project spec from templates
+- Runs `xcodegen generate` to produce `.xcodeproj`
+- Invokes Fastlane for build + submission
+- Supports `--dry-run` flag to generate project without submitting
 
 ### Xcode Project Structure (Auto-Generated)
 ```
@@ -522,7 +728,7 @@ Same as Etsy -- uses the same `print_etsy` output and distribution ZIP.
 
 | Tier | Platforms | Price | Purpose |
 |------|-----------|-------|---------|
-| Free | Sticker.ly, Telegram | $0.00 | Marketing, brand awareness |
+| Free | Sticker.ly, WhatsApp Native, Telegram | $0.00 | Marketing, brand awareness |
 | Low | LINE, iMessage | $0.99 | Volume sales, platform visibility |
 | Mid | Etsy, Gumroad | $2.99-$4.99 | Primary revenue |
 | Premium | Etsy, Gumroad (commercial) | $14.99 | Commercial licensing |

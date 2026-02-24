@@ -48,6 +48,14 @@ PACK_CONFIG = {
             "pose": "Jumping with arms raised, feet off the ground",
             "props": "Small sparkle effects (4-pointed stars) around head",
             "emoji": "\U0001f60a",
+            # Phase 2: Optional animation hints for animated/video stickers.
+            # Supported types: bounce, shake, pulse, spin, wave, custom.
+            # Omit this key entirely to use the default "bounce" preset.
+            "animation": {
+                "type": "bounce",
+                "duration_ms": 2000,
+                "loop": True,
+            },
         },
         {
             "id": "02_love",
@@ -215,7 +223,10 @@ PACK_CONFIG = {
     "platforms": [
         "whatsapp",
         "telegram",
+        "telegram_animated",  # Phase 2: Lottie TGS stickers
+        "telegram_video",  # Phase 2: WebM VP9 video stickers
         "imessage_large",
+        "whatsapp_native",  # Phase 3: WhatsApp native Android app
         "line",
         "print_etsy",
     ],
@@ -256,5 +267,13 @@ def create_pack_config(
         "style": style or STYLE,
         "stickers": stickers,
         "platforms": platforms
-        or ["whatsapp", "telegram", "imessage_large", "line", "print_etsy"],
+        or [
+            "whatsapp",
+            "telegram",
+            "telegram_animated",
+            "telegram_video",
+            "imessage_large",
+            "line",
+            "print_etsy",
+        ],
     }

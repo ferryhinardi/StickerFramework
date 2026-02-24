@@ -1,0 +1,3 @@
+app_identifier ENV["BUNDLE_ID"] || "com.yourbrand.stickers"
+apple_id ENV["APPLE_ID"]
+team_id ENV["APPLE_TEAM_ID"]

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sticker Packs</string>
+    <string name="no_sticker_packs">No sticker packs available</string>
+    <string name="add_to_whatsapp">Add to WhatsApp</string>
+    <string name="tray_icon_desc">Sticker pack icon</string>
+    <string name="sticker_count_format">%d stickers</string>
+    <string name="whatsapp_not_installed">WhatsApp is not installed</string>
+    <string name="pack_added_successfully">Sticker pack added successfully!</string>
+    <string name="pack_add_failed">Failed to add sticker pack</string>
+    <string name="pack_already_added">This sticker pack is already added to WhatsApp</string>
+    <string name="loading_packs">Loading sticker packs\u2026</string>
+    <string name="error_loading_packs">Error loading sticker packs</string>
+    <string name="retry">Retry</string>
+    <string name="pack_invalid">This sticker pack is invalid and cannot be added</string>
+    <string name="publisher_label">by %s</string>
+</resources>

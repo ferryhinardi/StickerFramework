@@ -87,19 +87,24 @@ STYLE_CATEGORIES = {
     "scary": "11",
     "pop_culture": "12",
 }
+# CHARACTER_CATEGORIES: maps our keys → display label text.
+# Used with select_option(label=...) for robustness against value changes.
+# Verified against live LINE Creator Market form (Feb 2026).
 CHARACTER_CATEGORIES = {
-    "male": "7",
-    "female": "8",
-    "families_couples": "9",
-    "cats": "10",
-    "rabbits": "11",
-    "dogs": "12",
-    "bears": "13",
-    "other_animals": "14",
-    "monsters_aliens": "15",
-    "food": "16",
-    "other": "17",
-    "inanimate": "18",
+    "male": "Male Characters",
+    "female": "Female Characters",
+    "families_couples": "Families & Couples",
+    "cats": "Cats",
+    "rabbits": "Rabbits",
+    "dogs": "Dogs",
+    "bears": "Bears",
+    "birds": "Birds",
+    "pandas": "Pandas",
+    "seals": "Seals",
+    "other_animals": "Other",  # LINE has no "Other Animals" — capybaras go under "Other"
+    "food": "Food",
+    "names": "Names",
+    "other": "Other",
 }
 
 # Save button + confirmation dialog
