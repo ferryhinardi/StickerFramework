@@ -28,6 +28,7 @@ Usage:
 """
 
 import argparse
+import importlib.util
 import json
 import os
 import shutil
@@ -44,6 +45,15 @@ if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
 REPO_ROOT = _SCRIPTS_DIR.parent
+
+
+def _load_pack_config(config_path: str) -> dict:
+    """Dynamically import PACK_CONFIG from an arbitrary pack_config.py path."""
+    path = Path(config_path).resolve()
+    spec = importlib.util.spec_from_file_location("pack_config_dynamic", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.PACK_CONFIG
 
 
 class WhatsAppExporter:
@@ -408,6 +418,10 @@ Examples:
         "pack_dir", help="Directory with processed whatsapp_native stickers"
     )
     sp_export.add_argument(
+        "--pack-config",
+        help="Path to pack_config.py (default: auto-detect from pack_dir)",
+    )
+    sp_export.add_argument(
         "--output",
         "-o",
         default=str(
@@ -420,6 +434,10 @@ Examples:
     sp_push = subparsers.add_parser("push", help="Export and push pack to server")
     sp_push.add_argument(
         "pack_dir", help="Directory with processed whatsapp_native stickers"
+    )
+    sp_push.add_argument(
+        "--pack-config",
+        help="Path to pack_config.py (default: auto-detect from pack_dir)",
     )
     sp_push.add_argument(
         "--server",
@@ -442,9 +460,27 @@ Examples:
     args = parser.parse_args()
     exporter = WhatsAppExporter()
 
-    if args.command == "export":
-        from pack_config import PACK_CONFIG
+    # Resolve pack config: explicit --pack-config, or auto-detect from pack_dir
+    if args.command in ("export", "push"):
+        config_path = getattr(args, "pack_config", None)
+        if not config_path:
+            # Auto-detect: walk up from pack_dir looking for pack_config.py
+            search = Path(args.pack_dir).resolve()
+            for parent in [search] + list(search.parents):
+                candidate = parent / "pack_config.py"
+                if candidate.exists():
+                    config_path = str(candidate)
+                    print(f"  Auto-detected pack config: {config_path}")
+                    break
+                # Stop at repo root
+                if (parent / ".git").exists():
+                    break
+        if not config_path:
+            print("Error: Could not find pack_config.py. Use --pack-config.")
+            sys.exit(1)
+        PACK_CONFIG = _load_pack_config(config_path)
 
+    if args.command == "export":
         pack_dir = exporter.export_pack(PACK_CONFIG, args.pack_dir, args.output)
         errors = exporter.validate_pack(str(pack_dir))
         if errors:
@@ -455,8 +491,6 @@ Examples:
             print("  Validation passed!")
 
     elif args.command == "push":
-        from pack_config import PACK_CONFIG
-
         pack_dir = exporter.export_pack(PACK_CONFIG, args.pack_dir, args.output)
         errors = exporter.validate_pack(str(pack_dir))
         if errors:

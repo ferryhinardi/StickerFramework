@@ -23,6 +23,7 @@ Usage:
 """
 
 import argparse
+import importlib.util
 import json
 import os
 import subprocess
@@ -40,6 +41,15 @@ if str(_SCRIPTS_DIR) not in sys.path:
 REPO_ROOT = _SCRIPTS_DIR.parent
 
 from prepare_imessage_pack import create_xcode_project
+
+
+def _load_pack_config(config_path: str) -> dict:
+    """Dynamically import PACK_CONFIG from an arbitrary pack_config.py path."""
+    path = Path(config_path).resolve()
+    spec = importlib.util.spec_from_file_location("pack_config_dynamic", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.PACK_CONFIG
 
 
 # =============================================================================
@@ -427,7 +437,7 @@ class IMessagePublisher:
         arr[:, :, 0] = (230 + (200 - 230) * ratios).astype(np.uint8)  # R
         arr[:, :, 1] = (210 + (220 - 210) * ratios).astype(np.uint8)  # G
         arr[:, :, 2] = 255  # B stays constant
-        screenshot = Image.fromarray(arr, "RGB")
+        screenshot = Image.fromarray(arr)
 
         if not stickers:
             return screenshot
@@ -621,11 +631,32 @@ Environment variables:
         "--icon",
         help="Path to custom icon source image (defaults to first sticker)",
     )
+    parser.add_argument(
+        "--pack-config",
+        help="Path to pack_config.py (default: auto-detect from pack_dir)",
+    )
 
     args = parser.parse_args()
 
+    # Resolve pack config: explicit --pack-config, or auto-detect from pack_dir
+    pack_config = None
+    config_path = args.pack_config
+    if not config_path:
+        search = Path(args.pack_dir).resolve()
+        for parent in [search] + list(search.parents):
+            candidate = parent / "pack_config.py"
+            if candidate.exists():
+                config_path = str(candidate)
+                print(f"  Auto-detected pack config: {config_path}")
+                break
+            if (parent / ".git").exists():
+                break
+    if config_path:
+        pack_config = _load_pack_config(config_path)
+
     publisher = IMessagePublisher(
         pack_dir=args.pack_dir,
+        pack_config=pack_config,
         dry_run=args.dry_run,
     )
 

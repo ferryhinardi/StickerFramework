@@ -15,6 +15,7 @@ Usage:
     python create_print_sheet.py pack01_emotions_v1/final/print_etsy pack01_emotions_v1/dist
 """
 
+import importlib.util
 import os
 import sys
 import zipfile
@@ -185,7 +186,9 @@ def create_distribution_zip(
     sticker_dir: str,
     sheet_paths: list[str],
     output_path: str,
-    publisher: str = "Your Brand Name",
+    publisher: str = "BobaStickers",
+    contact_email: str = "bobastickers.shop@gmail.com",
+    shop_url: str = "https://www.etsy.com/shop/BobaStickers",
 ) -> Path:
     """
     Create a complete distribution ZIP for Etsy/Gumroad.
@@ -247,8 +250,8 @@ Thank you for your purchase!
 - DO NOT: Resell, redistribute, or claim as your own creation
 
 ## Need Help?
-Contact: [your email]
-Shop: [your shop URL]
+Contact: {contact_email}
+Shop: {shop_url}
 
 Enjoy your stickers! <3
 """
@@ -273,7 +276,7 @@ This license does NOT permit:
 
 For commercial use, please purchase a Commercial License.
 
-Copyright (c) {publisher}. All rights reserved.
+Copyright (c) FHStudio / {publisher}. All rights reserved.
 """
         zf.writestr("LICENSE.txt", license_text)
 
@@ -286,19 +289,41 @@ Copyright (c) {publisher}. All rights reserved.
 # CLI ENTRY POINT
 # =============================================================================
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(
-            "Usage: python create_print_sheet.py <sticker_dir> [output_dir] [pack_name]"
-        )
-        print()
-        print("Example:")
-        print("  python create_print_sheet.py pack01_emotions_v1/final/print_etsy")
-        print("  python create_print_sheet.py stickers/ dist/ 'Mochi Emotions Vol. 1'")
-        sys.exit(1)
+    import argparse
+    from pathlib import Path
 
-    sticker_dir = sys.argv[1]
-    output_dir = sys.argv[2] if len(sys.argv) > 2 else "dist"
-    pack_name = sys.argv[3] if len(sys.argv) > 3 else "Kawaii Sticker Pack"
+    parser = argparse.ArgumentParser(
+        description="Create print-ready sticker sheets and distribution ZIP",
+    )
+    parser.add_argument("sticker_dir", help="Directory with high-res sticker PNGs")
+    parser.add_argument(
+        "output_dir", nargs="?", default="dist", help="Output directory"
+    )
+    parser.add_argument("pack_name", nargs="?", default=None, help="Pack name")
+    parser.add_argument(
+        "--pack-config",
+        help="Path to pack_config.py (auto-reads pack_name, publisher, pack_id)",
+    )
+    parser.add_argument("--publisher", default="BobaStickers", help="Publisher name")
+
+    args = parser.parse_args()
+
+    # Load pack config if provided
+    pack_name = args.pack_name or "Kawaii Sticker Pack"
+    publisher = args.publisher
+    pack_id = "pack01"
+    if args.pack_config:
+        cfg_path = Path(args.pack_config).resolve()
+        spec = importlib.util.spec_from_file_location("pack_config_dynamic", cfg_path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cfg = mod.PACK_CONFIG
+        pack_name = args.pack_name or cfg.get("pack_name", pack_name)
+        publisher = cfg.get("publisher", publisher)
+        pack_id = cfg.get("pack_id", pack_id)
+
+    sticker_dir = args.sticker_dir
+    output_dir = args.output_dir
 
     print(f"\nCreating print materials for: {pack_name}")
     print(f"{'=' * 60}")
@@ -334,11 +359,12 @@ if __name__ == "__main__":
 
     # Distribution ZIP
     create_distribution_zip(
-        pack_id="pack01",
+        pack_id=pack_id,
         pack_name=pack_name,
         sticker_dir=sticker_dir,
         sheet_paths=sheets,
         output_path=f"{output_dir}/{pack_name.replace(' ', '_').lower()}_digital_download.zip",
+        publisher=publisher,
     )
 
     print(f"\n{'=' * 60}")
