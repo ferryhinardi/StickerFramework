@@ -56,9 +56,9 @@ PACK_CONFIG = {
         # --- Sheet 1: Stickers 01–08 ---
         {
             "id": "01_good_morning",
-            "emotion": "Good Morning",
-            "pose": "Sitting up sleepily, one stubby arm rubbing eye, yawning with small open mouth",
-            "props": "Small sun icon in top-right corner, orange slightly tilted on head",
+            "emotion": "sleepy just woke up",
+            "pose": "sitting up drowsily, half-closed droopy eyes, wide open yawning mouth, one stubby arm rubbing eye",
+            "props": "small sun icon in top-right corner",
             "emoji": "🌅",
         },
         {

@@ -14,19 +14,34 @@
       "description": "A round, zen capybara with an orange on its head for every daily mood",
       "style_category": "cute",
       "character_category": "other_animals",
-      "submission_status": "not_submitted"
+      "submission_status": "waiting_for_review",
+      "sticker_id": 43216653,
+      "submission_url": "https://creator.line.me/my/LQu3ADYzrcqp2KCs/sticker/43216653",
+      "submitted_at": "2026-02-24"
     },
     "telegram": {
-      "enabled": true
+      "enabled": true,
+      "submission_status": "pending",
+      "notes": "Awaiting TELEGRAM_BOT_TOKEN and TELEGRAM_USER_ID env vars to publish via scripts/telegram_publisher.py"
     },
     "whatsapp": {
-      "enabled": true
+      "enabled": true,
+      "submission_status": "published",
+      "stickerly_url": "https://sticker.ly/s/7ZNT6Z",
+      "published_at": "2026-02-24"
     },
     "imessage": {
-      "enabled": true
+      "enabled": true,
+      "submission_status": "project_created",
+      "xcode_project_path": "CappyCapybara/",
+      "notes": "Xcode project created at repo root. Manual steps remain: add app icons, configure signing, archive & submit to App Store."
     },
     "print_etsy": {
-      "enabled": true
+      "enabled": true,
+      "submission_status": "files_ready",
+      "dist_zip": "dist/cappy_the_chill_capybara_digital_download.zip",
+      "dist_zip_size_mb": 27.3,
+      "notes": "Print sheets + ZIP generated. Manual steps remain: create Etsy listing, customize README.txt/LICENSE.txt placeholders."
     }
   },
   "content_flags": {

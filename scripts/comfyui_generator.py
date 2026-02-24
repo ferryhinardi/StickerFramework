@@ -96,37 +96,33 @@ class ComfyUIStickerGenerator:
         4. Technical/quality tokens
         """
         # 1. Style tokens front-loaded — SDXL pays most attention to early tokens
+        #    AVOID "sticker" — it triggers circular badge/die-cut framing in SDXL.
         style_prefix = (
-            "kawaii sticker, die-cut sticker, thick white outline border, "
-            "flat cell-shaded colors, no gradients, vector art, "
-            "solid pure white background, centered composition, "
-            "single character, masterpiece, best quality"
+            "kawaii chibi character illustration, flat colors, no gradients, "
+            "vector art style, (solid pure white background:1.3), "
+            "single character centered, masterpiece, best quality"
         )
 
-        # 2. Character — signature features emphasized with (parentheses) for SDXL
-        #    The accessory and species are the most important for character identity
+        # 2. Emotion FIRST, then character — front-load what matters most
+        #    Attempt #10 (seed 88) is the proven best result.
+        #    "as hat" is the ONLY phrasing that reliably places the orange on head.
+        #    Keep orange description SHORT to preserve attention for expression.
+        #    See docs/12-sdxl-prompt-engineering.md for the full experiment log.
         char_desc = (
-            f"(a round potato-shaped {character['species']}:1.3), "
-            f"(small orange fruit sitting on top of head:1.4), "
-            f"chibi proportions, {character['proportions']}, "
-            f"(warm brown body:1.1), "
-            f"(soft pink blush on both cheeks:1.1), "
-            f"{character['eye_style']}, "
-            f"small rounded ears, short flat wide nose, no whiskers, "
-            f"thick dark brown outline"
+            f"(closed eyes yawning:1.5), (drowsy sleepy face:1.4), "
+            f"(cute round chubby {character['species']}:1.3), "
+            f"(wearing tiny orange fruit as hat on head:1.4), "
+            f"warm brown fur, soft pink cheeks, "
+            f"small round ears, "
+            f"potato-shaped body, tiny stubby legs"
         )
 
-        # 3. This sticker's specific pose/emotion — action is important
-        sticker_desc = (
-            f"({sticker['emotion']} expression:1.2), "
-            f"{sticker['pose']}, "
-            f"{sticker['props']}"
-        )
+        # 3. This sticker's specific pose
+        sticker_desc = f"({sticker['pose']}:1.2)"
 
-        # 4. Style reinforcement
+        # 4. Style reinforcement — keep minimal
         style_suffix = (
-            f"{style['coloring']}, {style['outline_type']}, "
-            "simple minimal design, professional sticker quality, "
+            "flat colors, thick dark outline, simple minimal design, "
             "no text, no words, no letters"
         )
 
@@ -137,14 +133,27 @@ class ComfyUIStickerGenerator:
         return (
             "text, words, letters, numbers, alphabet, writing, caption, label, "
             "watermark, signature, logo, "
-            "circular frame, circular border, round frame, badge, emblem, stamp, "
+            "sticker, die-cut sticker, circular frame, circular border, round frame, "
+            "badge, emblem, stamp, die-cut border, sticker outline, "
+            "white border, cut-out shape, border, frame, "
             "blurry, low quality, low resolution, jpeg artifacts, "
             "realistic, photograph, photorealistic, 3d render, "
             "gradient shading, complex background, detailed background, patterned background, "
+            "gray background, beige background, colored background, dark background, "
+            "green background, sage background, blue background, "
             "multiple characters, duplicate, "
             "ugly, deformed, disfigured, bad anatomy, bad proportions, "
-            "extra limbs, extra fingers, mutated, whiskers, "
-            "dark background, colored background, "
+            "extra limbs, extra fingers, mutated, "
+            "(whiskers:1.4), cat whiskers, long whiskers, prominent whiskers, facial hair, "
+            "cat, feline, hamster, beaver, "
+            "holding fruit, carrying orange, orange in hands, orange in paws, "
+            "two oranges, multiple oranges, second orange, "
+            "large orange, big orange, orange covering head, "
+            "floating orange, orange above head, orange in air, "
+            "(wide open eyes:1.3), (open eyes:1.2), awake, alert, energetic, staring, surprised look, "
+            "tongue out, playful, "
+            "orange helmet, orange hat covering head, orange hat with brim, hat brim, cap brim, visor, "
+            "knit hat, beanie, winter hat, bucket hat, "
             "nsfw, violence"
         )
 

@@ -117,7 +117,8 @@ class StickerProcessor:
         h, w = arr.shape[:2]
 
         # Mark pixels that are white enough to be background candidates
-        white_threshold = 230
+        # Threshold 225 handles off-white/cream backgrounds from some DALL-E outputs
+        white_threshold = 225
         white_mask = np.all(arr > white_threshold, axis=2)
 
         # Label connected regions using 8-connectivity (diagonal gaps included)
