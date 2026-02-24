@@ -1,0 +1,43 @@
+{
+  "pack_name": "Cappy the Chill Capybara Vol.3",
+  "pack_id": "cappy-capybara-3",
+  "version": "1.0",
+  "character": "Cappy",
+  "theme": "chatty-text-stickers",
+  "description": "Cappy speaks! 16 text-based chat stickers for every daily conversation — SUP, NOPE, SLAY, MOOD, and more. Every sticker features bold readable text.",
+  "language": "en",
+  "sticker_count": 16,
+  "sequel_of": "cappy-capybara-2",
+  "platforms": {
+    "line": {
+      "enabled": true,
+      "title": "Cappy the Chill Capybara Vol.3",
+      "description": "Cappy speaks! 16 chatty stickers with text for everyday conversations — SUP, NOPE, LET'S GO, SLAY, MOOD & more!",
+      "style_category": "cute",
+      "character_category": "other_animals",
+      "submission_status": "not_started"
+    },
+    "telegram": {
+      "enabled": true,
+      "submission_status": "not_started"
+    },
+    "whatsapp": {
+      "enabled": true,
+      "submission_status": "not_started"
+    },
+    "imessage": {
+      "enabled": true,
+      "submission_status": "not_started"
+    },
+    "print_etsy": {
+      "enabled": true,
+      "submission_status": "not_started"
+    }
+  },
+  "content_flags": {
+    "contains_religious_content": false,
+    "contains_violence": false,
+    "contains_adult_content": false,
+    "line_guideline_3_13_risk": "none"
+  }
+}

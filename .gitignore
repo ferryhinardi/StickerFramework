@@ -58,6 +58,8 @@ reference/stickers-gen/
 fastlane/report.xml
 fastlane/README.md
 fastlane/test_output/
+fastlane/screenshots/
+packs/*/imessage_build/
 *.ipa
 *.dSYM.zip
 
