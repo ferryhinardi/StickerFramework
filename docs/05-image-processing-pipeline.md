@@ -204,7 +204,16 @@ Input: split/01_name.png (512x512, transparent)
        - Purpose: Visibility on dark chat backgrounds + brand consistency
                 │
                 ▼
-    4. Resize to Platform Specs
+    4. Text Overlay (optional, requires --pack-config)
+       - Reads per-sticker "text" field from pack_config.py
+       - Auto-sizes font to fit ~80% of image width (binary search)
+       - Renders text with configurable fill color + stroke
+       - Supports positions: "top" (~5%), "center" (50%), "bottom" (~82%)
+       - Font fallback: Fredoka One → Arial Rounded Bold → Marker Felt → PIL default
+       - Skipped for stickers with no "text" field
+                │
+                ▼
+    5. Resize to Platform Specs
        - Fit within 90% of target dimensions (preserving aspect ratio)
        - Center on transparent canvas at target dimensions
        - Enforce even-numbered width and height (LINE requirement)
@@ -221,30 +230,65 @@ Output: final/line/01_name.png (370x320)
         final/line_tab/01_name.png (96x74)
 ```
 
+### Text Overlay Configuration
+
+Text overlay is controlled per-sticker via the `text` field in `pack_config.py`. Two forms are supported:
+
+**Simple** (all defaults):
+```python
+"text": "NOTED!"
+```
+
+**Full dictionary**:
+```python
+"text": {
+    "content": "NOTED!",           # required - the text to show
+    "position": "bottom",          # "top" | "bottom" | "center" (default "bottom")
+    "font_size": "auto",           # "auto" or explicit int (default "auto")
+    "color": "#FFFFFF",            # hex fill color (default white)
+    "stroke_color": "#4A3728",     # hex stroke color (default dark brown)
+    "stroke_width": 8,             # stroke px at render resolution (default 8)
+    "style": "bold",               # "bold" | "regular" (default "bold")
+}
+```
+
+Position presets: `"top"` = ~5% from top, `"center"` = vertically centered, `"bottom"` = ~82% from top.
+
+Font fallback chain: `FredokaOne-Regular.ttf` (OFL) → `ArialRoundedBold.ttf` → system Arial Rounded Bold → `MarkerFelt.ttc` → PIL default bitmap.
+
 ### Usage
 
 ```bash
-python sticker_processor.py <input_dir> <output_dir> <platforms...> [--skip-bg]
+python sticker_processor.py <input_dir> <output_dir> <platforms...> [--skip-bg] [--pack-config PATH]
 ```
 
 #### LINE-Specific Command
 
 ```bash
+# Without text overlay
 python sticker_processor.py \
     packs/boba-milo-5/split \
     packs/boba-milo-5/final \
     line line_main line_tab \
     --skip-bg
+
+# With text overlay (reads per-sticker "text" fields from pack_config.py)
+python sticker_processor.py \
+    packs/cappy-capybara-2/raw \
+    packs/cappy-capybara-2/final \
+    line line_main line_tab whatsapp telegram imessage_large print_etsy \
+    --pack-config packs/cappy-capybara-2/pack_config.py
 ```
 
 #### Arguments
 
-| Argument     | Description                                               |
-| ------------ | --------------------------------------------------------- |
-| `input_dir`  | Directory containing source sticker PNGs                  |
-| `output_dir` | Base output directory (subdirs created per platform)      |
-| `platforms`  | Space-separated list of target platforms                  |
-| `--skip-bg`  | Skip background removal (use when bg already transparent) |
+| Argument        | Description                                               |
+| --------------- | --------------------------------------------------------- |
+| `input_dir`     | Directory containing source sticker PNGs                  |
+| `output_dir`    | Base output directory (subdirs created per platform)      |
+| `platforms`     | Space-separated list of target platforms                  |
+| `--skip-bg`     | Skip background removal (use when bg already transparent) |
+| `--pack-config` | Path to pack_config.py for per-sticker text overlay       |
 
 ### Platform Specs
 
@@ -331,6 +375,9 @@ For automated end-to-end processing, `run_pipeline.py` chains all stages:
 ```bash
 # Process-only mode (no DALL-E generation)
 python run_pipeline.py --process-only --input packs/boba-milo-5
+
+# Use a specific pack config
+python run_pipeline.py --pack packs/cappy-capybara-2/pack_config.py --process-only
 
 # Full pipeline (generate + process)
 python run_pipeline.py --input packs/boba-milo-5

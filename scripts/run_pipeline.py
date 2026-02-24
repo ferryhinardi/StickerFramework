@@ -46,9 +46,13 @@ Usage:
 
     # Export stickers for WhatsApp native Android app:
     python run_pipeline.py --process-only --whatsapp-native
+
+    # Use a specific pack config:
+    python run_pipeline.py --pack packs/cappy-capybara-2/pack_config.py --process-only
 """
 
 import argparse
+import importlib.util
 import json
 import os
 import sys
@@ -62,7 +66,22 @@ if str(_SCRIPTS_DIR) not in sys.path:
 # Repo root (parent of scripts/)
 REPO_ROOT = _SCRIPTS_DIR.parent
 
-from pack_config import PACK_CONFIG
+
+def _load_pack_config(pack_path: str | None) -> dict:
+    """Dynamically import PACK_CONFIG from a given path or fall back to scripts/pack_config.py."""
+    if pack_path:
+        p = Path(pack_path).resolve()
+        if not p.exists():
+            print(f"ERROR: Pack config not found: {p}")
+            sys.exit(1)
+        spec = importlib.util.spec_from_file_location("pack_config_dyn", p)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.PACK_CONFIG
+    # Default: import from scripts/pack_config.py (already on sys.path)
+    from pack_config import PACK_CONFIG
+
+    return PACK_CONFIG
 
 
 def stage_generate(
@@ -551,6 +570,12 @@ Examples:
 """,
     )
     parser.add_argument(
+        "--pack",
+        type=str,
+        default=None,
+        help="Path to pack_config.py (default: scripts/pack_config.py)",
+    )
+    parser.add_argument(
         "--process-only",
         action="store_true",
         help="Skip image generation, process existing raw images",
@@ -644,7 +669,7 @@ Examples:
     )
     args = parser.parse_args()
 
-    config = PACK_CONFIG
+    config = _load_pack_config(args.pack)
 
     print("\n" + "=" * 70)
     print(f"  STICKER PIPELINE: {config['pack_name']}")

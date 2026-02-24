@@ -121,6 +121,7 @@ Each sticker is a dictionary with emotion, pose, and prop details.
     "pose": "Jumping with both paws up, eyes squeezed shut smiling",
     "props": "Three sparkles floating around, small rainbow above",
     "emoji": "😊",
+    "text": "YAY!",
 }
 ```
 
@@ -133,6 +134,62 @@ Each sticker is a dictionary with emotion, pose, and prop details.
 | `pose` | Yes | Detailed pose description | DALL-E prompt |
 | `props` | Yes | Visual props and effects | DALL-E prompt |
 | `emoji` | Yes | Associated emoji | Telegram, metadata |
+| `text` | No | Text overlay config (string or dict) | Post-processing text rendering |
+
+### Text Overlay
+
+The `text` field is **optional** per sticker and controls text rendered as a post-processing step (via PIL), not baked into the AI generation prompt. Text is rendered after background removal, color normalization, and white outline — but before platform-specific resizing.
+
+**Simple form** — uses all defaults (white text, dark brown stroke, bottom position, auto font size):
+
+```python
+"text": "NOTED!"
+```
+
+**Full dict form** — fine-grained control:
+
+```python
+"text": {
+    "content": "NOTED!",           # required — the text to show
+    "position": "bottom",          # "top" | "bottom" | "center" (default "bottom")
+    "font_size": "auto",           # "auto" fits ~80% width, or explicit int (default "auto")
+    "color": "#FFFFFF",            # hex fill color (default white)
+    "stroke_color": "#4A3728",     # hex stroke color (default dark brown)
+    "stroke_width": 8,             # stroke px at render resolution (default 8)
+    "style": "bold",               # "bold" | "regular" (default "bold")
+}
+```
+
+**Text config fields:**
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `content` | str | *(required)* | The text to render on the sticker |
+| `position` | str | `"bottom"` | Vertical position: `"top"` (~5% from top), `"center"`, or `"bottom"` (~82%) |
+| `font_size` | str \| int | `"auto"` | `"auto"` uses binary search to fit ~80% width; or explicit pixel size |
+| `color` | str | `"#FFFFFF"` | Fill color (hex) |
+| `stroke_color` | str | `"#4A3728"` | Stroke/outline color (hex) |
+| `stroke_width` | int | `8` | Stroke width in pixels at render resolution |
+| `style` | str | `"bold"` | Font style: `"bold"` or `"regular"` |
+
+**Example** — a sticker with custom text styling:
+
+```python
+{
+    "id": "05_ok",
+    "emotion": "OK",
+    "pose": "Standing with one paw raised in thumbs-up gesture",
+    "props": "Sparkle near the thumbs-up paw",
+    "emoji": "👍",
+    "text": {
+        "content": "OK!",
+        "position": "bottom",
+        "color": "#FFD700",
+        "stroke_color": "#4A3728",
+        "stroke_width": 10,
+    },
+}
+```
 
 ### Writing Effective Sticker Descriptions
 
@@ -281,7 +338,7 @@ The `brand_kit.md` file serves as the visual identity reference. Key elements to
 
 - **Color palette**: Consistent body color, blush color, outline color
 - **Typography**: Rounded sans-serif (Nunito Bold) for external branding
-- **No text in stickers**: Ensures international market compatibility
+- **No AI-generated text**: Text is never baked into AI prompts (avoids garbled text). Use the `text` field for clean PIL-rendered overlays
 - **Consistent accessory**: The gold star pin on Mochi's left ear appears in every sticker
 - **Expression guide**: Standardized ways to show emotions (blue teardrops, steam for anger, etc.)
 

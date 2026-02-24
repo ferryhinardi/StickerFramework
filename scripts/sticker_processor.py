@@ -174,7 +174,7 @@ class StickerProcessor:
         result[:, :, :3] = arr
         result[:, :, 3] = np.where(bg_mask, 0, 255)
 
-        return Image.fromarray(result, "RGBA")
+        return Image.fromarray(result)  # dtype uint8 + 4 channels → RGBA
 
     def add_white_outline(
         self, img: Image.Image, width: int | None = None
@@ -217,11 +217,15 @@ class StickerProcessor:
     _FONTS_DIR = Path(__file__).resolve().parent.parent / "fonts"
     _FONT_PATHS = {
         "bold": [
+            _FONTS_DIR
+            / "FredokaOne-Regular.ttf",  # bundled OFL — rounded, thick, perfect for stickers
             _FONTS_DIR / "ArialRoundedBold.ttf",  # bundled — bubbly, thick
             Path("/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf"),
             _FONTS_DIR / "MarkerFelt.ttc",  # bundled — casual handwritten
         ],
         "regular": [
+            _FONTS_DIR
+            / "FredokaOne-Regular.ttf",  # bundled OFL — works well at regular weight too
             _FONTS_DIR / "ArialRoundedBold.ttf",  # still looks good at regular weight
             Path("/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf"),
         ],

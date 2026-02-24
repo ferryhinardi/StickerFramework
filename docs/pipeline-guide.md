@@ -40,6 +40,9 @@ export TELEGRAM_USER_ID="your_numeric_user_id"
 
 ```bash
 python run_pipeline.py
+
+# Or with a specific pack config:
+python run_pipeline.py --pack packs/cappy-capybara-2/pack_config.py
 ```
 
 This executes stages 1-5:
@@ -80,6 +83,7 @@ python run_pipeline.py [OPTIONS]
 
 | Flag | Description | Default |
 |------|-------------|---------|
+| `--pack <PATH>` | Path to `pack_config.py` file | `scripts/pack_config.py` |
 | `--process-only` | Skip generation, use existing raw images | Off |
 | `--generate-only` | Only generate images, skip processing | Off |
 | `--input <DIR>` | Custom input directory for `--process-only` | None |
@@ -164,7 +168,28 @@ python run_pipeline.py --standard
 4. Re-run the pipeline -- it will only regenerate missing stickers
 5. Process again with `--process-only`
 
-### Workflow 6: Telegram-Only Publish
+### Workflow 6: Process with Text Overlays
+
+If your `pack_config.py` includes `"text"` fields on individual stickers, use `--pack-config` with the standalone processor:
+
+```bash
+# Process raw images and render text on stickers that have a "text" key
+python scripts/sticker_processor.py packs/cappy-capybara-2/raw/ \
+    packs/cappy-capybara-2/final/ \
+    --pack-config packs/cappy-capybara-2/pack_config.py
+```
+
+Or via the full pipeline with `--pack`:
+
+```bash
+python scripts/run_pipeline.py --pack packs/cappy-capybara-2/pack_config.py --process-only
+```
+
+Text is rendered as a **post-processing** step (via PIL) after background removal, color normalization, and white outline — but before platform-specific resize. This ensures crisp text at every output size.
+
+See [Configuration Guide — Text Overlay](configuration.md#text-overlay) for the full text config schema.
+
+### Workflow 7: Telegram-Only Publish
 
 If you have already-processed stickers and just want to publish to Telegram:
 

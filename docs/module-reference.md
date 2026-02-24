@@ -10,6 +10,17 @@ Detailed API reference for every module in StickerFramework.
 
 ### Functions
 
+#### `_load_pack_config(pack_path: str | None) -> dict`
+Dynamically imports `PACK_CONFIG` from a given file path, or falls back to the default `scripts/pack_config.py`.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `pack_path` | str \| None | `None` | Path to a `pack_config.py` file. If `None`, imports from `scripts/pack_config.py` |
+
+**Returns**: The `PACK_CONFIG` dictionary from the loaded module.
+
+**Error handling**: Exits with `sys.exit(1)` if the specified path does not exist.
+
 #### `stage_generate(config, output_dir, quality)`
 Generates raw sticker images using DALL-E 3.
 
@@ -45,9 +56,20 @@ Creates print sheets (US Letter + A4), social preview image, and distribution ZI
 ### CLI Entry Point
 
 ```
-python run_pipeline.py [--process-only] [--generate-only] [--input DIR]
+python run_pipeline.py [--pack PATH] [--process-only] [--generate-only] [--input DIR]
                        [--skip-bg] [--standard] [--telegram] [--imessage]
 ```
+
+| Flag | Description |
+|------|-------------|
+| `--pack PATH` | Path to a `pack_config.py` file (default: `scripts/pack_config.py`) |
+| `--process-only` | Skip image generation, process existing raw images |
+| `--generate-only` | Generate raw images only, skip processing |
+| `--input DIR` | Input directory of raw images (for `--process-only`) |
+| `--skip-bg` | Skip background removal |
+| `--standard` | Use DALL-E standard quality ($0.04) instead of HD ($0.08) |
+| `--telegram` | Include Telegram platform export |
+| `--imessage` | Include iMessage platform export |
 
 ---
 
@@ -177,6 +199,44 @@ Resizes image to platform dimensions with transparent padding.
 
 **Behavior**: Fits image to 90% of target dimensions (maintaining aspect ratio), then centers on a transparent canvas of the exact platform dimensions.
 
+#### `_resolve_font(cls, style: str, size: int) -> ImageFont.FreeTypeFont`
+Class method that resolves a TrueType font from the bundled fallback chain.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `style` | str | `"bold"` | `"bold"` or `"regular"` |
+| `size` | int | `72` | Font point size |
+
+**Font fallback chain** (bold): FredokaOne-Regular.ttf → ArialRoundedBold.ttf → MarkerFelt.ttc → PIL default bitmap.
+
+**Returns**: `ImageFont.FreeTypeFont`, or PIL's default bitmap font as last resort.
+
+#### `add_text_overlay(self, img: PIL.Image, text_config: dict | str) -> PIL.Image`
+Renders text on top of a processed sticker image. Called AFTER `add_white_outline()` and BEFORE `resize_to_spec()`, so text is rendered at full resolution (typically 1024x1024) and scales cleanly for every target platform.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `img` | PIL.Image | RGBA image with outline already applied |
+| `text_config` | dict \| str | Plain string (uses all defaults) or a config dict (see below) |
+
+**Text config dict fields:**
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `content` | str | *(required)* | The text to render |
+| `position` | str | `"bottom"` | `"top"`, `"bottom"`, or `"center"` |
+| `font_size` | str \| int | `"auto"` | `"auto"` fits ~80% width, or explicit int |
+| `color` | str | `"#FFFFFF"` | Hex fill color |
+| `stroke_color` | str | `"#4A3728"` | Hex stroke color |
+| `stroke_width` | int | `8` | Stroke width in pixels at render resolution |
+| `style` | str | `"bold"` | `"bold"` or `"regular"` |
+
+**Position presets**: `"top"` = ~5% from top, `"center"` = vertically centered, `"bottom"` = ~82% from top.
+
+**Auto font sizing**: Uses binary search to find the largest font size where the text fits within ~80% of the image width.
+
+**Returns**: New RGBA image with text composited on top.
+
 #### `save_optimized(img: PIL.Image, output_path: str, platform: str) -> str`
 Format-specific optimization and saving.
 
@@ -184,24 +244,56 @@ Format-specific optimization and saving.
 
 **PNG optimization**: Uses Pillow's `optimize=True` flag. If still over `max_kb`, applies color quantization (256 colors).
 
-#### `process_single(input_path, output_dir, platforms, skip_bg_removal) -> dict`
-Full 4-step pipeline for one image.
+#### `process_single(input_path, output_dir, platforms, skip_bg_removal, sticker_config) -> dict`
+Full 5-step pipeline for one image.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `input_path` | str | - | Path to raw image (PNG/JPG) |
+| `output_dir` | str | - | Base output directory |
+| `platforms` | list | - | Target platform keys (from `SPECS`) |
+| `skip_bg_removal` | bool | `False` | Skip background removal |
+| `sticker_config` | dict \| None | `None` | Per-sticker config dict. If it contains a `"text"` key, text overlay is applied |
 
 **Pipeline steps**:
 1. `remove_background()` (unless `skip_bg_removal=True`)
 2. `normalize_colors()`
 3. `add_white_outline()`
-4. `resize_to_spec()` + `save_optimized()` for each platform
+4. `add_text_overlay()` (only if `sticker_config` has a `"text"` key)
+5. `resize_to_spec()` + `save_optimized()` for each platform
 
 **Returns**: Dictionary mapping platform names to output file paths.
 
-#### `process_batch(input_dir, output_dir, platforms, skip_bg_removal) -> list`
+#### `process_batch(input_dir, output_dir, platforms, skip_bg_removal, sticker_configs) -> list`
 Processes all PNG/JPG/JPEG/WebP images in a directory.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `input_dir` | str | - | Directory containing raw images |
+| `output_dir` | str | - | Base output directory (subdirs per platform) |
+| `platforms` | list | - | Target platform keys |
+| `skip_bg_removal` | bool | `False` | Skip background removal |
+| `sticker_configs` | list[dict] \| None | `None` | Optional list of per-sticker config dicts (matched by sticker `id` to filename) |
 
 **Returns**: List of result dicts from `process_single()`.
 
 #### `create_tray_icon(source_path, output_path, platform) -> str`
 Creates a tray/tab icon from an existing processed sticker.
+
+### CLI Entry Point
+
+```
+python sticker_processor.py <input_dir> <output_dir> [platforms...]
+                            [--skip-bg] [--pack-config PATH]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `input_dir` | Directory of raw sticker images |
+| `output_dir` | Base output directory |
+| `platforms...` | Platform keys (e.g., `whatsapp telegram line`) |
+| `--skip-bg` | Skip background removal |
+| `--pack-config PATH` | Path to `pack_config.py` for per-sticker text overlay. Matches stickers by `id` field to filenames |
 
 ---
 
