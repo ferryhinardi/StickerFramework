@@ -22,7 +22,10 @@
     },
     "telegram": {
       "enabled": true,
-      "submission_status": "not_started"
+      "submission_status": "published",
+      "pack_name": "CappyChillV3_by_BobaStickersBot",
+      "url": "https://t.me/addstickers/CappyChillV3_by_BobaStickersBot",
+      "published_date": "2026-02-24"
     },
     "whatsapp": {
       "enabled": true,

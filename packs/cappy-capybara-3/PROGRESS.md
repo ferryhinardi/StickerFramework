@@ -3,7 +3,7 @@
 > **Purpose**: Resume-friendly checklist. If you hit `Request Entity Too Large`,
 > just pick up from the next unchecked `[ ]` item.
 >
-> **Last updated**: 2026-02-24 (LINE submitted for review; WhatsApp/Telegram/iMessage pending manual setup)
+> **Last updated**: 2026-02-24 (LINE submitted; Telegram published; WhatsApp/iMessage pending manual setup)
 
 ---
 
@@ -129,7 +129,7 @@
 
 ---
 
-## Phase 6: Package for Distribution (LINE submitted; WhatsApp/Telegram/iMessage need manual action)
+## Phase 6: Package for Distribution (LINE submitted; Telegram published; WhatsApp/iMessage need manual action)
 
 ### 6A: Print / Etsy (COMPLETE)
 
@@ -162,17 +162,14 @@
 - [ ] Pack name, author, tags set
 - [ ] Published
 
-### 6D: Telegram — PENDING CREDENTIALS
-
-> **Requires**: `TELEGRAM_BOT_TOKEN` and `TELEGRAM_USER_ID` environment variables.
-> Setup: Message @BotFather on Telegram -> /newbot -> get token;
-> message @userinfobot -> get numeric user ID.
-> Then run: `python3 scripts/telegram_publisher.py packs/cappy-capybara-3/final/telegram CappyChillV3_by_<BotName> "Cappy the Chill Capybara Vol.3"`
+### 6D: Telegram (COMPLETE — Published)
 
 - [x] Confirmed `final/telegram/` has 16 WEBPs (512x512)
-- [ ] Set TELEGRAM_BOT_TOKEN and TELEGRAM_USER_ID in .env
-- [ ] Run Telegram publisher or manual upload via @Stickers bot
-- [ ] Set sticker emojis from pack_config.py emoji field
+- [x] Set TELEGRAM_BOT_TOKEN and TELEGRAM_USER_ID in .env
+- [x] Run Telegram publisher with --pack-config for emoji mapping
+- [x] Pack name: **CappyChillV3_by_BobaStickersBot**
+- [x] URL: https://t.me/addstickers/CappyChillV3_by_BobaStickersBot
+- [x] Published: 2026-02-24
 
 ### 6E: iMessage — PENDING APPLE DEVELOPER CREDENTIALS
 
@@ -193,7 +190,7 @@
   - [x] LINE — submitted (sticker ID 43221908, waiting for review)
   - [x] Print/Etsy — dist ZIP ready (32.6MB)
   - [ ] WhatsApp — pending manual Sticker.ly upload
-  - [ ] Telegram — pending bot credentials
+  - [x] Telegram — published (https://t.me/addstickers/CappyChillV3_by_BobaStickersBot)
   - [ ] iMessage — pending Apple developer credentials
 - [x] `pack_metadata.json` updated with LINE submission status and sticker ID
 - [x] No temp files or duplicates left behind
