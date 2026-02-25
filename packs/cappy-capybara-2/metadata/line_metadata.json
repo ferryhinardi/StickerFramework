@@ -1,0 +1,90 @@
+{
+  "title": {
+    "en": "Cappy the Chill Capybara Vol.2"
+  },
+  "author": {
+    "en": "BobaStickers"
+  },
+  "stickers": [
+    {
+      "id": 1,
+      "filename": "01_omg.png",
+      "emoji": "\ud83d\ude31"
+    },
+    {
+      "id": 2,
+      "filename": "02_no_way.png",
+      "emoji": "\ud83d\ude35"
+    },
+    {
+      "id": 3,
+      "filename": "03_noted.png",
+      "emoji": "\ud83e\udee1"
+    },
+    {
+      "id": 4,
+      "filename": "04_brb.png",
+      "emoji": "\ud83c\udfc3"
+    },
+    {
+      "id": 5,
+      "filename": "05_wait_what.png",
+      "emoji": "\ud83e\udd28"
+    },
+    {
+      "id": 6,
+      "filename": "06_lmao.png",
+      "emoji": "\ud83e\udd23"
+    },
+    {
+      "id": 7,
+      "filename": "07_yay.png",
+      "emoji": "\ud83c\udf89"
+    },
+    {
+      "id": 8,
+      "filename": "08_send_help.png",
+      "emoji": "\ud83d\ude35\u200d\ud83d\udcab"
+    },
+    {
+      "id": 9,
+      "filename": "09_dead_tired.png",
+      "emoji": "\ud83e\udea6"
+    },
+    {
+      "id": 10,
+      "filename": "10_jealous.png",
+      "emoji": "\ud83e\udd24"
+    },
+    {
+      "id": 11,
+      "filename": "11_judging.png",
+      "emoji": "\ud83e\udd28"
+    },
+    {
+      "id": 12,
+      "filename": "12_hug.png",
+      "emoji": "\ud83e\udd17"
+    },
+    {
+      "id": 13,
+      "filename": "13_oops.png",
+      "emoji": "\ud83d\ude05"
+    },
+    {
+      "id": 14,
+      "filename": "14_deal_with_it.png",
+      "emoji": "\ud83d\ude0e"
+    },
+    {
+      "id": 15,
+      "filename": "15_fighting.png",
+      "emoji": "\ud83d\udcaa"
+    },
+    {
+      "id": 16,
+      "filename": "16_miss_you.png",
+      "emoji": "\ud83e\udd7a"
+    }
+  ]
+}

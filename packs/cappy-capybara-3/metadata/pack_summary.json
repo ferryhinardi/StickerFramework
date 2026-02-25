@@ -1,0 +1,95 @@
+{
+  "pack_id": "cappy-capybara-3",
+  "pack_name": "Cappy the Chill Capybara Vol.3",
+  "publisher": "BobaStickers",
+  "sticker_count": 16,
+  "platforms": [
+    "line",
+    "telegram",
+    "whatsapp",
+    "imessage_large",
+    "print_etsy"
+  ],
+  "stickers": [
+    {
+      "id": "01_sup",
+      "emotion": "Casual Greeting / Hey",
+      "emoji": "\ud83d\udc4b"
+    },
+    {
+      "id": "02_same",
+      "emotion": "Relatable / Me Too",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": "03_nope",
+      "emotion": "Refusal / Hard No",
+      "emoji": "\ud83d\ude45"
+    },
+    {
+      "id": "04_lets_go",
+      "emotion": "Pumped Up / Let's Do This",
+      "emoji": "\ud83d\udd25"
+    },
+    {
+      "id": "05_why",
+      "emotion": "Confused / Existential Why",
+      "emoji": "\ud83d\ude15"
+    },
+    {
+      "id": "06_food",
+      "emotion": "Craving Food / Hungry Excited",
+      "emoji": "\ud83c\udf5c"
+    },
+    {
+      "id": "07_no_money",
+      "emotion": "Broke / No Budget",
+      "emoji": "\ud83d\udcb8"
+    },
+    {
+      "id": "08_on_my_way",
+      "emotion": "Coming / Almost There",
+      "emoji": "\ud83d\udef5"
+    },
+    {
+      "id": "09_chill",
+      "emotion": "Relaxed / Vibing",
+      "emoji": "\u2728"
+    },
+    {
+      "id": "10_ugh",
+      "emotion": "Annoyed / Fed Up",
+      "emoji": "\ud83d\ude24"
+    },
+    {
+      "id": "11_slay",
+      "emotion": "Fabulous / Killing It",
+      "emoji": "\ud83d\udc85"
+    },
+    {
+      "id": "12_its_fine",
+      "emotion": "Everything Is Fine / Denial",
+      "emoji": "\ud83d\udd25"
+    },
+    {
+      "id": "13_pls",
+      "emotion": "Begging / Pretty Please",
+      "emoji": "\ud83e\udd7a"
+    },
+    {
+      "id": "14_wut",
+      "emotion": "Dumbfounded / Processing",
+      "emoji": "\ud83e\uddd0"
+    },
+    {
+      "id": "15_ttyl",
+      "emotion": "Gotta Go / Talk Later",
+      "emoji": "\ud83d\udc4b"
+    },
+    {
+      "id": "16_mood",
+      "emotion": "Big Mood / That's So Me",
+      "emoji": "\ud83d\udecb\ufe0f"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "title": {
+    "en": "Chubby Mochi Hamster Vol.2: Study Mode"
+  },
+  "author": {
+    "en": "BobaStickers"
+  },
+  "stickers": [
+    {
+      "id": 1,
+      "filename": "01_studying.png",
+      "emoji": "\ud83d\udcd6"
+    },
+    {
+      "id": 2,
+      "filename": "02_brain_full.png",
+      "emoji": "\ud83e\udd2f"
+    },
+    {
+      "id": 3,
+      "filename": "03_eureka.png",
+      "emoji": "\ud83d\udca1"
+    },
+    {
+      "id": 4,
+      "filename": "04_lets_go.png",
+      "emoji": "\ud83d\udd25"
+    },
+    {
+      "id": 5,
+      "filename": "05_need_coffee.png",
+      "emoji": "\u2615"
+    },
+    {
+      "id": 6,
+      "filename": "06_quiz_time.png",
+      "emoji": "\u270f\ufe0f"
+    },
+    {
+      "id": 7,
+      "filename": "07_aced_it.png",
+      "emoji": "\ud83d\udcaf"
+    },
+    {
+      "id": 8,
+      "filename": "08_help_me.png",
+      "emoji": "\u2753"
+    },
+    {
+      "id": 9,
+      "filename": "09_break_time.png",
+      "emoji": "\ud83d\ude0c"
+    },
+    {
+      "id": 10,
+      "filename": "10_due_tomorrow.png",
+      "emoji": "\ud83d\ude28"
+    },
+    {
+      "id": 11,
+      "filename": "11_good_luck.png",
+      "emoji": "\ud83c\udf40"
+    },
+    {
+      "id": 12,
+      "filename": "12_so_tired.png",
+      "emoji": "\ud83d\ude35"
+    },
+    {
+      "id": 13,
+      "filename": "13_you_can_do_it.png",
+      "emoji": "\ud83d\udce3"
+    },
+    {
+      "id": 14,
+      "filename": "14_procrastinating.png",
+      "emoji": "\ud83d\udcf1"
+    },
+    {
+      "id": 15,
+      "filename": "15_group_study.png",
+      "emoji": "\ud83d\udc65"
+    },
+    {
+      "id": 16,
+      "filename": "16_all_done.png",
+      "emoji": "\u2705"
+    }
+  ]
+}

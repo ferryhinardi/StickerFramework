@@ -1,0 +1,95 @@
+{
+  "pack_id": "cappy-capybara",
+  "pack_name": "Cappy the Chill Capybara",
+  "publisher": "BobaStickers",
+  "sticker_count": 16,
+  "platforms": [
+    "line",
+    "telegram",
+    "whatsapp",
+    "imessage_large",
+    "print_etsy"
+  ],
+  "stickers": [
+    {
+      "id": "01_good_morning",
+      "emotion": "sleepy just woke up",
+      "emoji": "\ud83c\udf05"
+    },
+    {
+      "id": "02_ok_thumbs_up",
+      "emotion": "OK / Thumbs Up",
+      "emoji": "\ud83d\udc4d"
+    },
+    {
+      "id": "03_thank_you",
+      "emotion": "Thank You",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": "04_lol",
+      "emotion": "LOL / Laughing",
+      "emoji": "\ud83d\ude02"
+    },
+    {
+      "id": "05_love",
+      "emotion": "Love / Heart",
+      "emoji": "\u2764\ufe0f"
+    },
+    {
+      "id": "06_sleepy",
+      "emotion": "Sleepy / Zzz",
+      "emoji": "\ud83d\ude34"
+    },
+    {
+      "id": "07_hungry",
+      "emotion": "Hungry",
+      "emoji": "\ud83e\udd24"
+    },
+    {
+      "id": "08_working_hard",
+      "emotion": "Working Hard / Busy",
+      "emoji": "\ud83d\udcbb"
+    },
+    {
+      "id": "09_excited",
+      "emotion": "Excited / Yay",
+      "emoji": "\ud83e\udd29"
+    },
+    {
+      "id": "10_sad",
+      "emotion": "Sad",
+      "emoji": "\ud83d\ude22"
+    },
+    {
+      "id": "11_angry",
+      "emotion": "Angry / Frustrated",
+      "emoji": "\ud83d\ude24"
+    },
+    {
+      "id": "12_sorry",
+      "emotion": "Sorry / Apologize",
+      "emoji": "\ud83d\ude47"
+    },
+    {
+      "id": "13_bye",
+      "emotion": "Bye Bye",
+      "emoji": "\ud83d\udc4b"
+    },
+    {
+      "id": "14_thinking",
+      "emotion": "Thinking / Hmm",
+      "emoji": "\ud83e\udd14"
+    },
+    {
+      "id": "15_cheering",
+      "emotion": "Cheering / You Can Do It",
+      "emoji": "\ud83d\udcaa"
+    },
+    {
+      "id": "16_good_night",
+      "emotion": "Good Night",
+      "emoji": "\ud83c\udf19"
+    }
+  ]
+}

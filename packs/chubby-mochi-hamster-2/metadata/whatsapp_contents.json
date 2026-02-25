@@ -1,0 +1,112 @@
+{
+  "android_play_store_link": "",
+  "ios_app_store_link": "",
+  "sticker_packs": [
+    {
+      "identifier": "chubby-mochi-hamster-2",
+      "name": "Chubby Mochi Hamster Vol.2: Study Mode",
+      "publisher": "BobaStickers",
+      "tray_image_file": "tray_icon.webp",
+      "publisher_website": "",
+      "privacy_policy_website": "",
+      "stickers": [
+        {
+          "image_file": "01_studying.webp",
+          "emojis": [
+            "\ud83d\udcd6"
+          ]
+        },
+        {
+          "image_file": "02_brain_full.webp",
+          "emojis": [
+            "\ud83e\udd2f"
+          ]
+        },
+        {
+          "image_file": "03_eureka.webp",
+          "emojis": [
+            "\ud83d\udca1"
+          ]
+        },
+        {
+          "image_file": "04_lets_go.webp",
+          "emojis": [
+            "\ud83d\udd25"
+          ]
+        },
+        {
+          "image_file": "05_need_coffee.webp",
+          "emojis": [
+            "\u2615"
+          ]
+        },
+        {
+          "image_file": "06_quiz_time.webp",
+          "emojis": [
+            "\u270f\ufe0f"
+          ]
+        },
+        {
+          "image_file": "07_aced_it.webp",
+          "emojis": [
+            "\ud83d\udcaf"
+          ]
+        },
+        {
+          "image_file": "08_help_me.webp",
+          "emojis": [
+            "\u2753"
+          ]
+        },
+        {
+          "image_file": "09_break_time.webp",
+          "emojis": [
+            "\ud83d\ude0c"
+          ]
+        },
+        {
+          "image_file": "10_due_tomorrow.webp",
+          "emojis": [
+            "\ud83d\ude28"
+          ]
+        },
+        {
+          "image_file": "11_good_luck.webp",
+          "emojis": [
+            "\ud83c\udf40"
+          ]
+        },
+        {
+          "image_file": "12_so_tired.webp",
+          "emojis": [
+            "\ud83d\ude35"
+          ]
+        },
+        {
+          "image_file": "13_you_can_do_it.webp",
+          "emojis": [
+            "\ud83d\udce3"
+          ]
+        },
+        {
+          "image_file": "14_procrastinating.webp",
+          "emojis": [
+            "\ud83d\udcf1"
+          ]
+        },
+        {
+          "image_file": "15_group_study.webp",
+          "emojis": [
+            "\ud83d\udc65"
+          ]
+        },
+        {
+          "image_file": "16_all_done.webp",
+          "emojis": [
+            "\u2705"
+          ]
+        }
+      ]
+    }
+  ]
+}

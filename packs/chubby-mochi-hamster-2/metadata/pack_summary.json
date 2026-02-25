@@ -1,0 +1,94 @@
+{
+  "pack_id": "chubby-mochi-hamster-2",
+  "pack_name": "Chubby Mochi Hamster Vol.2: Study Mode",
+  "publisher": "BobaStickers",
+  "sticker_count": 16,
+  "platforms": [
+    "whatsapp",
+    "telegram",
+    "line",
+    "imessage_large"
+  ],
+  "stickers": [
+    {
+      "id": "01_studying",
+      "emotion": "Focused / Studying",
+      "emoji": "\ud83d\udcd6"
+    },
+    {
+      "id": "02_brain_full",
+      "emotion": "Overwhelmed / Brain Full",
+      "emoji": "\ud83e\udd2f"
+    },
+    {
+      "id": "03_eureka",
+      "emotion": "Excited discovery / Eureka",
+      "emoji": "\ud83d\udca1"
+    },
+    {
+      "id": "04_lets_go",
+      "emotion": "Motivated / Pumped up",
+      "emoji": "\ud83d\udd25"
+    },
+    {
+      "id": "05_need_coffee",
+      "emotion": "Tired / Need caffeine",
+      "emoji": "\u2615"
+    },
+    {
+      "id": "06_quiz_time",
+      "emotion": "Nervous excitement / Alert",
+      "emoji": "\u270f\ufe0f"
+    },
+    {
+      "id": "07_aced_it",
+      "emotion": "Proud / Triumphant",
+      "emoji": "\ud83d\udcaf"
+    },
+    {
+      "id": "08_help_me",
+      "emotion": "Confused / Lost",
+      "emoji": "\u2753"
+    },
+    {
+      "id": "09_break_time",
+      "emotion": "Relieved / Relaxing",
+      "emoji": "\ud83d\ude0c"
+    },
+    {
+      "id": "10_due_tomorrow",
+      "emotion": "Panic / Dread",
+      "emoji": "\ud83d\ude28"
+    },
+    {
+      "id": "11_good_luck",
+      "emotion": "Encouraging / Supportive",
+      "emoji": "\ud83c\udf40"
+    },
+    {
+      "id": "12_so_tired",
+      "emotion": "Exhausted / Dead tired",
+      "emoji": "\ud83d\ude35"
+    },
+    {
+      "id": "13_you_can_do_it",
+      "emotion": "Cheerful encouragement",
+      "emoji": "\ud83d\udce3"
+    },
+    {
+      "id": "14_procrastinating",
+      "emotion": "Guilty / Distracted",
+      "emoji": "\ud83d\udcf1"
+    },
+    {
+      "id": "15_group_study",
+      "emotion": "Friendly / Social",
+      "emoji": "\ud83d\udc65"
+    },
+    {
+      "id": "16_all_done",
+      "emotion": "Relieved / Accomplished",
+      "emoji": "\u2705"
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "pack_id": "cappy-capybara-2",
+  "pack_name": "Cappy the Chill Capybara Vol.2",
+  "publisher": "BobaStickers",
+  "sticker_count": 16,
+  "platforms": [
+    "line",
+    "telegram",
+    "whatsapp",
+    "imessage_large",
+    "print_etsy"
+  ],
+  "stickers": [
+    {
+      "id": "01_omg",
+      "emotion": "OMG / Shocked",
+      "emoji": "\ud83d\ude31"
+    },
+    {
+      "id": "02_no_way",
+      "emotion": "No Way / Disbelief",
+      "emoji": "\ud83d\ude35"
+    },
+    {
+      "id": "03_noted",
+      "emotion": "Noted / Roger That",
+      "emoji": "\ud83e\udee1"
+    },
+    {
+      "id": "04_brb",
+      "emotion": "BRB / Be Right Back",
+      "emoji": "\ud83c\udfc3"
+    },
+    {
+      "id": "05_wait_what",
+      "emotion": "Wait What / Double Take",
+      "emoji": "\ud83e\udd28"
+    },
+    {
+      "id": "06_lmao",
+      "emotion": "LMAO / Rolling on Floor",
+      "emoji": "\ud83e\udd23"
+    },
+    {
+      "id": "07_yay",
+      "emotion": "Yay / Celebrating",
+      "emoji": "\ud83c\udf89"
+    },
+    {
+      "id": "08_send_help",
+      "emotion": "Send Help / Overwhelmed",
+      "emoji": "\ud83d\ude35\u200d\ud83d\udcab"
+    },
+    {
+      "id": "09_dead_tired",
+      "emotion": "So Tired / Dead Inside",
+      "emoji": "\ud83e\udea6"
+    },
+    {
+      "id": "10_jealous",
+      "emotion": "Jealous / Want That",
+      "emoji": "\ud83e\udd24"
+    },
+    {
+      "id": "11_judging",
+      "emotion": "Judging You / Side Eye",
+      "emoji": "\ud83e\udd28"
+    },
+    {
+      "id": "12_hug",
+      "emotion": "Hug / Come Here",
+      "emoji": "\ud83e\udd17"
+    },
+    {
+      "id": "13_oops",
+      "emotion": "Oops / My Bad",
+      "emoji": "\ud83d\ude05"
+    },
+    {
+      "id": "14_deal_with_it",
+      "emotion": "Deal With It / Cool",
+      "emoji": "\ud83d\ude0e"
+    },
+    {
+      "id": "15_fighting",
+      "emotion": "Fighting! / You Got This",
+      "emoji": "\ud83d\udcaa"
+    },
+    {
+      "id": "16_miss_you",
+      "emotion": "Miss You / Lonely",
+      "emoji": "\ud83e\udd7a"
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "pack_id": "chubby-mochi-hamster",
+  "pack_name": "Chubby Mochi Hamster",
+  "publisher": "BobaStickers",
+  "sticker_count": 14,
+  "platforms": [
+    "whatsapp",
+    "telegram",
+    "line",
+    "imessage_large"
+  ],
+  "stickers": [
+    {
+      "id": "01_hello",
+      "emotion": "Hello / Greeting",
+      "emoji": "\ud83d\udc4b"
+    },
+    {
+      "id": "02_thank_you",
+      "emotion": "Thank You / Grateful",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": "03_sorry",
+      "emotion": "Sorry / Apologize",
+      "emoji": "\ud83d\ude47"
+    },
+    {
+      "id": "04_ok",
+      "emotion": "OK / Approval",
+      "emoji": "\ud83d\udc4d"
+    },
+    {
+      "id": "05_what",
+      "emotion": "Shocked / Confused",
+      "emoji": "\ud83d\ude31"
+    },
+    {
+      "id": "06_lol",
+      "emotion": "Laughing hard",
+      "emoji": "\ud83d\ude02"
+    },
+    {
+      "id": "07_love_you",
+      "emotion": "Love / Affection",
+      "emoji": "\u2764\ufe0f"
+    },
+    {
+      "id": "08_good_night",
+      "emotion": "Sleepy / Good Night",
+      "emoji": "\ud83c\udf19"
+    },
+    {
+      "id": "09_hungry",
+      "emotion": "Hungry / Starving",
+      "emoji": "\ud83e\udd24"
+    },
+    {
+      "id": "10_busy",
+      "emotion": "Busy / Working",
+      "emoji": "\ud83d\udcbb"
+    },
+    {
+      "id": "11_waiting",
+      "emotion": "Waiting / Impatient",
+      "emoji": "\u23f0"
+    },
+    {
+      "id": "12_nooo",
+      "emotion": "Despair / Nooo",
+      "emoji": "\ud83d\ude2d"
+    },
+    {
+      "id": "13_yes",
+      "emotion": "Excited agreement / Yesss",
+      "emoji": "\ud83c\udf89"
+    },
+    {
+      "id": "14_please",
+      "emotion": "Begging / Please",
+      "emoji": "\ud83e\udd7a"
+    }
+  ]
+}

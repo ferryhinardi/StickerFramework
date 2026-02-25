@@ -1,0 +1,112 @@
+{
+  "android_play_store_link": "",
+  "ios_app_store_link": "",
+  "sticker_packs": [
+    {
+      "identifier": "cappy-capybara-2",
+      "name": "Cappy the Chill Capybara Vol.2",
+      "publisher": "BobaStickers",
+      "tray_image_file": "tray_icon.webp",
+      "publisher_website": "",
+      "privacy_policy_website": "",
+      "stickers": [
+        {
+          "image_file": "01_omg.webp",
+          "emojis": [
+            "\ud83d\ude31"
+          ]
+        },
+        {
+          "image_file": "02_no_way.webp",
+          "emojis": [
+            "\ud83d\ude35"
+          ]
+        },
+        {
+          "image_file": "03_noted.webp",
+          "emojis": [
+            "\ud83e\udee1"
+          ]
+        },
+        {
+          "image_file": "04_brb.webp",
+          "emojis": [
+            "\ud83c\udfc3"
+          ]
+        },
+        {
+          "image_file": "05_wait_what.webp",
+          "emojis": [
+            "\ud83e\udd28"
+          ]
+        },
+        {
+          "image_file": "06_lmao.webp",
+          "emojis": [
+            "\ud83e\udd23"
+          ]
+        },
+        {
+          "image_file": "07_yay.webp",
+          "emojis": [
+            "\ud83c\udf89"
+          ]
+        },
+        {
+          "image_file": "08_send_help.webp",
+          "emojis": [
+            "\ud83d\ude35\u200d\ud83d\udcab"
+          ]
+        },
+        {
+          "image_file": "09_dead_tired.webp",
+          "emojis": [
+            "\ud83e\udea6"
+          ]
+        },
+        {
+          "image_file": "10_jealous.webp",
+          "emojis": [
+            "\ud83e\udd24"
+          ]
+        },
+        {
+          "image_file": "11_judging.webp",
+          "emojis": [
+            "\ud83e\udd28"
+          ]
+        },
+        {
+          "image_file": "12_hug.webp",
+          "emojis": [
+            "\ud83e\udd17"
+          ]
+        },
+        {
+          "image_file": "13_oops.webp",
+          "emojis": [
+            "\ud83d\ude05"
+          ]
+        },
+        {
+          "image_file": "14_deal_with_it.webp",
+          "emojis": [
+            "\ud83d\ude0e"
+          ]
+        },
+        {
+          "image_file": "15_fighting.webp",
+          "emojis": [
+            "\ud83d\udcaa"
+          ]
+        },
+        {
+          "image_file": "16_miss_you.webp",
+          "emojis": [
+            "\ud83e\udd7a"
+          ]
+        }
+      ]
+    }
+  ]
+}
