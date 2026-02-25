@@ -1,0 +1,43 @@
+{
+  "pack_name": "Chubby Mochi Hamster Vol.2: Study Mode",
+  "pack_id": "chubby-mochi-hamster-2",
+  "version": "1.0",
+  "character": "Mochi Hamster",
+  "theme": "study-learning",
+  "description": "Mochi Hamster is back — hitting the books! 16 study-themed stickers for students, late-night crammers, and anyone who's ever had their brain melt from too much studying.",
+  "language": "en",
+  "sticker_count": 16,
+  "sequel_of": "chubby-mochi-hamster",
+  "platforms": {
+    "line": {
+      "enabled": true,
+      "title": "Chubby Mochi Hamster Vol.2: Study Mode",
+      "description": "The round squishy hamster returns with study-themed stickers — STUDYING, BRAIN FULL, NEED COFFEE, ACED IT, DUE TOMORROW & more!",
+      "style_category": "cute",
+      "character_category": "other_animals",
+      "submission_status": "not_submitted"
+    },
+    "telegram": {
+      "enabled": true,
+      "submission_status": "not_submitted"
+    },
+    "whatsapp": {
+      "enabled": true,
+      "submission_status": "not_submitted"
+    },
+    "imessage": {
+      "enabled": true,
+      "submission_status": "not_started"
+    },
+    "print_etsy": {
+      "enabled": true,
+      "submission_status": "not_started"
+    }
+  },
+  "content_flags": {
+    "contains_religious_content": false,
+    "contains_violence": false,
+    "contains_adult_content": false,
+    "line_guideline_3_13_risk": "none"
+  }
+}

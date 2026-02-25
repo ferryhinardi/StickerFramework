@@ -1,0 +1,36 @@
+# Custom Docker image for StickerFramework
+# Includes Python 3.11, Node.js, Ruby, FFmpeg, and Playwright for full pipeline support
+
+FROM python:3.11-bookworm
+
+# Install system dependencies including FFmpeg with VP9 support
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    ffmpeg \
+    libvpx7 \
+    ruby-full \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 20.x LTS
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Ruby bundler and fastlane dependencies
+RUN gem install bundler fastlane
+
+# Verify installations
+RUN python --version && \
+    node --version && \
+    npm --version && \
+    ruby --version && \
+    ffmpeg -version | head -n 1
+
+# Set working directory
+WORKDIR /workspace
+
+# Note: Project dependencies (pip install, playwright install, etc.) 
+# will be handled by setup commands in the environment configuration

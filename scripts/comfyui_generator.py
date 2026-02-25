@@ -154,10 +154,11 @@ class ComfyUIStickerGenerator:
         # ------------------------------------------------------------------
         if art_style == "painted_illustration":
             style_prefix = (
-                "kawaii sticker illustration, semi-realistic painting style, "
-                "thick black outlines, (solid pure white background:1.3), "
-                "single character centered, dynamic expressive pose, "
-                "masterpiece, best quality"
+                "kawaii chibi sticker design, cute cartoon illustration, "
+                "digital anime art, thick black outlines, clean lineart, "
+                "(solid pure white background:1.3), "
+                "single character centered, large head small body, "
+                "dynamic expressive pose, masterpiece, best quality"
             )
         else:
             # Default: flat_vector (original capybara/mochi style)
@@ -188,7 +189,8 @@ class ComfyUIStickerGenerator:
         # ------------------------------------------------------------------
         if art_style == "painted_illustration":
             style_suffix = (
-                "thick dark outlines, expressive face, action effects, "
+                "thick dark outlines, clean lineart, expressive face, "
+                "soft cel shading, warm color palette, action effects, "
                 "dynamic composition, "
                 "no text, no words, no letters, no writing"
             )
@@ -236,9 +238,14 @@ class ComfyUIStickerGenerator:
         )
 
         if art_style == "painted_illustration":
-            # Painted style WANTS semi-realistic shading and gradients
-            # Only block photorealism and 3D render
-            style_negatives = "photograph, photorealistic, 3d render"
+            # Painted style wants cartoon/anime shading, NOT photorealism
+            # Block realistic fur textures, photo-like rendering, lifelike animals
+            style_negatives = (
+                "realistic, photorealistic, photograph, 3d render, "
+                "real animal, real photo, lifelike, hyperrealistic, "
+                "raw photo, dslr, film grain, fur texture, detailed fur, "
+                "skin texture, skin pores"
+            )
         else:
             # Flat vector blocks all realistic/gradient/shading elements
             style_negatives = (
