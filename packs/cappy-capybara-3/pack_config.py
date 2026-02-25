@@ -26,6 +26,22 @@ CHARACTER = {
     "eye_style": "small round black dot eyes, calm and content, slightly droopy for chill vibes",
     "accessory": "tiny orange (mikan) sitting on top of head — the iconic capybara meme",
     "proportions": "chibi, very round body like a potato, tiny stubby legs, head is 50% of body height",
+    # v2 fields — used by comfyui_generator for character-agnostic prompts
+    "body_description": (
+        "a single cute round chibi capybara character, warm brown fur, "
+        "small round black dot eyes, calm and content expression, "
+        "tiny orange mikan fruit sitting on top of head, "
+        "very round potato-shaped body, tiny stubby legs, "
+        "small rounded ears, short flat snout, "
+        "thick dark brown outline, flat colors, no gradients"
+    ),
+    "features": [
+        "small rounded ears on top of head",
+        "short flat nose/snout",
+        "tiny tail (barely visible)",
+        "soft gradient-free flat coloring",
+    ],
+    # legacy field kept for backward compatibility
     "extra_features": (
         "small rounded ears on top of head, "
         "short flat nose/snout, "
@@ -38,6 +54,7 @@ CHARACTER = {
 # ART STYLE  (identical to v1/v2 — visual consistency)
 # =============================================================================
 STYLE = {
+    "art_style": "flat_vector",  # v2 field — controls prompt template selection
     "outline_type": "thick uniform dark brown outline, consistent 3-4px width",
     "coloring": "flat colors only, absolutely no gradients, no realistic shading",
     "background": "clean solid white background with no other elements",
@@ -70,6 +87,13 @@ PACK_CONFIG = {
     "publisher": "BobaStickers",
     "character": CHARACTER,
     "style": STYLE,
+    "text_defaults": {  # v2 field — pack-level Pillow text styling for all-text pack
+        "font_size": "auto",
+        "color": "#FFFFFF",
+        "stroke_color": "#4A3728",
+        "stroke_width": 8,
+        "position": "bottom",
+    },
     # -----------------------------------------------------------------
     # TEXT OVERLAY — every sticker in this pack has text
     #

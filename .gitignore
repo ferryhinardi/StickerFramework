@@ -42,6 +42,7 @@ packs/*/final/
 packs/*/raw/
 packs/*/dist/
 packs/*/line_output/
+packs/*/text_preview/
 
 # Playwright automation state
 automation/screenshots/

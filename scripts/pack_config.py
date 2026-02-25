@@ -17,6 +17,19 @@ CHARACTER = {
     "eye_style": "simple black oval eyes, no pupils, highly expressive",
     "accessory": "tiny gold star pin on left ear",
     "proportions": "chibi, head is 60% of total body height, stubby short limbs",
+    # --- v2 fields (character-agnostic prompt building) ---
+    "body_description": (
+        "cute round chubby mochi cat, pink body, simple black oval eyes, "
+        "tiny gold star pin on left ear, potato-shaped body, "
+        "stubby short limbs, soft pink cheeks"
+    ),
+    "features": [
+        "round chubby body",
+        "pink fur",
+        "black oval eyes",
+        "gold star pin on left ear",
+        "stubby limbs",
+    ],
 }
 
 # =============================================================================
@@ -30,6 +43,9 @@ STYLE = {
         "die-cut sticker style with a thick white outline border "
         "around the ENTIRE character"
     ),
+    # --- v2 field: controls prompt template and negative prompt selection ---
+    # Options: "flat_vector" (default, original style) | "painted_illustration"
+    "art_style": "flat_vector",
 }
 
 # =============================================================================
@@ -41,6 +57,10 @@ PACK_CONFIG = {
     "publisher": "Your Brand Name",  # Change this
     "character": CHARACTER,
     "style": STYLE,
+    # --- v2 field: pack-level text overlay defaults for TextCompositor ---
+    # Per-sticker "text" fields can override these.  Omit entirely for
+    # text-free packs (like cappy-capybara Vol. 1/2).
+    "text_defaults": None,  # No text for this pack
     "stickers": [
         {
             "id": "01_happy",
@@ -244,6 +264,7 @@ def create_pack_config(
     character: dict | None = None,
     style: dict | None = None,
     publisher: str = "Your Brand Name",
+    text_defaults: dict | None = None,
 ) -> dict:
     """
     Create a new pack config using the same character/style.
@@ -265,6 +286,7 @@ def create_pack_config(
         "publisher": publisher,
         "character": character or CHARACTER,
         "style": style or STYLE,
+        "text_defaults": text_defaults,
         "stickers": stickers,
         "platforms": platforms
         or [
