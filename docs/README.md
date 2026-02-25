@@ -110,6 +110,8 @@ StickerFramework/
 | [Platform Specs](docs/platform-specs.md) | Platform requirements and distribution details |
 | [Distribution Guide](guides/distribution_guide.md) | Multi-platform distribution strategy |
 | [Sticker.ly Guide](guides/stickerly_guide.md) | Step-by-step Sticker.ly upload instructions |
+| [iMessage Sticker Guide](docs/13-imessage-sticker-guide.md) | iMessage publishing overview, toolchain, and current status |
+| [iMessage Submission Guide](docs/guides/imessage_submission_guide.md) | Detailed step-by-step: enrollment, credentials, pipeline, troubleshooting |
 
 ## Requirements
 
