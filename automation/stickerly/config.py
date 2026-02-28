@@ -61,6 +61,10 @@ SEL_PROFILE_NEW_PACK = {"text": "New Pack"}
 SEL_PROFILE_FOLLOWER_COUNT = {"resourceId": f"{PKG}:id/followerCount"}
 SEL_PROFILE_FOLLOWING_COUNT = {"resourceId": f"{PKG}:id/followingCount"}
 
+# -- Error banner / snackbar (may appear after snapshot restore) ----------------
+SEL_ERROR_BANNER_CLOSE = {"description": "Close"}
+SEL_ERROR_BANNER_RETRY = {"description": "Retry"}
+
 # -- Pack type selection bottom sheet (after clicking New Pack) -----------------
 SEL_PACK_TYPE_TITLE = {"resourceId": f"{PKG}:id/packTypeTitle"}
 SEL_PACK_TYPE_REGULAR = {"resourceId": f"{PKG}:id/regularText"}

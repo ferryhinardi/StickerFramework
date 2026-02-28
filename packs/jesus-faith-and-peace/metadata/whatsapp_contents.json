@@ -1,0 +1,94 @@
+{
+  "android_play_store_link": "",
+  "ios_app_store_link": "",
+  "sticker_packs": [
+    {
+      "identifier": "jesus-faith-and-peace",
+      "name": "Jesus \u2013 Faith and Peace",
+      "publisher": "BobaStickers",
+      "tray_image_file": "tray_icon.webp",
+      "publisher_website": "",
+      "privacy_policy_website": "",
+      "stickers": [
+        {
+          "image_file": "01_god_bless_you.webp",
+          "emojis": [
+            "\ud83d\ude4f"
+          ]
+        },
+        {
+          "image_file": "02_praying_for_you.webp",
+          "emojis": [
+            "\ud83d\ude4f"
+          ]
+        },
+        {
+          "image_file": "03_have_faith.webp",
+          "emojis": [
+            "\u2728"
+          ]
+        },
+        {
+          "image_file": "04_peace_be_with_you.webp",
+          "emojis": [
+            "\u262e\ufe0f"
+          ]
+        },
+        {
+          "image_file": "05_god_is_good.webp",
+          "emojis": [
+            "\ud83c\udf1f"
+          ]
+        },
+        {
+          "image_file": "06_amen.webp",
+          "emojis": [
+            "\ud83d\udd4a\ufe0f"
+          ]
+        },
+        {
+          "image_file": "07_thank_you_lord.webp",
+          "emojis": [
+            "\ud83d\udc9b"
+          ]
+        },
+        {
+          "image_file": "08_trust_in_him.webp",
+          "emojis": [
+            "\ud83d\udc99"
+          ]
+        },
+        {
+          "image_file": "09_i_love_you.webp",
+          "emojis": [
+            "\u2764\ufe0f"
+          ]
+        },
+        {
+          "image_file": "10_be_still.webp",
+          "emojis": [
+            "\ud83e\uddd8"
+          ]
+        },
+        {
+          "image_file": "11_you_are_loved.webp",
+          "emojis": [
+            "\ud83e\udd70"
+          ]
+        },
+        {
+          "image_file": "12_good_morning.webp",
+          "emojis": [
+            "\ud83c\udf05"
+          ]
+        },
+        {
+          "image_file": "13_good_night.webp",
+          "emojis": [
+            "\ud83c\udf19"
+          ]
+        }
+      ]
+    }
+  ]
+}

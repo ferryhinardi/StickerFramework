@@ -1,0 +1,90 @@
+{
+  "title": {
+    "en": "Jesus Christ 2"
+  },
+  "author": {
+    "en": "BobaStickers"
+  },
+  "stickers": [
+    {
+      "id": 1,
+      "filename": "01_walk_by_faith.png",
+      "emoji": "\ud83d\udeb6"
+    },
+    {
+      "id": 2,
+      "filename": "02_keep_praying.png",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": 3,
+      "filename": "03_faith_over_fear.png",
+      "emoji": "\ud83d\udee1\ufe0f"
+    },
+    {
+      "id": 4,
+      "filename": "04_his_grace.png",
+      "emoji": "\u2728"
+    },
+    {
+      "id": 5,
+      "filename": "05_seek_him_first.png",
+      "emoji": "\ud83d\udd0d"
+    },
+    {
+      "id": 6,
+      "filename": "06_god_is_with_you.png",
+      "emoji": "\ud83e\udd17"
+    },
+    {
+      "id": 7,
+      "filename": "07_hope_in_him.png",
+      "emoji": "\ud83c\udf1f"
+    },
+    {
+      "id": 8,
+      "filename": "08_give_it_to_god.png",
+      "emoji": "\ud83e\udd8b"
+    },
+    {
+      "id": 9,
+      "filename": "09_joy_of_the_lord.png",
+      "emoji": "\ud83d\udc83"
+    },
+    {
+      "id": 10,
+      "filename": "10_be_kind.png",
+      "emoji": "\ud83c\udf38"
+    },
+    {
+      "id": 11,
+      "filename": "11_forgive.png",
+      "emoji": "\ud83d\udc9c"
+    },
+    {
+      "id": 12,
+      "filename": "12_you_matter.png",
+      "emoji": "\ud83d\udc96"
+    },
+    {
+      "id": 13,
+      "filename": "13_never_give_up.png",
+      "emoji": "\ud83c\udfc3"
+    },
+    {
+      "id": 14,
+      "filename": "14_let_go_let_god.png",
+      "emoji": "\u2601\ufe0f"
+    },
+    {
+      "id": 15,
+      "filename": "15_be_the_light.png",
+      "emoji": "\ud83d\udd6f\ufe0f"
+    },
+    {
+      "id": 16,
+      "filename": "16_god_has_a_plan.png",
+      "emoji": "\ud83d\uddfa\ufe0f"
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "pack_id": "little-angel",
+  "pack_name": "Little Angel",
+  "publisher": "BobaStickers",
+  "sticker_count": 16,
+  "platforms": [
+    "whatsapp",
+    "telegram",
+    "imessage_large",
+    "print_etsy"
+  ],
+  "stickers": [
+    {
+      "id": "01_god_bless_you",
+      "emotion": "Blessing / Loving",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": "02_praying_for_you",
+      "emotion": "Devout / Caring",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": "03_have_faith",
+      "emotion": "Encouraging / Bright",
+      "emoji": "\u2728"
+    },
+    {
+      "id": "04_hallelujah",
+      "emotion": "Ecstatic / Praising",
+      "emoji": "\ud83c\udfb6"
+    },
+    {
+      "id": "05_you_are_blessed",
+      "emotion": "Affirming / Warm",
+      "emoji": "\ud83c\udf08"
+    },
+    {
+      "id": "06_god_is_good",
+      "emotion": "Joyful / Celebrating",
+      "emoji": "\ud83c\udf1f"
+    },
+    {
+      "id": "07_amen",
+      "emotion": "Reverent / Peaceful",
+      "emoji": "\ud83d\udd4a\ufe0f"
+    },
+    {
+      "id": "08_thank_you_lord",
+      "emotion": "Grateful / Overjoyed",
+      "emoji": "\ud83d\udc9b"
+    },
+    {
+      "id": "09_i_love_you",
+      "emotion": "Loving / Cuddly",
+      "emoji": "\u2764\ufe0f"
+    },
+    {
+      "id": "10_trust_him",
+      "emotion": "Reassuring / Calm",
+      "emoji": "\u2601\ufe0f"
+    },
+    {
+      "id": "11_be_kind",
+      "emotion": "Gentle / Sweet",
+      "emoji": "\ud83c\udf38"
+    },
+    {
+      "id": "12_sending_love",
+      "emotion": "Affectionate / Blowing kiss",
+      "emoji": "\ud83d\ude18"
+    },
+    {
+      "id": "13_good_morning",
+      "emotion": "Cheerful / Fresh",
+      "emoji": "\ud83c\udf05"
+    },
+    {
+      "id": "14_good_night",
+      "emotion": "Sleepy / Cozy",
+      "emoji": "\ud83c\udf19"
+    },
+    {
+      "id": "15_stay_strong",
+      "emotion": "Brave / Supportive",
+      "emoji": "\ud83d\udcaa"
+    },
+    {
+      "id": "16_peace",
+      "emotion": "Serene / Floating",
+      "emoji": "\ud83d\udd4a\ufe0f"
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "pack_id": "jesus-christ-2",
+  "pack_name": "Jesus Christ 2",
+  "publisher": "BobaStickers",
+  "sticker_count": 16,
+  "platforms": [
+    "whatsapp",
+    "telegram",
+    "imessage_large",
+    "print_etsy"
+  ],
+  "stickers": [
+    {
+      "id": "01_walk_by_faith",
+      "emotion": "Determined / Faithful",
+      "emoji": "\ud83d\udeb6"
+    },
+    {
+      "id": "02_keep_praying",
+      "emotion": "Persistent / Devoted",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": "03_faith_over_fear",
+      "emotion": "Brave / Courageous",
+      "emoji": "\ud83d\udee1\ufe0f"
+    },
+    {
+      "id": "04_his_grace",
+      "emotion": "Serene / Grateful",
+      "emoji": "\u2728"
+    },
+    {
+      "id": "05_seek_him_first",
+      "emotion": "Focused / Searching",
+      "emoji": "\ud83d\udd0d"
+    },
+    {
+      "id": "06_god_is_with_you",
+      "emotion": "Comforting / Reassuring",
+      "emoji": "\ud83e\udd17"
+    },
+    {
+      "id": "07_hope_in_him",
+      "emotion": "Hopeful / Optimistic",
+      "emoji": "\ud83c\udf1f"
+    },
+    {
+      "id": "08_give_it_to_god",
+      "emotion": "Surrendering / Trusting",
+      "emoji": "\ud83e\udd8b"
+    },
+    {
+      "id": "09_joy_of_the_lord",
+      "emotion": "Ecstatic / Dancing",
+      "emoji": "\ud83d\udc83"
+    },
+    {
+      "id": "10_be_kind",
+      "emotion": "Gentle / Kind",
+      "emoji": "\ud83c\udf38"
+    },
+    {
+      "id": "11_forgive",
+      "emotion": "Compassionate / Forgiving",
+      "emoji": "\ud83d\udc9c"
+    },
+    {
+      "id": "12_you_matter",
+      "emotion": "Affirming / Validating",
+      "emoji": "\ud83d\udc96"
+    },
+    {
+      "id": "13_never_give_up",
+      "emotion": "Motivating / Persistent",
+      "emoji": "\ud83c\udfc3"
+    },
+    {
+      "id": "14_let_go_let_god",
+      "emotion": "Surrendered / Peaceful",
+      "emoji": "\u2601\ufe0f"
+    },
+    {
+      "id": "15_be_the_light",
+      "emotion": "Inspiring / Radiant",
+      "emoji": "\ud83d\udd6f\ufe0f"
+    },
+    {
+      "id": "16_god_has_a_plan",
+      "emotion": "Wise / Reassuring",
+      "emoji": "\ud83d\uddfa\ufe0f"
+    }
+  ]
+}

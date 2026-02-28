@@ -1,0 +1,94 @@
+{
+  "pack_id": "jesus-christ-1",
+  "pack_name": "Jesus Christ 1",
+  "publisher": "BobaStickers",
+  "sticker_count": 16,
+  "platforms": [
+    "whatsapp",
+    "telegram",
+    "imessage_large",
+    "print_etsy"
+  ],
+  "stickers": [
+    {
+      "id": "01_god_bless_you",
+      "emotion": "Loving / Blessing",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": "02_praying_for_you",
+      "emotion": "Compassionate / Prayerful",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": "03_have_faith",
+      "emotion": "Encouraging / Uplifting",
+      "emoji": "\u2728"
+    },
+    {
+      "id": "04_god_is_good",
+      "emotion": "Joyful / Celebratory",
+      "emoji": "\ud83c\udf1f"
+    },
+    {
+      "id": "05_amen",
+      "emotion": "Reverent / Agreement",
+      "emoji": "\ud83d\udd4a\ufe0f"
+    },
+    {
+      "id": "06_thank_you_lord",
+      "emotion": "Grateful / Thankful",
+      "emoji": "\ud83d\udc9b"
+    },
+    {
+      "id": "07_i_love_you",
+      "emotion": "Loving / Affectionate",
+      "emoji": "\u2764\ufe0f"
+    },
+    {
+      "id": "08_trust_in_him",
+      "emotion": "Reassuring / Comforting",
+      "emoji": "\ud83d\udc99"
+    },
+    {
+      "id": "09_you_are_blessed",
+      "emotion": "Affirming / Warm",
+      "emoji": "\ud83c\udf08"
+    },
+    {
+      "id": "10_peace_be_with_you",
+      "emotion": "Calm / Peaceful",
+      "emoji": "\u262e\ufe0f"
+    },
+    {
+      "id": "11_be_strong",
+      "emotion": "Determined / Encouraging",
+      "emoji": "\ud83d\udcaa"
+    },
+    {
+      "id": "12_dont_worry",
+      "emotion": "Soothing / Calming",
+      "emoji": "\ud83d\ude0c"
+    },
+    {
+      "id": "13_good_morning",
+      "emotion": "Cheerful / Fresh",
+      "emoji": "\ud83c\udf05"
+    },
+    {
+      "id": "14_good_night",
+      "emotion": "Gentle / Sleepy",
+      "emoji": "\ud83c\udf19"
+    },
+    {
+      "id": "15_hallelujah",
+      "emotion": "Ecstatic / Praising",
+      "emoji": "\ud83c\udfb6"
+    },
+    {
+      "id": "16_stay_blessed",
+      "emotion": "Warm / Farewell blessing",
+      "emoji": "\u271d\ufe0f"
+    }
+  ]
+}

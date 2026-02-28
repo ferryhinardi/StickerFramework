@@ -1,0 +1,112 @@
+{
+  "android_play_store_link": "",
+  "ios_app_store_link": "",
+  "sticker_packs": [
+    {
+      "identifier": "jesus-christ-1",
+      "name": "Jesus Christ 1",
+      "publisher": "BobaStickers",
+      "tray_image_file": "tray_icon.webp",
+      "publisher_website": "",
+      "privacy_policy_website": "",
+      "stickers": [
+        {
+          "image_file": "01_god_bless_you.webp",
+          "emojis": [
+            "\ud83d\ude4f"
+          ]
+        },
+        {
+          "image_file": "02_praying_for_you.webp",
+          "emojis": [
+            "\ud83d\ude4f"
+          ]
+        },
+        {
+          "image_file": "03_have_faith.webp",
+          "emojis": [
+            "\u2728"
+          ]
+        },
+        {
+          "image_file": "04_god_is_good.webp",
+          "emojis": [
+            "\ud83c\udf1f"
+          ]
+        },
+        {
+          "image_file": "05_amen.webp",
+          "emojis": [
+            "\ud83d\udd4a\ufe0f"
+          ]
+        },
+        {
+          "image_file": "06_thank_you_lord.webp",
+          "emojis": [
+            "\ud83d\udc9b"
+          ]
+        },
+        {
+          "image_file": "07_i_love_you.webp",
+          "emojis": [
+            "\u2764\ufe0f"
+          ]
+        },
+        {
+          "image_file": "08_trust_in_him.webp",
+          "emojis": [
+            "\ud83d\udc99"
+          ]
+        },
+        {
+          "image_file": "09_you_are_blessed.webp",
+          "emojis": [
+            "\ud83c\udf08"
+          ]
+        },
+        {
+          "image_file": "10_peace_be_with_you.webp",
+          "emojis": [
+            "\u262e\ufe0f"
+          ]
+        },
+        {
+          "image_file": "11_be_strong.webp",
+          "emojis": [
+            "\ud83d\udcaa"
+          ]
+        },
+        {
+          "image_file": "12_dont_worry.webp",
+          "emojis": [
+            "\ud83d\ude0c"
+          ]
+        },
+        {
+          "image_file": "13_good_morning.webp",
+          "emojis": [
+            "\ud83c\udf05"
+          ]
+        },
+        {
+          "image_file": "14_good_night.webp",
+          "emojis": [
+            "\ud83c\udf19"
+          ]
+        },
+        {
+          "image_file": "15_hallelujah.webp",
+          "emojis": [
+            "\ud83c\udfb6"
+          ]
+        },
+        {
+          "image_file": "16_stay_blessed.webp",
+          "emojis": [
+            "\u271d\ufe0f"
+          ]
+        }
+      ]
+    }
+  ]
+}

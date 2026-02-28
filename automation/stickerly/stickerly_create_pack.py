@@ -19,6 +19,7 @@ from pathlib import Path
 import uiautomator2 as u2
 
 from automation.stickerly.config import (
+    APP_LAUNCH_TIMEOUT,
     ELEMENT_WAIT_TIMEOUT,
     REMOTE_STICKER_DIR,
     SEL_DIALOG_OK,
@@ -26,6 +27,7 @@ from automation.stickerly.config import (
     SEL_EDITOR_MULTI_SELECT_BTN,
     SEL_EDITOR_NEXT_BTN,
     SEL_EDITOR_SELECT_NUM,
+    SEL_ERROR_BANNER_CLOSE,
     SEL_NAV_PROFILE,
     SEL_NEW_PACK_CREATE_BTN,
     SEL_NEW_PACK_NAME_INPUT,
@@ -38,6 +40,7 @@ from automation.stickerly.config import (
     SEL_SAVE_PACK_NAME,
     SEL_SAVE_TAG_INPUT,
     STICKER_ADD_TIMEOUT,
+    STICKERLY_PACKAGE,
 )
 from automation.stickerly.utils import (
     ElementNotFound,
@@ -73,6 +76,9 @@ class StickerlyCreatePack:
         d = self.device
 
         with screenshot_on_failure(d, "create_pack"):
+            # 0. Dismiss any error banners/snackbars that may be present
+            self._dismiss_error_banners()
+
             # 1. Go to Profile tab
             print("  Navigating to Profile tab...")
             safe_click(d, SEL_NAV_PROFILE)
@@ -99,15 +105,19 @@ class StickerlyCreatePack:
             # 5. Click "Create"
             print("  Clicking Create...")
             safe_click(d, SEL_NEW_PACK_CREATE_BTN)
-            human_delay(2000, 4000)
+            human_delay(4000, 6000)  # Extra delay — app may be slow after pack creation
 
             # 6. Handle private pack info dialog (appears on first pack creation)
             try:
                 safe_click(d, SEL_DIALOG_OK, timeout=3)
                 print("  Dismissed private pack info dialog.")
-                human_delay(1000, 2000)
+                human_delay(2000, 3000)
             except ElementNotFound:
                 pass  # Dialog doesn't appear every time
+
+            # 6b. Check if app crashed (went to launcher) — if so, relaunch
+            self._ensure_app_running()
+            self._dismiss_error_banners()
 
             # 7. We should now be on Pack Detail screen. Extract pack code.
             pack_code = self._get_pack_code()
@@ -155,6 +165,9 @@ class StickerlyCreatePack:
         count = len(sticker_files)
 
         with screenshot_on_failure(d, f"add_stickers_{pack_id}"):
+            # 0. Ensure we're in the app and on the pack detail screen
+            self._ensure_on_pack_detail(pack_name)
+
             # 1. Click "Add sticker" on Pack Detail
             print(f"  Clicking 'Add sticker' to add {count} images...")
             safe_click(d, SEL_PACK_ADD_STICKER)
@@ -254,3 +267,94 @@ class StickerlyCreatePack:
         except ElementNotFound:
             pass
         return None
+
+    def _dismiss_error_banners(self) -> None:
+        """Dismiss any error banners/snackbars that may overlay the UI."""
+        d = self.device
+        try:
+            close_btn = d(**SEL_ERROR_BANNER_CLOSE)
+            if close_btn.exists(timeout=2):
+                close_btn.click()
+                print("  Dismissed error banner.")
+                human_delay(500, 1000)
+        except Exception:
+            pass  # No banner present — continue
+
+    def _ensure_app_running(self) -> None:
+        """Ensure Sticker.ly is in the foreground. Relaunch if not."""
+        d = self.device
+        current_pkg = d.app_current().get("package", "")
+        if current_pkg != STICKERLY_PACKAGE:
+            print("  App not in foreground, relaunching...")
+            import subprocess
+
+            subprocess.run(
+                ["adb", "shell", "am", "force-stop", STICKERLY_PACKAGE],
+                capture_output=True,
+            )
+            time.sleep(1)
+            subprocess.run(
+                [
+                    "adb",
+                    "shell",
+                    "am",
+                    "start",
+                    "-n",
+                    f"{STICKERLY_PACKAGE}/.LauncherEntryActivity",
+                ],
+                capture_output=True,
+            )
+            time.sleep(APP_LAUNCH_TIMEOUT + 5)
+            self._dismiss_error_banners()
+
+    def _ensure_on_pack_detail(self, pack_name: str) -> None:
+        """
+        Ensure we're on the Pack Detail screen for the given pack.
+        If not (e.g., app crashed), relaunch and navigate there.
+        """
+        d = self.device
+
+        # Check if "Add sticker" is already visible (we're on Pack Detail)
+        add_btn = d(text="Add sticker")
+        if add_btn.exists(timeout=3):
+            return  # Already on Pack Detail
+
+        # App may have crashed — relaunch and navigate
+        print(f"  Not on Pack Detail, recovering...")
+        self._ensure_app_running()
+        self._dismiss_error_banners()
+
+        # Navigate to Profile tab (try resourceId first, then text fallback)
+        try:
+            safe_click(d, SEL_NAV_PROFILE, timeout=10)
+        except ElementNotFound:
+            print("  Profile nav not found by resourceId, trying text 'Profile'...")
+            profile_btn = d(text="Profile")
+            if profile_btn.exists(timeout=5):
+                profile_btn.click()
+            else:
+                # Last resort: tap known coordinate of Profile tab (bottom right)
+                print("  Tapping Profile tab by coordinates...")
+                d.click(635, 1396)  # Approximate Profile tab location
+        human_delay(2000, 3000)
+        self._dismiss_error_banners()
+
+        # Find and tap the pack by name
+        pack_el = d(text=pack_name)
+        if pack_el.exists(timeout=ELEMENT_WAIT_TIMEOUT):
+            pack_el.click()
+            human_delay(2000, 3000)
+            print(f"  Navigated to pack: {pack_name}")
+        else:
+            # Try scrolling down to find it
+            d(scrollable=True).scroll.toEnd()
+            human_delay(1000, 1500)
+            d(scrollable=True).scroll.toBeginning()
+            human_delay(1000, 1500)
+            pack_el = d(text=pack_name)
+            if pack_el.exists(timeout=5):
+                pack_el.click()
+                human_delay(2000, 3000)
+                print(f"  Navigated to pack (after scroll): {pack_name}")
+            else:
+                print(f"  WARNING: Could not find pack '{pack_name}' in profile")

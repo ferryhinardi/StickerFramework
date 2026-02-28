@@ -1,0 +1,90 @@
+{
+  "title": {
+    "en": "Little Angel"
+  },
+  "author": {
+    "en": "BobaStickers"
+  },
+  "stickers": [
+    {
+      "id": 1,
+      "filename": "01_god_bless_you.png",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": 2,
+      "filename": "02_praying_for_you.png",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": 3,
+      "filename": "03_have_faith.png",
+      "emoji": "\u2728"
+    },
+    {
+      "id": 4,
+      "filename": "04_hallelujah.png",
+      "emoji": "\ud83c\udfb6"
+    },
+    {
+      "id": 5,
+      "filename": "05_you_are_blessed.png",
+      "emoji": "\ud83c\udf08"
+    },
+    {
+      "id": 6,
+      "filename": "06_god_is_good.png",
+      "emoji": "\ud83c\udf1f"
+    },
+    {
+      "id": 7,
+      "filename": "07_amen.png",
+      "emoji": "\ud83d\udd4a\ufe0f"
+    },
+    {
+      "id": 8,
+      "filename": "08_thank_you_lord.png",
+      "emoji": "\ud83d\udc9b"
+    },
+    {
+      "id": 9,
+      "filename": "09_i_love_you.png",
+      "emoji": "\u2764\ufe0f"
+    },
+    {
+      "id": 10,
+      "filename": "10_trust_him.png",
+      "emoji": "\u2601\ufe0f"
+    },
+    {
+      "id": 11,
+      "filename": "11_be_kind.png",
+      "emoji": "\ud83c\udf38"
+    },
+    {
+      "id": 12,
+      "filename": "12_sending_love.png",
+      "emoji": "\ud83d\ude18"
+    },
+    {
+      "id": 13,
+      "filename": "13_good_morning.png",
+      "emoji": "\ud83c\udf05"
+    },
+    {
+      "id": 14,
+      "filename": "14_good_night.png",
+      "emoji": "\ud83c\udf19"
+    },
+    {
+      "id": 15,
+      "filename": "15_stay_strong.png",
+      "emoji": "\ud83d\udcaa"
+    },
+    {
+      "id": 16,
+      "filename": "16_peace.png",
+      "emoji": "\ud83d\udd4a\ufe0f"
+    }
+  ]
+}

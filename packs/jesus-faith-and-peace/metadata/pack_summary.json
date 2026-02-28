@@ -1,0 +1,79 @@
+{
+  "pack_id": "jesus-faith-and-peace",
+  "pack_name": "Jesus \u2013 Faith and Peace",
+  "publisher": "BobaStickers",
+  "sticker_count": 13,
+  "platforms": [
+    "whatsapp",
+    "telegram",
+    "imessage_large",
+    "print_etsy"
+  ],
+  "stickers": [
+    {
+      "id": "01_god_bless_you",
+      "emotion": "Loving / Blessing",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": "02_praying_for_you",
+      "emotion": "Compassionate / Prayerful",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": "03_have_faith",
+      "emotion": "Encouraging / Uplifting",
+      "emoji": "\u2728"
+    },
+    {
+      "id": "04_peace_be_with_you",
+      "emotion": "Calm / Peaceful",
+      "emoji": "\u262e\ufe0f"
+    },
+    {
+      "id": "05_god_is_good",
+      "emotion": "Joyful / Grateful",
+      "emoji": "\ud83c\udf1f"
+    },
+    {
+      "id": "06_amen",
+      "emotion": "Reverent / Agreement",
+      "emoji": "\ud83d\udd4a\ufe0f"
+    },
+    {
+      "id": "07_thank_you_lord",
+      "emotion": "Grateful / Thankful",
+      "emoji": "\ud83d\udc9b"
+    },
+    {
+      "id": "08_trust_in_him",
+      "emotion": "Reassuring / Comforting",
+      "emoji": "\ud83d\udc99"
+    },
+    {
+      "id": "09_i_love_you",
+      "emotion": "Loving / Affectionate",
+      "emoji": "\u2764\ufe0f"
+    },
+    {
+      "id": "10_be_still",
+      "emotion": "Calm / Meditative",
+      "emoji": "\ud83e\uddd8"
+    },
+    {
+      "id": "11_you_are_loved",
+      "emotion": "Warm / Encouraging",
+      "emoji": "\ud83e\udd70"
+    },
+    {
+      "id": "12_good_morning",
+      "emotion": "Cheerful / Fresh",
+      "emoji": "\ud83c\udf05"
+    },
+    {
+      "id": "13_good_night",
+      "emotion": "Gentle / Sleepy",
+      "emoji": "\ud83c\udf19"
+    }
+  ]
+}
