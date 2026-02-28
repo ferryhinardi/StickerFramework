@@ -1,0 +1,92 @@
+{
+  "pack_id": "chubby-mochi-panda",
+  "pack_name": "Chubby Mochi Panda",
+  "publisher": "BobaStickers",
+  "sticker_count": 16,
+  "platforms": [
+    "line",
+    "telegram"
+  ],
+  "stickers": [
+    {
+      "id": "01_hello",
+      "emotion": "Hello / Greeting",
+      "emoji": "\ud83d\udc4b"
+    },
+    {
+      "id": "02_thank_you",
+      "emotion": "Thank You / Grateful",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": "03_love",
+      "emotion": "Love / Affection",
+      "emoji": "\u2764\ufe0f"
+    },
+    {
+      "id": "04_lol",
+      "emotion": "Laughing hard",
+      "emoji": "\ud83d\ude02"
+    },
+    {
+      "id": "05_ok",
+      "emotion": "OK / Approval",
+      "emoji": "\ud83d\udc4d"
+    },
+    {
+      "id": "06_what",
+      "emotion": "Shocked / Confused",
+      "emoji": "\ud83d\ude31"
+    },
+    {
+      "id": "07_sorry",
+      "emotion": "Sorry / Apologize",
+      "emoji": "\ud83d\ude47"
+    },
+    {
+      "id": "08_sleepy",
+      "emotion": "Sleepy / Good Night",
+      "emoji": "\ud83c\udf19"
+    },
+    {
+      "id": "09_hungry",
+      "emotion": "Hungry / Starving",
+      "emoji": "\ud83e\udd24"
+    },
+    {
+      "id": "10_angry",
+      "emotion": "Angry / Grumpy",
+      "emoji": "\ud83d\ude24"
+    },
+    {
+      "id": "11_cry",
+      "emotion": "Sad / Crying",
+      "emoji": "\ud83d\ude2d"
+    },
+    {
+      "id": "12_yay",
+      "emotion": "Excited / Celebrating",
+      "emoji": "\ud83c\udf89"
+    },
+    {
+      "id": "13_please",
+      "emotion": "Begging / Please",
+      "emoji": "\ud83e\udd7a"
+    },
+    {
+      "id": "14_busy",
+      "emotion": "Busy / Working",
+      "emoji": "\ud83d\udcbb"
+    },
+    {
+      "id": "15_omg",
+      "emotion": "Amazed / OMG",
+      "emoji": "\ud83e\udd29"
+    },
+    {
+      "id": "16_bye",
+      "emotion": "Goodbye / See You",
+      "emoji": "\ud83d\udc4b"
+    }
+  ]
+}

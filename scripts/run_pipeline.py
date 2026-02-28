@@ -134,6 +134,7 @@ def stage_process(
         output_dir=final_dir,
         platforms=config["platforms"],
         skip_bg_removal=skip_bg,
+        sticker_configs=config.get("stickers"),
     )
 
 
