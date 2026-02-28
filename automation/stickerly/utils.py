@@ -54,52 +54,62 @@ def human_delay(min_ms: int = 500, max_ms: int = 2000) -> None:
 # -- Resilient UI interaction --------------------------------------------------
 
 
-def find_element(device, selector_group: dict, timeout: float = ELEMENT_WAIT_TIMEOUT):
+def find_element(device, selector: dict, timeout: float = ELEMENT_WAIT_TIMEOUT):
     """
-    Try multiple selectors in order; return the first element found.
+    Find a UI element using a uiautomator2 selector dict.
+
+    Supports both flat selectors (new format) and the legacy format with
+    "description" + "selectors" list.
 
     Args:
         device: uiautomator2.Device instance.
-        selector_group: Dict with 'description' and 'selectors' (list of
-            uiautomator2 selector kwargs).
-        timeout: Max wait per selector in seconds.
+        selector: Either a flat dict of u2 kwargs (e.g., {"resourceId": "...", "text": "..."}),
+                  or a legacy dict with "selectors" list and optional "description".
+        timeout: Max wait in seconds.
 
     Returns:
         uiautomator2 UiObject that matched.
 
     Raises:
-        ElementNotFound: If none of the selectors match within timeout.
+        ElementNotFound: If the selector doesn't match within timeout.
     """
-    errors = []
-    desc = selector_group.get("description", "unknown element")
-    for sel_kwargs in selector_group["selectors"]:
-        try:
-            el = device(**sel_kwargs)
-            if el.wait(timeout=timeout):
-                return el
-            errors.append(f"  {sel_kwargs}: timed out after {timeout}s")
-        except Exception as exc:
-            errors.append(f"  {sel_kwargs}: {exc}")
-    raise ElementNotFound(f"Cannot find '{desc}'. Tried:\n" + "\n".join(errors))
+    # Legacy format: {"description": "...", "selectors": [{...}, {...}]}
+    if "selectors" in selector:
+        errors = []
+        desc = selector.get("description", "unknown element")
+        for sel_kwargs in selector["selectors"]:
+            try:
+                el = device(**sel_kwargs)
+                if el.wait(timeout=timeout):
+                    return el
+                errors.append(f"  {sel_kwargs}: timed out after {timeout}s")
+            except Exception as exc:
+                errors.append(f"  {sel_kwargs}: {exc}")
+        raise ElementNotFound(f"Cannot find '{desc}'. Tried:\n" + "\n".join(errors))
+
+    # New flat format: {"resourceId": "...", "text": "..."}
+    desc = selector.get("resourceId", "") or selector.get("text", "") or str(selector)
+    el = device(**selector)
+    if el.wait(timeout=timeout):
+        return el
+    raise ElementNotFound(f"Cannot find element: {desc} (timeout={timeout}s)")
 
 
-def safe_click(
-    device, selector_group: dict, timeout: float = ELEMENT_WAIT_TIMEOUT
-) -> None:
-    """Find element using selector group and click it."""
-    el = find_element(device, selector_group, timeout)
+def safe_click(device, selector: dict, timeout: float = ELEMENT_WAIT_TIMEOUT) -> None:
+    """Find element using selector and click it."""
+    el = find_element(device, selector, timeout)
     el.click()
 
 
 def safe_set_text(
     device,
-    selector_group: dict,
+    selector: dict,
     text: str,
     clear_first: bool = True,
     timeout: float = ELEMENT_WAIT_TIMEOUT,
 ) -> None:
-    """Find element using selector group and set its text."""
-    el = find_element(device, selector_group, timeout)
+    """Find element using selector and set its text."""
+    el = find_element(device, selector, timeout)
     if clear_first:
         el.clear_text()
     el.set_text(text)
@@ -168,6 +178,19 @@ def screenshot_on_failure(device, action_name: str):
         raise
 
 
+def take_screenshot(device, label: str) -> Path | None:
+    """Take a screenshot with a descriptive label. Returns path or None."""
+    SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    path = SCREENSHOT_DIR / f"{timestamp}_{label}.png"
+    try:
+        device.screenshot(str(path))
+        return path
+    except Exception as exc:
+        print(f"  Failed to save screenshot: {exc}")
+        return None
+
+
 # -- ADB helpers ---------------------------------------------------------------
 
 
@@ -208,6 +231,14 @@ def adb_pull(remote_path: str, local_path: str) -> None:
         raise RuntimeError(f"adb pull failed: {result.stderr.strip()}")
 
 
+def media_scan(remote_path: str) -> None:
+    """Trigger Android media scanner on a path so gallery picks up new files."""
+    adb_shell(
+        f"am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE "
+        f'-d "file://{remote_path}"'
+    )
+
+
 # -- Progress persistence ------------------------------------------------------
 
 
@@ -230,7 +261,12 @@ def load_progress(path: Path | None = None) -> dict | None:
     return json.loads(src.read_text())
 
 
-def save_published_pack(pack_id: str, share_link: str | None = None) -> None:
+def save_published_pack(
+    pack_id: str,
+    pack_code: str | None = None,
+    share_link: str | None = None,
+    sticker_count: int = 0,
+) -> None:
     """Append a published pack entry to the published packs log."""
     from automation.stickerly.config import PUBLISHED_PACKS_PATH
 
@@ -239,7 +275,9 @@ def save_published_pack(pack_id: str, share_link: str | None = None) -> None:
     if PUBLISHED_PACKS_PATH.exists():
         packs = json.loads(PUBLISHED_PACKS_PATH.read_text())
     packs[pack_id] = {
+        "pack_code": pack_code,
         "share_link": share_link,
+        "sticker_count": sticker_count,
         "published_at": datetime.now().isoformat(),
     }
     PUBLISHED_PACKS_PATH.write_text(json.dumps(packs, indent=2))

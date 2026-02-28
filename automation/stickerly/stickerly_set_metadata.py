@@ -1,158 +1,54 @@
 """
 Sticker.ly pack metadata automation.
 
-Fills pack name, author/creator, and tags in the Sticker.ly app
-using uiautomator2.
+In the actual Sticker.ly flow, metadata is limited:
+- Pack name: set at creation time (editable via overflow menu -> Edit pack)
+- Tags: set during the "Save to..." step when adding stickers
+- No separate "author" field exists in the app UI
+
+This module handles tag generation and metadata helpers.
 """
 
 from __future__ import annotations
 
-import uiautomator2 as u2
-
 from automation.stickerly.config import (
     DEFAULTS,
-    ELEMENT_WAIT_TIMEOUT,
-    SEL_AUTHOR_INPUT,
-    SEL_PACK_NAME_INPUT,
-    SEL_TAG_INPUT,
     TAG_TEMPLATES,
-)
-from automation.stickerly.utils import (
-    ElementNotFound,
-    find_element,
-    human_delay,
-    safe_click,
-    safe_set_text,
-    screenshot_on_failure,
 )
 
 
 class StickerlySetMetadata:
-    """Fill pack metadata (name, author, tags) in the Sticker.ly app."""
+    """Build and manage pack metadata (tags, names) for Sticker.ly."""
 
-    def set_metadata(
-        self,
-        device: u2.Device,
-        pack_name: str,
-        publisher: str | None = None,
-        tags: list[str] | None = None,
+    @staticmethod
+    def build_tags(
+        custom_tags: list[str] | None = None,
         character_type: str | None = None,
-    ) -> None:
+        pack_name: str | None = None,
+    ) -> str:
         """
-        Fill in pack metadata fields.
+        Build a comma-separated tag string for the "Save to..." screen.
 
         Args:
-            device: uiautomator2 Device instance.
-            pack_name: Display name for the sticker pack.
-            publisher: Creator/author name (defaults to config).
-            tags: Custom tags. If None, auto-generates from character_type.
-            character_type: Character category key for tag templates
+            custom_tags: Explicit tags to include first.
+            character_type: Character category for template tags
                            (e.g., "cat", "panda", "capybara").
-        """
-        publisher = publisher or DEFAULTS["publisher"]
+            pack_name: Pack name to extract additional keywords from.
 
-        with screenshot_on_failure(device, "set_metadata"):
-            # Set pack name
-            print(f"  Setting pack name: {pack_name}")
-            self._fill_field(device, SEL_PACK_NAME_INPUT, pack_name)
-            human_delay(500, 1000)
-
-            # Set author
-            print(f"  Setting author: {publisher}")
-            self._fill_field(device, SEL_AUTHOR_INPUT, publisher)
-            human_delay(500, 1000)
-
-            # Set tags
-            final_tags = self._build_tags(tags, character_type)
-            print(f"  Adding {len(final_tags)} tags...")
-            self._add_tags(device, final_tags)
-
-        print("  Metadata set successfully.")
-
-    def _fill_field(
-        self,
-        device: u2.Device,
-        selector_group: dict,
-        value: str,
-    ) -> None:
-        """Fill a text input field, handling potential issues."""
-        try:
-            safe_set_text(device, selector_group, value)
-        except ElementNotFound:
-            # Fallback: try finding any EditText and filling by index
-            desc = selector_group.get("description", "unknown")
-            print(f"    WARNING: Could not find '{desc}', trying EditText fallback...")
-            edit_texts = device(className="android.widget.EditText")
-            if edit_texts.count > 0:
-                # Use the first empty one or the first overall
-                for i in range(edit_texts.count):
-                    et = edit_texts[i]
-                    current = et.get_text() or ""
-                    if not current.strip():
-                        et.set_text(value)
-                        return
-                # If all have text, use the first one
-                edit_texts[0].clear_text()
-                edit_texts[0].set_text(value)
-            else:
-                raise
-
-    def _add_tags(self, device: u2.Device, tags: list[str]) -> None:
-        """
-        Add tags one by one to the tag input field.
-
-        The Sticker.ly tag flow typically works by:
-        1. Tap the tag input
-        2. Type a tag
-        3. Press Enter or tap "Add"
-        4. Repeat
-        """
-        for tag in tags:
-            try:
-                # Find and tap tag input
-                el = find_element(device, SEL_TAG_INPUT, timeout=3)
-                el.click()
-                human_delay(200, 500)
-
-                # Type the tag
-                el.set_text(tag)
-                human_delay(200, 500)
-
-                # Press Enter to confirm the tag
-                device.press("enter")
-                human_delay(300, 700)
-
-            except ElementNotFound:
-                # Tag input may have a different UI pattern
-                # Try typing directly and pressing enter
-                try:
-                    device.send_keys(tag)
-                    human_delay(200, 500)
-                    device.press("enter")
-                    human_delay(300, 700)
-                except Exception as exc:
-                    print(f"    WARNING: Could not add tag '{tag}': {exc}")
-                    break  # Stop adding tags if we can't find the input
-            except Exception as exc:
-                print(f"    WARNING: Could not add tag '{tag}': {exc}")
-                continue
-
-    def _build_tags(
-        self,
-        custom_tags: list[str] | None,
-        character_type: str | None,
-    ) -> list[str]:
-        """
-        Build a merged, deduplicated tag list.
-
-        Order: custom tags > character-specific > base defaults.
-        Limit to ~20 tags (Sticker.ly may have a cap).
+        Returns:
+            Comma-separated tag string, e.g., "capybara, cute, kawaii, stickers"
         """
         tags: list[str] = []
 
         # Custom tags first
         if custom_tags:
             tags.extend(custom_tags)
+
+        # Pack name words as tags (skip short words)
+        if pack_name:
+            for word in pack_name.lower().replace("-", " ").split():
+                if len(word) > 2 and word not in ("the", "and", "for"):
+                    tags.append(word)
 
         # Character-specific tags
         if character_type:
@@ -173,5 +69,32 @@ class StickerlySetMetadata:
                 seen.add(tag_lower)
                 unique_tags.append(tag.strip())
 
-        # Limit to 20 tags
-        return unique_tags[:20]
+        # Limit to 20 tags, join with comma-space
+        return ", ".join(unique_tags[:20])
+
+    @staticmethod
+    def detect_character_type(pack_id: str) -> str:
+        """
+        Detect the character type from a pack ID.
+
+        Args:
+            pack_id: Pack directory name, e.g., "cappy-capybara-3"
+
+        Returns:
+            Character type key matching TAG_TEMPLATES, or "default".
+        """
+        pack_lower = pack_id.lower()
+        for key in TAG_TEMPLATES:
+            if key != "default" and key in pack_lower:
+                return key
+        # Special cases
+        if "cappy" in pack_lower or "capy" in pack_lower:
+            return "capybara"
+        if "mochi" in pack_lower:
+            # chubby-mochi-cat, chubby-mochi-hamster, chubby-mochi-panda
+            for animal in ("cat", "hamster", "panda"):
+                if animal in pack_lower:
+                    return animal
+        if "boba" in pack_lower or "milo" in pack_lower:
+            return "otter"
+        return "default"

@@ -18,8 +18,8 @@ from automation.stickerly.config import (
     APP_LAUNCH_TIMEOUT,
     ELEMENT_WAIT_TIMEOUT,
     LOGIN_TIMEOUT,
-    SEL_HOME_SCREEN,
-    SEL_LOGIN_SCREEN,
+    SEL_HOME_INDICATOR,
+    SEL_LOGIN_GOOGLE,
     SESSION_MARKER_PATH,
     SESSION_STATE_DIR,
     SNAPSHOT_NAME,
@@ -181,23 +181,21 @@ class StickerlyAuth:
         Determine if Sticker.ly is showing an authenticated screen.
         Returns True if home screen elements are found, False if login screen.
         """
-        # Check for login screen indicators (should NOT be present)
-        for sel_kwargs in SEL_LOGIN_SCREEN["selectors"]:
-            try:
-                el = device(**sel_kwargs)
-                if el.exists(timeout=2):
-                    return False
-            except Exception:
-                continue
+        # Check for login screen indicator (should NOT be present)
+        try:
+            el = device(**SEL_LOGIN_GOOGLE)
+            if el.exists(timeout=2):
+                return False
+        except Exception:
+            pass
 
-        # Check for home screen indicators (SHOULD be present)
-        for sel_kwargs in SEL_HOME_SCREEN["selectors"]:
-            try:
-                el = device(**sel_kwargs)
-                if el.exists(timeout=3):
-                    return True
-            except Exception:
-                continue
+        # Check for home screen indicator (SHOULD be present)
+        try:
+            el = device(**SEL_HOME_INDICATOR)
+            if el.exists(timeout=3):
+                return True
+        except Exception:
+            pass
 
         # Fallback: if we can't determine, assume authenticated
         # (user may be on a different screen within the app)

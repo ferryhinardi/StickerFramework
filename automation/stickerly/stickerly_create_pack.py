@@ -1,8 +1,14 @@
 """
 Sticker.ly pack creation and sticker upload automation.
 
-Handles creating a new WhatsApp sticker pack and adding individual stickers
-through the Sticker.ly mobile app UI via uiautomator2.
+Real flow (verified via UI dumps):
+1. Profile tab -> "New Pack" -> Pack type bottom sheet -> "Regular"
+2. New Pack form -> enter name -> "Create"
+3. Handle private pack info dialog (first time only)
+4. Land on Pack Detail screen (pack is LIVE immediately)
+5. "Add sticker" -> Gallery editor -> multi-select images -> "Next"
+6. "Save to..." screen -> select pack + add tags -> "Save"
+7. Back on Pack Detail with stickers added
 """
 
 from __future__ import annotations
@@ -15,15 +21,22 @@ import uiautomator2 as u2
 from automation.stickerly.config import (
     ELEMENT_WAIT_TIMEOUT,
     REMOTE_STICKER_DIR,
-    SEL_ADD_STICKER,
-    SEL_CREATE_BUTTON,
-    SEL_CROP_DONE,
-    SEL_CROP_NEXT,
-    SEL_FILE_PICKER_DOWNLOADS,
-    SEL_FILE_PICKER_MENU,
-    SEL_FILE_PICKER_STICKERLY_DIR,
-    SEL_TRAY_ICON,
-    SEL_WHATSAPP_STICKER_TYPE,
+    SEL_DIALOG_OK,
+    SEL_EDITOR_BACK_BTN,
+    SEL_EDITOR_MULTI_SELECT_BTN,
+    SEL_EDITOR_NEXT_BTN,
+    SEL_EDITOR_SELECT_NUM,
+    SEL_NAV_PROFILE,
+    SEL_NEW_PACK_CREATE_BTN,
+    SEL_NEW_PACK_NAME_INPUT,
+    SEL_PACK_ADD_STICKER,
+    SEL_PACK_CODE_TEXT,
+    SEL_PACK_NAME_TEXT,
+    SEL_PACK_TYPE_REGULAR,
+    SEL_PROFILE_NEW_PACK,
+    SEL_SAVE_BUTTON,
+    SEL_SAVE_PACK_NAME,
+    SEL_SAVE_TAG_INPUT,
     STICKER_ADD_TIMEOUT,
 )
 from automation.stickerly.utils import (
@@ -31,8 +44,11 @@ from automation.stickerly.utils import (
     StickerUploadError,
     find_element,
     human_delay,
+    media_scan,
     safe_click,
+    safe_set_text,
     screenshot_on_failure,
+    take_screenshot,
 )
 
 
@@ -42,203 +58,199 @@ class StickerlyCreatePack:
     def __init__(self, device: u2.Device):
         self.device = device
 
-    def create_new_pack(self) -> None:
+    def create_pack(self, pack_name: str) -> str | None:
         """
-        Navigate to create a new WhatsApp sticker pack.
+        Create a new sticker pack with the given name.
 
-        Taps the Create button on the bottom nav, then selects
-        'WhatsApp Stickers' as the pack type.
-        """
-        print("  Creating new sticker pack...")
-
-        with screenshot_on_failure(self.device, "create_new_pack"):
-            # Tap Create / + button
-            safe_click(self.device, SEL_CREATE_BUTTON)
-            human_delay(1000, 2000)
-
-            # Select WhatsApp Stickers type
-            safe_click(self.device, SEL_WHATSAPP_STICKER_TYPE)
-            human_delay(1000, 2000)
-
-        print("  New pack creation started.")
-
-    def add_sticker(
-        self,
-        device: u2.Device,
-        remote_file_path: str,
-        sticker_name: str,
-        index: int,
-    ) -> None:
-        """
-        Add a single sticker to the current pack via the file picker.
+        Flow: Profile tab -> New Pack -> Regular -> enter name -> Create -> OK dialog
 
         Args:
-            device: uiautomator2 Device instance.
-            remote_file_path: Full path to the WEBP file on the emulator.
-            sticker_name: Human-readable name for logging.
-            index: Sticker index (1-based) for logging.
-        """
-        with screenshot_on_failure(device, f"add_sticker_{index:02d}"):
-            print(f"    [{index}] Adding: {sticker_name}")
-
-            # Tap "Add Sticker"
-            safe_click(device, SEL_ADD_STICKER)
-            human_delay(1000, 2000)
-
-            # Navigate file picker to select the sticker file
-            self._select_file_in_picker(device, remote_file_path)
-            human_delay(1000, 2000)
-
-            # Confirm / Done on the crop/editor screen
-            self._confirm_sticker_edit(device)
-            human_delay(500, 1500)
-
-            print(f"    [{index}] Added: {sticker_name}")
-
-    def add_all_stickers(
-        self,
-        device: u2.Device,
-        pack_id: str,
-        sticker_files: list[Path],
-    ) -> int:
-        """
-        Add all stickers from the file list to the current pack.
-
-        Args:
-            device: uiautomator2 Device instance.
-            pack_id: Pack identifier (matches remote directory name).
-            sticker_files: Sorted list of local .webp sticker file paths
-                          (excluding tray_icon.webp).
+            pack_name: Display name for the sticker pack.
 
         Returns:
-            Number of stickers successfully added.
+            Pack code (e.g., "NDT04A") if captured, or None.
         """
-        remote_dir = f"{REMOTE_STICKER_DIR}/{pack_id}"
-        added = 0
+        d = self.device
 
-        print(f"  Adding {len(sticker_files)} stickers...")
-        for i, local_file in enumerate(sticker_files, 1):
-            remote_path = f"{remote_dir}/{local_file.name}"
-            try:
-                self.add_sticker(device, remote_path, local_file.stem, i)
-                added += 1
-            except (ElementNotFound, StickerUploadError) as exc:
-                print(f"    [{i}] FAILED: {exc}")
-                # Continue with remaining stickers
-                continue
-
-        print(f"  Added {added}/{len(sticker_files)} stickers.")
-        return added
-
-    def set_tray_icon(self, device: u2.Device, pack_id: str) -> None:
-        """
-        Set the pack tray icon from the pushed files.
-
-        Args:
-            device: uiautomator2 Device instance.
-            pack_id: Pack identifier.
-        """
-        remote_tray = f"{REMOTE_STICKER_DIR}/{pack_id}/tray_icon.webp"
-
-        with screenshot_on_failure(device, "set_tray_icon"):
-            print("  Setting tray icon...")
-
-            # Tap tray icon area
-            safe_click(device, SEL_TRAY_ICON)
+        with screenshot_on_failure(d, "create_pack"):
+            # 1. Go to Profile tab
+            print("  Navigating to Profile tab...")
+            safe_click(d, SEL_NAV_PROFILE)
             human_delay(1000, 2000)
 
-            # Select tray icon file
-            self._select_file_in_picker(device, remote_tray)
+            # 2. Tap "New Pack"
+            print("  Tapping 'New Pack'...")
+            safe_click(d, SEL_PROFILE_NEW_PACK)
             human_delay(1000, 2000)
 
-            # Confirm
-            self._confirm_sticker_edit(device)
+            # 3. Select "Regular" from pack type bottom sheet
+            print("  Selecting 'Regular' pack type...")
+            safe_click(d, SEL_PACK_TYPE_REGULAR)
+            human_delay(1000, 2000)
+
+            # 4. Enter pack name
+            print(f"  Setting pack name: {pack_name}")
+            el = find_element(d, SEL_NEW_PACK_NAME_INPUT)
+            el.click()
+            human_delay(300, 600)
+            el.set_text(pack_name)
             human_delay(500, 1000)
 
-            print("  Tray icon set.")
+            # 5. Click "Create"
+            print("  Clicking Create...")
+            safe_click(d, SEL_NEW_PACK_CREATE_BTN)
+            human_delay(2000, 4000)
 
-    # -- File picker navigation -------------------------------------------------
-
-    def _select_file_in_picker(self, device: u2.Device, remote_path: str) -> None:
-        """
-        Navigate the Android file picker to select a specific file.
-
-        Strategy:
-        1. Open the hamburger menu / navigation drawer.
-        2. Select "Downloads" from the sidebar.
-        3. Navigate to the stickerly_upload subdirectory.
-        4. Tap the target file by name.
-
-        If the standard file picker flow fails, falls back to using
-        ADB intent to directly open the file.
-        """
-        filename = remote_path.rsplit("/", 1)[-1]
-        pack_dir = remote_path.rsplit("/", 2)[-2] if "/" in remote_path else ""
-
-        try:
-            # Try to navigate to Downloads > stickerly_upload > pack_dir
-            # Open sidebar/navigation
+            # 6. Handle private pack info dialog (appears on first pack creation)
             try:
-                safe_click(device, SEL_FILE_PICKER_MENU, timeout=3)
-                human_delay(500, 1000)
+                safe_click(d, SEL_DIALOG_OK, timeout=3)
+                print("  Dismissed private pack info dialog.")
+                human_delay(1000, 2000)
             except ElementNotFound:
-                pass  # Menu may already be open or not needed
+                pass  # Dialog doesn't appear every time
 
-            # Tap Downloads
-            try:
-                safe_click(device, SEL_FILE_PICKER_DOWNLOADS, timeout=3)
-                human_delay(500, 1000)
-            except ElementNotFound:
-                # May already be in Downloads
-                pass
-
-            # Navigate to stickerly_upload directory
-            try:
-                safe_click(device, SEL_FILE_PICKER_STICKERLY_DIR, timeout=3)
-                human_delay(500, 1000)
-            except ElementNotFound:
-                pass
-
-            # Navigate to pack subdirectory if present
-            if pack_dir:
-                try:
-                    el = device(text=pack_dir)
-                    if el.wait(timeout=3):
-                        el.click()
-                        human_delay(500, 1000)
-                except Exception:
-                    pass
-
-            # Select the target file
-            el = device(text=filename)
-            if not el.wait(timeout=ELEMENT_WAIT_TIMEOUT):
-                # Try partial match
-                el = device(textContains=filename.replace(".webp", ""))
-                if not el.wait(timeout=3):
-                    raise ElementNotFound(f"File '{filename}' not found in file picker")
-            el.click()
-
-        except ElementNotFound:
-            # Fallback: try scrolling to find the file
-            device(scrollable=True).scroll.to(text=filename)
-            el = device(text=filename)
-            if el.wait(timeout=3):
-                el.click()
+            # 7. We should now be on Pack Detail screen. Extract pack code.
+            pack_code = self._get_pack_code()
+            if pack_code:
+                print(f"  Pack created! Code: {pack_code}")
             else:
-                raise ElementNotFound(
-                    f"Cannot find file '{filename}' in file picker after scroll"
-                )
+                print("  Pack created! (could not capture code)")
 
-    def _confirm_sticker_edit(self, device: u2.Device) -> None:
-        """Confirm/save on the sticker edit/crop screen."""
-        # Try "Done" first, then "Next", then "Save"
-        for sel_group in [SEL_CROP_DONE, SEL_CROP_NEXT]:
+            take_screenshot(d, f"pack_created_{pack_name.replace(' ', '_')}")
+            return pack_code
+
+    def add_stickers_to_pack(
+        self,
+        pack_name: str,
+        pack_id: str,
+        sticker_files: list[Path],
+        tags: str = "",
+    ) -> int:
+        """
+        Add stickers to an existing pack via the gallery multi-select flow.
+
+        Flow:
+        1. From Pack Detail, click "Add sticker"
+        2. In gallery editor, click "Select" for multi-select mode
+        3. Tap each sticker image in the gallery grid
+        4. Click "Next"
+        5. On "Save to..." screen, select the target pack
+        6. Add tags
+        7. Click "Save"
+
+        Images must already be pushed to the emulator's media store
+        (e.g., /sdcard/Pictures/Stickers/<pack_id>/) and media-scanned.
+
+        Args:
+            pack_name: Display name of the pack (used to select in "Save to..." list).
+            pack_id: Pack identifier for logging.
+            sticker_files: List of local sticker file paths (used for count only;
+                          actual images are read from emulator gallery).
+            tags: Comma-separated tags string for the stickers.
+
+        Returns:
+            Number of stickers selected (same as sticker_files count on success).
+        """
+        d = self.device
+        count = len(sticker_files)
+
+        with screenshot_on_failure(d, f"add_stickers_{pack_id}"):
+            # 1. Click "Add sticker" on Pack Detail
+            print(f"  Clicking 'Add sticker' to add {count} images...")
+            safe_click(d, SEL_PACK_ADD_STICKER)
+            human_delay(2000, 3000)
+
+            # 2. Enable multi-select mode
+            print("  Enabling multi-select mode...")
+            safe_click(d, SEL_EDITOR_MULTI_SELECT_BTN)
+            human_delay(1000, 2000)
+
+            # 3. Select all sticker images in the gallery
+            selected = self._select_gallery_images(count)
+            if selected == 0:
+                raise StickerUploadError("No images could be selected in gallery")
+
+            print(f"  Selected {selected}/{count} images.")
+            human_delay(500, 1000)
+
+            # 4. Click "Next"
+            print("  Clicking Next...")
+            safe_click(d, SEL_EDITOR_NEXT_BTN)
+            human_delay(2000, 4000)
+
+            # 5. Select the target pack in the "Save to..." screen
+            print(f"  Selecting pack '{pack_name}'...")
             try:
-                safe_click(device, sel_group, timeout=3)
-                return
-            except ElementNotFound:
-                continue
+                pack_el = d(text=pack_name)
+                if pack_el.wait(timeout=ELEMENT_WAIT_TIMEOUT):
+                    pack_el.click()
+                    human_delay(500, 1000)
+                else:
+                    print(f"  WARNING: Pack '{pack_name}' not found in list")
+            except Exception as exc:
+                print(f"  WARNING: Could not select pack: {exc}")
 
-        # If no confirmation button found, the sticker may have been
-        # added directly without an edit screen
-        print("    (No edit confirmation screen detected, continuing...)")
+            # 6. Add tags
+            if tags:
+                print(f"  Adding tags: {tags}")
+                try:
+                    tag_el = find_element(d, SEL_SAVE_TAG_INPUT, timeout=5)
+                    tag_el.click()
+                    human_delay(300, 600)
+                    tag_el.set_text(tags)
+                    human_delay(500, 1000)
+                except ElementNotFound:
+                    print("  WARNING: Could not find tag input")
+
+            # 7. Click "Save"
+            print("  Saving stickers to pack...")
+            safe_click(d, SEL_SAVE_BUTTON)
+            human_delay(3000, 5000)
+
+            take_screenshot(d, f"stickers_added_{pack_id}")
+            print(f"  Added {selected} stickers to pack.")
+            return selected
+
+    def _select_gallery_images(self, target_count: int) -> int:
+        """
+        Select images in the gallery grid by tapping selection circles.
+
+        In multi-select mode, each gallery image has a selectNumLayout overlay.
+        Tapping it selects the image and shows the selection number (1, 2, 3...).
+
+        Args:
+            target_count: Number of images to select.
+
+        Returns:
+            Number of images actually selected.
+        """
+        d = self.device
+        select_circles = d(resourceId=SEL_EDITOR_SELECT_NUM["resourceId"])
+
+        # Wait for gallery to load
+        if not select_circles.wait(timeout=ELEMENT_WAIT_TIMEOUT):
+            print("  WARNING: No selectable images found in gallery")
+            return 0
+
+        available = select_circles.count
+        to_select = min(target_count, available)
+
+        for i in range(to_select):
+            try:
+                select_circles[i].click()
+                human_delay(200, 500)
+            except Exception as exc:
+                print(f"  WARNING: Could not select image {i + 1}: {exc}")
+
+        return to_select
+
+    def _get_pack_code(self) -> str | None:
+        """Extract the pack code from the Pack Detail screen."""
+        try:
+            el = find_element(self.device, SEL_PACK_CODE_TEXT, timeout=5)
+            code = el.get_text()
+            if code and len(code) <= 10:  # pack codes are short
+                return code
+        except ElementNotFound:
+            pass
+        return None

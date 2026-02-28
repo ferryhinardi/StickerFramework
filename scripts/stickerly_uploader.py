@@ -8,6 +8,13 @@ creating WhatsApp sticker packs and publishing them automatically.
 First run requires --headful for manual Google login.
 Subsequent runs work headless using saved AVD snapshots.
 
+Actual flow (verified):
+1. Push sticker images to emulator via ADB
+2. Media-scan so gallery picks them up
+3. Create pack (Profile -> New Pack -> Regular -> name -> Create)
+4. Add stickers (Add sticker -> multi-select -> Next -> Save to pack + tags)
+5. Capture share link (pack is public immediately on creation)
+
 Usage:
     # First run: show emulator GUI for login
     python stickerly_uploader.py \\
@@ -52,18 +59,19 @@ from automation.stickerly import (
 from automation.stickerly.config import (
     DEFAULT_AVD_NAME,
     PUBLISHED_PACKS_PATH,
-    SESSION_STATE_DIR,
-    TAG_TEMPLATES,
+    REMOTE_STICKER_DIR,
 )
 from automation.stickerly.utils import (
     SessionExpired,
+    adb_shell,
     human_delay,
     load_progress,
+    media_scan,
     save_progress,
 )
 
-# Pipeline steps
-STEPS = ["push_files", "create_pack", "set_metadata", "publish"]
+# Pipeline steps (simplified from old 4-step to actual flow)
+STEPS = ["push_files", "create_pack", "add_stickers", "capture_link"]
 
 
 # -- Pack config loading -------------------------------------------------------
@@ -76,8 +84,8 @@ def _load_pack_config(config_path: str) -> dict:
         print(f"ERROR: Pack config not found: {p}")
         sys.exit(1)
     spec = importlib.util.spec_from_file_location("pack_config_dyn", p)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    mod = importlib.util.module_from_spec(spec)  # type: ignore
+    spec.loader.exec_module(mod)  # type: ignore
     return mod.PACK_CONFIG
 
 
@@ -89,18 +97,6 @@ def _find_pack_config(pack_dir: Path) -> Path | None:
         if candidate.exists():
             return candidate
         current = current.parent
-    return None
-
-
-def _detect_character_type(config: dict) -> str | None:
-    """Infer character type from pack config for tag generation."""
-    character = config.get("character", {})
-    species = character.get("species", "").lower()
-    name = character.get("name", "").lower()
-
-    for key in TAG_TEMPLATES:
-        if key in species or key in name:
-            return key
     return None
 
 
@@ -136,11 +132,56 @@ def _discover_packs() -> list[dict]:
     return found
 
 
+# -- Push files to emulator ----------------------------------------------------
+
+
+def push_sticker_files(pack_dir: Path, pack_id: str) -> list[Path]:
+    """
+    Push sticker PNG/WEBP files to emulator and trigger media scan.
+
+    Returns the list of sticker files (excluding tray icon).
+    """
+    webp_files = sorted(pack_dir.glob("*.webp"))
+    sticker_files = [f for f in webp_files if f.name != "tray_icon.webp"]
+
+    if not sticker_files:
+        # Also check for PNG files
+        png_files = sorted(pack_dir.glob("*.png"))
+        sticker_files = [f for f in png_files if "tray" not in f.name.lower()]
+
+    if not sticker_files:
+        print(f"  ERROR: No sticker files found in {pack_dir}")
+        return []
+
+    remote_dir = f"{REMOTE_STICKER_DIR}/{pack_id}"
+
+    # Create remote directory
+    adb_shell(f"mkdir -p {remote_dir}")
+
+    # Push each file
+    print(f"  Pushing {len(sticker_files)} sticker files...")
+    from automation.stickerly.utils import adb_push
+
+    for f in sticker_files:
+        remote_path = f"{remote_dir}/{f.name}"
+        adb_push(str(f), remote_path)
+
+    # Trigger media scan so gallery picks up the files
+    print("  Triggering media scan...")
+    media_scan(remote_dir)
+    # Also scan individual files for reliability
+    for f in sticker_files:
+        media_scan(f"{remote_dir}/{f.name}")
+    human_delay(2000, 3000)  # Wait for media scanner
+
+    print(f"  Pushed {len(sticker_files)} files to {remote_dir}")
+    return sticker_files
+
+
 # -- Single pack upload pipeline -----------------------------------------------
 
 
 def upload_pack(
-    emulator: EmulatorManager,
     device,
     pack_dir: str,
     pack_config: dict | None,
@@ -154,118 +195,127 @@ def upload_pack(
     Returns:
         Progress dict with completed steps and share link.
     """
-    pack_dir = Path(pack_dir)
+    pack_path = Path(pack_dir)
 
-    # Determine sticker files (exclude tray icon)
-    webp_files = sorted(pack_dir.glob("*.webp"))
+    # Determine sticker files
+    webp_files = sorted(pack_path.glob("*.webp"))
     sticker_files = [f for f in webp_files if f.name != "tray_icon.webp"]
-    has_tray = (pack_dir / "tray_icon.webp").exists()
 
     if len(sticker_files) < 3:
         print(f"  ERROR: Pack has {len(sticker_files)} stickers (minimum 3).")
-        return {"error": "Too few stickers"}
+        return {"pack_id": pack_id, "error": "Too few stickers"}
 
     # Initialize progress
     progress = resume_from or {
         "pack_id": pack_id,
-        "pack_dir": str(pack_dir),
+        "pack_dir": str(pack_path),
         "completed_steps": [],
         "pending_steps": list(STEPS),
+        "pack_code": None,
         "share_link": None,
     }
 
     completed = progress["completed_steps"]
 
-    # Derive metadata from config
+    # Derive metadata
+    meta_builder = StickerlySetMetadata()
     pack_name = pack_id.replace("-", " ").title()
-    publisher = None
-    character_type = None
+    character_type = meta_builder.detect_character_type(pack_id)
     custom_tags = None
 
     if pack_config:
         pack_name = pack_config.get("pack_name", pack_name)
-        publisher = pack_config.get("publisher")
-        character_type = _detect_character_type(pack_config)
-
-        # Extract emotion keywords as tags
         sticker_configs = pack_config.get("stickers", [])
         if sticker_configs:
-            custom_tags = [
-                s.get("emotion", "").lower()
-                for s in sticker_configs
-                if s.get("emotion")
-            ]
+            custom_tags = list(
+                {
+                    s.get("emotion", "").lower()
+                    for s in sticker_configs
+                    if s.get("emotion")
+                }
+            )
+
+    tags_str = meta_builder.build_tags(
+        custom_tags=custom_tags,
+        character_type=character_type,
+        pack_name=pack_name,
+    )
 
     print(f"\n{'=' * 60}")
     print(f"  UPLOADING: {pack_name}")
     print(f"  Pack ID: {pack_id}")
     print(f"  Stickers: {len(sticker_files)}")
-    print(f"  Tray icon: {'yes' if has_tray else 'no'}")
+    print(f"  Tags: {tags_str[:60]}...")
     print(f"{'=' * 60}\n")
 
     # Step 1: Push files to emulator
     if "push_files" not in completed:
         print("STEP 1/4: Pushing files to emulator")
-        emulator.push_stickers(pack_dir, pack_id)
+        pushed = push_sticker_files(pack_path, pack_id)
+        if not pushed:
+            progress["error"] = "No files pushed"
+            save_progress(progress)
+            return progress
         completed.append("push_files")
-        progress["pending_steps"].remove("push_files")
+        if "push_files" in progress["pending_steps"]:
+            progress["pending_steps"].remove("push_files")
         save_progress(progress)
     else:
         print("STEP 1/4: Push files (already done, skipping)")
 
-    # Step 2: Create pack + add stickers
+    # Step 2: Create pack
     if "create_pack" not in completed:
-        print("\nSTEP 2/4: Creating pack and adding stickers")
+        print("\nSTEP 2/4: Creating pack")
         creator = StickerlyCreatePack(device)
-        creator.create_new_pack()
-        human_delay(1000, 2000)
+        pack_code = creator.create_pack(pack_name)
+        progress["pack_code"] = pack_code
+        completed.append("create_pack")
+        if "create_pack" in progress["pending_steps"]:
+            progress["pending_steps"].remove("create_pack")
+        save_progress(progress)
+    else:
+        print("STEP 2/4: Create pack (already done, skipping)")
 
-        # Add all stickers
-        added = creator.add_all_stickers(device, pack_id, sticker_files)
+    # Step 3: Add stickers via gallery multi-select
+    if "add_stickers" not in completed:
+        print("\nSTEP 3/4: Adding stickers via gallery")
+        creator = StickerlyCreatePack(device)
+        added = creator.add_stickers_to_pack(
+            pack_name=pack_name,
+            pack_id=pack_id,
+            sticker_files=sticker_files,
+            tags=tags_str,
+        )
         if added < 3:
             print(f"  ERROR: Only {added} stickers added (minimum 3). Aborting.")
             progress["error"] = f"Only {added} stickers added"
             save_progress(progress)
             return progress
-
-        # Set tray icon
-        if has_tray:
-            creator.set_tray_icon(device, pack_id)
-
-        completed.append("create_pack")
-        progress["pending_steps"].remove("create_pack")
+        completed.append("add_stickers")
+        if "add_stickers" in progress["pending_steps"]:
+            progress["pending_steps"].remove("add_stickers")
         save_progress(progress)
     else:
-        print("STEP 2/4: Create pack (already done, skipping)")
+        print("STEP 3/4: Add stickers (already done, skipping)")
 
-    # Step 3: Set metadata
-    if "set_metadata" not in completed:
-        print("\nSTEP 3/4: Setting metadata")
-        meta = StickerlySetMetadata()
-        meta.set_metadata(
-            device,
-            pack_name=pack_name,
-            publisher=publisher,
-            tags=custom_tags,
-            character_type=character_type,
-        )
-        completed.append("set_metadata")
-        progress["pending_steps"].remove("set_metadata")
-        save_progress(progress)
-    else:
-        print("STEP 3/4: Set metadata (already done, skipping)")
-
-    # Step 4: Publish
-    if "publish" not in completed:
-        print("\nSTEP 4/4: Publishing")
+    # Step 4: Capture share link
+    if "capture_link" not in completed:
+        print("\nSTEP 4/4: Capturing share link")
         pub = StickerlyPublish()
-        share_link = pub.publish(device, pack_id, dry_run=dry_run)
-        progress["share_link"] = share_link
-        completed.append("publish")
-        progress["pending_steps"].remove("publish")
+        result = pub.capture_share_link(
+            device,
+            pack_id,
+            sticker_count=len(sticker_files),
+            dry_run=dry_run,
+        )
+        progress["pack_code"] = result.get("pack_code") or progress.get("pack_code")
+        progress["share_link"] = result.get("share_link")
+        completed.append("capture_link")
+        if "capture_link" in progress["pending_steps"]:
+            progress["pending_steps"].remove("capture_link")
         save_progress(progress)
     else:
-        print("STEP 4/4: Publish (already done, skipping)")
+        print("STEP 4/4: Capture link (already done, skipping)")
 
     return progress
 
@@ -277,7 +327,6 @@ def main():
     parser = argparse.ArgumentParser(
         description="Sticker.ly Uploader — Automated publishing via Android emulator",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__,
     )
     parser.add_argument(
         "--pack-dir",
@@ -300,7 +349,7 @@ def main():
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Run everything except the final publish tap",
+        help="Run everything except share link capture",
     )
     parser.add_argument(
         "--resume",
@@ -360,7 +409,6 @@ def main():
             config_path = _find_pack_config(Path(pack_dir))
             pack_config = _load_pack_config(str(config_path)) if config_path else None
             result = upload_pack(
-                emulator,
                 device,
                 pack_dir,
                 pack_config,
@@ -397,7 +445,6 @@ def main():
                 config_path = pack_info.get("config_path")
                 pack_config = _load_pack_config(config_path) if config_path else None
                 result = upload_pack(
-                    emulator,
                     device,
                     pack_info["pack_dir"],
                     pack_config,
@@ -431,7 +478,6 @@ def main():
         pack_id = pack_dir.parent.parent.name  # packs/<pack_id>/final/whatsapp
 
         result = upload_pack(
-            emulator,
             device,
             str(pack_dir),
             pack_config,
@@ -460,13 +506,15 @@ def _print_result(result: dict) -> None:
     pack_id = result.get("pack_id", "unknown")
     completed = result.get("completed_steps", [])
     share_link = result.get("share_link")
+    pack_code = result.get("pack_code")
     error = result.get("error")
 
     if error:
         print(f"  {pack_id}: FAILED - {error}")
-    elif "publish" in completed:
+    elif "capture_link" in completed:
         link_str = f" -> {share_link}" if share_link else ""
-        print(f"  {pack_id}: PUBLISHED{link_str}")
+        code_str = f" (code: {pack_code})" if pack_code else ""
+        print(f"  {pack_id}: PUBLISHED{code_str}{link_str}")
     else:
         print(f"  {pack_id}: PARTIAL ({len(completed)}/{len(STEPS)} steps)")
 
