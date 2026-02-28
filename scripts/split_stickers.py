@@ -534,7 +534,26 @@ def main():
             "pack_dir": "jesus-faith-and-peace",
             "input_file": "sticker_pack.png",
             "grid_rows": 4,
+            "grid_cols": 4,
+            "use_grid_crop": True,
+            "skip_text_blank": True,
             "threshold": 235,
+            # Row y-boundaries detected from white gutters between sticker rows.
+            # Sticker content overflows the naive equal-height grid (1536/4=384px),
+            # so explicit boundaries are required.
+            # row_starts gives the top of each row; the bottom of each row is the
+            # top of the next row (or image bottom for the last row).
+            # Actual ends: row0→360, row1→700, row2→1020, row3→1360.
+            "row_starts": [0, 380, 720, 1040],
+            # Per-row column separators (x midpoints of white vertical gutters).
+            # Stickers are not equal-width and the gutters shift per row, so each
+            # row has its own set of 4 boundaries: [x_left, sep1, sep2, sep3, x_right].
+            "row_col_starts": {
+                0: [0, 289, 533, 764, 1024],  # row 1: god_bless_you … praying_for_you
+                1: [0, 277, 531, 769, 1024],  # row 2: do_not_fear … god_is_good
+                2: [0, 289, 538, 758, 1024],  # row 3: amen … forgive
+                3: [0, 304, 533, 768, 1024],  # row 4: love_one_another … good_night
+            },
             "names": [
                 "01_god_bless_you",
                 "02_peace_be_with_you",

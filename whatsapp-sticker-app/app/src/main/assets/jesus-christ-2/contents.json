@@ -1,0 +1,110 @@
+{
+  "sticker_packs": [
+    {
+      "identifier": "jesus-christ-2",
+      "name": "Jesus Christ 2",
+      "publisher": "BobaStickers",
+      "tray_image_file": "tray_icon.webp",
+      "image_data_version": "1",
+      "avoid_cache": false,
+      "stickers": [
+        {
+          "image_file": "01_walk_by_faith.webp",
+          "emojis": [
+            "\ud83d\udeb6"
+          ]
+        },
+        {
+          "image_file": "02_keep_praying.webp",
+          "emojis": [
+            "\ud83d\ude4f"
+          ]
+        },
+        {
+          "image_file": "03_faith_over_fear.webp",
+          "emojis": [
+            "\ud83d\udee1\ufe0f"
+          ]
+        },
+        {
+          "image_file": "04_his_grace.webp",
+          "emojis": [
+            "\u2728"
+          ]
+        },
+        {
+          "image_file": "05_seek_him_first.webp",
+          "emojis": [
+            "\ud83d\udd0d"
+          ]
+        },
+        {
+          "image_file": "06_god_is_with_you.webp",
+          "emojis": [
+            "\ud83e\udd17"
+          ]
+        },
+        {
+          "image_file": "07_hope_in_him.webp",
+          "emojis": [
+            "\ud83c\udf1f"
+          ]
+        },
+        {
+          "image_file": "08_give_it_to_god.webp",
+          "emojis": [
+            "\ud83e\udd8b"
+          ]
+        },
+        {
+          "image_file": "09_joy_of_the_lord.webp",
+          "emojis": [
+            "\ud83d\udc83"
+          ]
+        },
+        {
+          "image_file": "10_be_kind.webp",
+          "emojis": [
+            "\ud83c\udf38"
+          ]
+        },
+        {
+          "image_file": "11_forgive.webp",
+          "emojis": [
+            "\ud83d\udc9c"
+          ]
+        },
+        {
+          "image_file": "12_you_matter.webp",
+          "emojis": [
+            "\ud83d\udc96"
+          ]
+        },
+        {
+          "image_file": "13_never_give_up.webp",
+          "emojis": [
+            "\ud83c\udfc3"
+          ]
+        },
+        {
+          "image_file": "14_let_go_let_god.webp",
+          "emojis": [
+            "\u2601\ufe0f"
+          ]
+        },
+        {
+          "image_file": "15_be_the_light.webp",
+          "emojis": [
+            "\ud83d\udd6f\ufe0f"
+          ]
+        },
+        {
+          "image_file": "16_god_has_a_plan.webp",
+          "emojis": [
+            "\ud83d\uddfa\ufe0f"
+          ]
+        }
+      ]
+    }
+  ]
+}

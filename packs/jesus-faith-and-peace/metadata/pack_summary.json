@@ -2,7 +2,7 @@
   "pack_id": "jesus-faith-and-peace",
   "pack_name": "Jesus \u2013 Faith and Peace",
   "publisher": "BobaStickers",
-  "sticker_count": 13,
+  "sticker_count": 16,
   "platforms": [
     "whatsapp",
     "telegram",
@@ -16,9 +16,9 @@
       "emoji": "\ud83d\ude4f"
     },
     {
-      "id": "02_praying_for_you",
-      "emotion": "Compassionate / Prayerful",
-      "emoji": "\ud83d\ude4f"
+      "id": "02_peace_be_with_you",
+      "emotion": "Calm / Peaceful",
+      "emoji": "\u262e\ufe0f"
     },
     {
       "id": "03_have_faith",
@@ -26,52 +26,67 @@
       "emoji": "\u2728"
     },
     {
-      "id": "04_peace_be_with_you",
-      "emotion": "Calm / Peaceful",
-      "emoji": "\u262e\ufe0f"
+      "id": "04_praying_for_you",
+      "emotion": "Compassionate / Prayerful",
+      "emoji": "\ud83d\ude4f"
     },
     {
-      "id": "05_god_is_good",
-      "emotion": "Joyful / Grateful",
-      "emoji": "\ud83c\udf1f"
+      "id": "05_do_not_fear",
+      "emotion": "Reassuring / Brave",
+      "emoji": "\ud83d\udee1\ufe0f"
     },
     {
-      "id": "06_amen",
-      "emotion": "Reverent / Agreement",
-      "emoji": "\ud83d\udd4a\ufe0f"
+      "id": "06_i_am_with_you",
+      "emotion": "Comforting / Present",
+      "emoji": "\ud83e\udd17"
     },
     {
-      "id": "07_thank_you_lord",
-      "emotion": "Grateful / Thankful",
-      "emoji": "\ud83d\udc9b"
-    },
-    {
-      "id": "08_trust_in_him",
+      "id": "07_trust_in_him",
       "emotion": "Reassuring / Comforting",
       "emoji": "\ud83d\udc99"
     },
     {
-      "id": "09_i_love_you",
-      "emotion": "Loving / Affectionate",
+      "id": "08_god_is_good",
+      "emotion": "Joyful / Grateful",
+      "emoji": "\ud83c\udf1f"
+    },
+    {
+      "id": "09_amen",
+      "emotion": "Reverent / Agreement",
+      "emoji": "\ud83d\udd4a\ufe0f"
+    },
+    {
+      "id": "10_stay_strong",
+      "emotion": "Encouraging / Powerful",
+      "emoji": "\ud83d\udcaa"
+    },
+    {
+      "id": "11_thank_you_lord",
+      "emotion": "Grateful / Thankful",
+      "emoji": "\ud83d\udc9b"
+    },
+    {
+      "id": "12_forgive",
+      "emotion": "Gracious / Merciful",
+      "emoji": "\ud83d\udd4a\ufe0f"
+    },
+    {
+      "id": "13_love_one_another",
+      "emotion": "Loving / Compassionate",
       "emoji": "\u2764\ufe0f"
     },
     {
-      "id": "10_be_still",
-      "emotion": "Calm / Meditative",
-      "emoji": "\ud83e\uddd8"
+      "id": "14_be_kind",
+      "emotion": "Gentle / Sweet",
+      "emoji": "\ud83c\udf38"
     },
     {
-      "id": "11_you_are_loved",
+      "id": "15_you_are_loved",
       "emotion": "Warm / Encouraging",
       "emoji": "\ud83e\udd70"
     },
     {
-      "id": "12_good_morning",
-      "emotion": "Cheerful / Fresh",
-      "emoji": "\ud83c\udf05"
-    },
-    {
-      "id": "13_good_night",
+      "id": "16_good_night",
       "emotion": "Gentle / Sleepy",
       "emoji": "\ud83c\udf19"
     }
