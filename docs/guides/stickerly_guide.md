@@ -113,14 +113,117 @@ Your pipeline already produces these files in `<pack_id>/final/whatsapp/`.
 
 ---
 
-## Automation Note
+## Automated Upload via Android Emulator
 
-Since Sticker.ly has no API, the upload process cannot be automated. However, you CAN automate:
-- File preparation (your pipeline handles this)
-- File transfer to phone (AirDrop batch)
-- Tag lists (prepare them in a text file to copy-paste)
+While Sticker.ly has no API, we've built a full automation pipeline using an
+Android emulator + uiautomator2 to drive the Sticker.ly app programmatically.
 
-**Estimated time per pack**: 10-15 minutes for a 24-sticker pack.
+### Prerequisites
+
+```bash
+# Install Python dependency
+pip install uiautomator2
+
+# Verify Android SDK and emulator are set up
+adb version
+emulator -list-avds   # Should show Medium_Phone_API_36.1
+```
+
+### First-Time Setup (Interactive Login)
+
+```bash
+# Start emulator with GUI, log in to Google, save snapshot
+python3 scripts/stickerly_uploader.py --setup-only --headful
+```
+
+This will:
+1. Launch the emulator with a visible window
+2. Prompt you to install Sticker.ly from Play Store (if needed)
+3. Prompt you to log in via Google
+4. Save an AVD snapshot so future runs skip login
+
+### Single Pack Upload
+
+```bash
+# Headless upload (after first-time setup)
+python3 scripts/stickerly_uploader.py \
+    --pack-dir packs/chubby-mochi-panda/final/whatsapp
+
+# Dry run (skip final publish tap)
+python3 scripts/stickerly_uploader.py \
+    --pack-dir packs/chubby-mochi-panda/final/whatsapp --dry-run
+```
+
+### Batch Upload (All Packs)
+
+```bash
+# Upload all packs with final/whatsapp/ directories
+python3 scripts/stickerly_uploader.py --batch
+
+# Batch dry run
+python3 scripts/stickerly_uploader.py --batch --dry-run
+```
+
+### Resume Interrupted Upload
+
+```bash
+python3 scripts/stickerly_uploader.py --resume
+```
+
+Progress is saved after each step to `~/.stickerly-automation/progress.json`.
+
+### CLI Options
+
+| Flag | Description |
+|------|-------------|
+| `--pack-dir` | Path to pack's `final/whatsapp/` directory |
+| `--pack-config` | Path to `pack_config.py` (auto-detected) |
+| `--batch` | Upload all packs with WhatsApp stickers |
+| `--headful` | Show emulator GUI (required first time) |
+| `--dry-run` | Skip the final publish step |
+| `--resume` | Resume from saved progress |
+| `--setup-only` | Only log in, don't upload |
+| `--no-stop` | Keep emulator running after upload |
+
+### How It Works
+
+The automation uses a 4-step pipeline per pack:
+
+1. **Push files** — ADB pushes WEBP stickers to emulator storage
+2. **Create pack** — Taps Create, selects WhatsApp Stickers, adds each sticker via file picker
+3. **Set metadata** — Fills pack name, author, tags
+4. **Publish** — Taps Publish, captures share link
+
+### Troubleshooting
+
+| Issue | Solution |
+|---|---|
+| Session expired | Run with `--headful` to log in again |
+| Selector not found | Sticker.ly UI may have changed; inspect with `uiautomator2 weditor` |
+| Emulator won't start | Check `emulator -list-avds` and `adb devices` |
+| Screenshots | Saved to `automation/stickerly/screenshots/` on any failure |
+
+### Updating UI Selectors
+
+If Sticker.ly updates their app UI, selectors in
+`automation/stickerly/config.py` may need updating. To inspect the current UI:
+
+```bash
+# Start emulator and open Sticker.ly
+python3 -c "
+from automation.stickerly.emulator import EmulatorManager
+em = EmulatorManager(); em.start(headless=False)
+"
+
+# In another terminal, dump UI hierarchy
+adb shell uiautomator dump /sdcard/ui.xml && adb pull /sdcard/ui.xml
+```
+
+---
+
+## Manual Upload (Fallback)
+
+If automation is not set up, you can still upload manually:
 
 ---
 

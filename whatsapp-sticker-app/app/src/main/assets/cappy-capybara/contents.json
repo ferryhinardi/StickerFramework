@@ -1,0 +1,110 @@
+{
+  "sticker_packs": [
+    {
+      "identifier": "cappy-capybara",
+      "name": "Cappy the Chill Capybara",
+      "publisher": "BobaStickers",
+      "tray_image_file": "tray_icon.webp",
+      "image_data_version": "1",
+      "avoid_cache": false,
+      "stickers": [
+        {
+          "image_file": "01_good_morning.webp",
+          "emojis": [
+            "\ud83c\udf05"
+          ]
+        },
+        {
+          "image_file": "02_ok_thumbs_up.webp",
+          "emojis": [
+            "\ud83d\udc4d"
+          ]
+        },
+        {
+          "image_file": "03_thank_you.webp",
+          "emojis": [
+            "\ud83d\ude4f"
+          ]
+        },
+        {
+          "image_file": "04_lol.webp",
+          "emojis": [
+            "\ud83d\ude02"
+          ]
+        },
+        {
+          "image_file": "05_love.webp",
+          "emojis": [
+            "\u2764\ufe0f"
+          ]
+        },
+        {
+          "image_file": "06_sleepy.webp",
+          "emojis": [
+            "\ud83d\ude34"
+          ]
+        },
+        {
+          "image_file": "07_hungry.webp",
+          "emojis": [
+            "\ud83e\udd24"
+          ]
+        },
+        {
+          "image_file": "08_working_hard.webp",
+          "emojis": [
+            "\ud83d\udcbb"
+          ]
+        },
+        {
+          "image_file": "09_excited.webp",
+          "emojis": [
+            "\ud83e\udd29"
+          ]
+        },
+        {
+          "image_file": "10_sad.webp",
+          "emojis": [
+            "\ud83d\ude22"
+          ]
+        },
+        {
+          "image_file": "11_angry.webp",
+          "emojis": [
+            "\ud83d\ude24"
+          ]
+        },
+        {
+          "image_file": "12_sorry.webp",
+          "emojis": [
+            "\ud83d\ude47"
+          ]
+        },
+        {
+          "image_file": "13_bye.webp",
+          "emojis": [
+            "\ud83d\udc4b"
+          ]
+        },
+        {
+          "image_file": "14_thinking.webp",
+          "emojis": [
+            "\ud83e\udd14"
+          ]
+        },
+        {
+          "image_file": "15_cheering.webp",
+          "emojis": [
+            "\ud83d\udcaa"
+          ]
+        },
+        {
+          "image_file": "16_good_night.webp",
+          "emojis": [
+            "\ud83c\udf19"
+          ]
+        }
+      ]
+    }
+  ]
+}

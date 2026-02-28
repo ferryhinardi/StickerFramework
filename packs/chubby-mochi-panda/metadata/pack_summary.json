@@ -5,7 +5,8 @@
   "sticker_count": 16,
   "platforms": [
     "line",
-    "telegram"
+    "telegram",
+    "whatsapp"
   ],
   "stickers": [
     {

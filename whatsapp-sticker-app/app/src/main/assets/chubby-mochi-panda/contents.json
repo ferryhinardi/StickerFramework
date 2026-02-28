@@ -1,0 +1,110 @@
+{
+  "sticker_packs": [
+    {
+      "identifier": "chubby-mochi-panda",
+      "name": "Chubby Mochi Panda",
+      "publisher": "BobaStickers",
+      "tray_image_file": "tray_icon.webp",
+      "image_data_version": "1",
+      "avoid_cache": false,
+      "stickers": [
+        {
+          "image_file": "01_hello.webp",
+          "emojis": [
+            "\ud83d\udc4b"
+          ]
+        },
+        {
+          "image_file": "02_thank_you.webp",
+          "emojis": [
+            "\ud83d\ude4f"
+          ]
+        },
+        {
+          "image_file": "03_love.webp",
+          "emojis": [
+            "\u2764\ufe0f"
+          ]
+        },
+        {
+          "image_file": "04_lol.webp",
+          "emojis": [
+            "\ud83d\ude02"
+          ]
+        },
+        {
+          "image_file": "05_ok.webp",
+          "emojis": [
+            "\ud83d\udc4d"
+          ]
+        },
+        {
+          "image_file": "06_what.webp",
+          "emojis": [
+            "\ud83d\ude31"
+          ]
+        },
+        {
+          "image_file": "07_sorry.webp",
+          "emojis": [
+            "\ud83d\ude47"
+          ]
+        },
+        {
+          "image_file": "08_sleepy.webp",
+          "emojis": [
+            "\ud83c\udf19"
+          ]
+        },
+        {
+          "image_file": "09_hungry.webp",
+          "emojis": [
+            "\ud83e\udd24"
+          ]
+        },
+        {
+          "image_file": "10_angry.webp",
+          "emojis": [
+            "\ud83d\ude24"
+          ]
+        },
+        {
+          "image_file": "11_cry.webp",
+          "emojis": [
+            "\ud83d\ude2d"
+          ]
+        },
+        {
+          "image_file": "12_yay.webp",
+          "emojis": [
+            "\ud83c\udf89"
+          ]
+        },
+        {
+          "image_file": "13_please.webp",
+          "emojis": [
+            "\ud83e\udd7a"
+          ]
+        },
+        {
+          "image_file": "14_busy.webp",
+          "emojis": [
+            "\ud83d\udcbb"
+          ]
+        },
+        {
+          "image_file": "15_omg.webp",
+          "emojis": [
+            "\ud83e\udd29"
+          ]
+        },
+        {
+          "image_file": "16_bye.webp",
+          "emojis": [
+            "\ud83d\udc4b"
+          ]
+        }
+      ]
+    }
+  ]
+}

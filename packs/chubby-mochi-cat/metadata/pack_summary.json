@@ -1,0 +1,64 @@
+{
+  "pack_id": "chubby-mochi-cat",
+  "pack_name": "Chubby Mochi Cat",
+  "publisher": "BobaStickers",
+  "sticker_count": 10,
+  "platforms": [
+    "whatsapp",
+    "telegram",
+    "line",
+    "imessage_large"
+  ],
+  "stickers": [
+    {
+      "id": "01_what",
+      "emotion": "Shocked / Surprised",
+      "emoji": "\ud83d\ude31"
+    },
+    {
+      "id": "02_lol",
+      "emotion": "Laughing hard",
+      "emoji": "\ud83d\ude02"
+    },
+    {
+      "id": "03_ok",
+      "emotion": "OK / Approval",
+      "emoji": "\ud83d\udc4d"
+    },
+    {
+      "id": "04_nope",
+      "emotion": "Refusal / Rejection",
+      "emoji": "\ud83d\ude45"
+    },
+    {
+      "id": "05_bye",
+      "emotion": "Goodbye",
+      "emoji": "\ud83d\udc4b"
+    },
+    {
+      "id": "06_lets_go",
+      "emotion": "Excited / Pumped up",
+      "emoji": "\ud83d\udd25"
+    },
+    {
+      "id": "07_im_done",
+      "emotion": "Exhausted / Done with life",
+      "emoji": "\ud83d\ude35"
+    },
+    {
+      "id": "08_perfect",
+      "emotion": "Delighted / Chef's kiss",
+      "emoji": "\ud83e\udd29"
+    },
+    {
+      "id": "09_sure",
+      "emotion": "Casual agreement",
+      "emoji": "\ud83d\ude0c"
+    },
+    {
+      "id": "10_yesss",
+      "emotion": "Triumphant / Victory",
+      "emoji": "\ud83c\udf89"
+    }
+  ]
+}

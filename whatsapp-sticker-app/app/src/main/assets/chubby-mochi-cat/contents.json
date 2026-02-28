@@ -1,0 +1,74 @@
+{
+  "sticker_packs": [
+    {
+      "identifier": "chubby-mochi-cat",
+      "name": "Chubby Mochi Cat",
+      "publisher": "BobaStickers",
+      "tray_image_file": "tray_icon.webp",
+      "image_data_version": "1",
+      "avoid_cache": false,
+      "stickers": [
+        {
+          "image_file": "01_what.webp",
+          "emojis": [
+            "\ud83d\ude31"
+          ]
+        },
+        {
+          "image_file": "02_lol.webp",
+          "emojis": [
+            "\ud83d\ude02"
+          ]
+        },
+        {
+          "image_file": "03_ok.webp",
+          "emojis": [
+            "\ud83d\udc4d"
+          ]
+        },
+        {
+          "image_file": "04_nope.webp",
+          "emojis": [
+            "\ud83d\ude45"
+          ]
+        },
+        {
+          "image_file": "05_bye.webp",
+          "emojis": [
+            "\ud83d\udc4b"
+          ]
+        },
+        {
+          "image_file": "06_lets_go.webp",
+          "emojis": [
+            "\ud83d\udd25"
+          ]
+        },
+        {
+          "image_file": "07_im_done.webp",
+          "emojis": [
+            "\ud83d\ude35"
+          ]
+        },
+        {
+          "image_file": "08_perfect.webp",
+          "emojis": [
+            "\ud83e\udd29"
+          ]
+        },
+        {
+          "image_file": "09_sure.webp",
+          "emojis": [
+            "\ud83d\ude0c"
+          ]
+        },
+        {
+          "image_file": "10_yesss.webp",
+          "emojis": [
+            "\ud83c\udf89"
+          ]
+        }
+      ]
+    }
+  ]
+}

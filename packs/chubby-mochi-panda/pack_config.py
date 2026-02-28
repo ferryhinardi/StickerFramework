@@ -214,5 +214,6 @@ PACK_CONFIG = {
     "platforms": [
         "line",
         "telegram",
+        "whatsapp",
     ],
 }

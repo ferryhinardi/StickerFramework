@@ -73,3 +73,6 @@ server/__pycache__/
 
 # OpenCode tool state
 .opencode/
+
+# Misc logs
+excalidraw.log
