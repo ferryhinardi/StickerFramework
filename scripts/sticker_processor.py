@@ -81,6 +81,23 @@ class StickerProcessor:
             "max_kb": 1000,
             "ext": ".png",
         },
+        # LINE Emoji — 180x180 PNG, transparent bg, no white outline
+        "line_emoji": {
+            "size": (180, 180),
+            "format": "PNG",
+            "max_kb": 1000,
+            "ext": ".png",
+            "outline": False,
+            "fill_ratio": 0.95,
+        },
+        "line_emoji_tab": {
+            "size": (96, 74),
+            "format": "PNG",
+            "max_kb": 1000,
+            "ext": ".png",
+            "outline": False,
+            "fill_ratio": 0.90,
+        },
         "print_etsy": {
             "size": (2048, 2048),
             "format": "PNG",
@@ -410,10 +427,12 @@ class StickerProcessor:
                 y1 = min(img.height, int(ys.max()) + pad + 1)
                 img = img.crop((x0, y0, x1, y1))
 
-        # STEP 2: Scale tight-cropped image to fit 90% of target canvas
+        # STEP 2: Scale tight-cropped image to fit target canvas
+        # Use per-platform fill_ratio if specified, otherwise default to 90%
+        fill_ratio = spec.get("fill_ratio", 0.90)
         ratio = min(
-            (target_w * 0.9) / img.width,
-            (target_h * 0.9) / img.height,
+            (target_w * fill_ratio) / img.width,
+            (target_h * fill_ratio) / img.height,
         )
         new_w = max(1, int(img.width * ratio))
         new_h = max(1, int(img.height * ratio))
@@ -555,14 +574,29 @@ class StickerProcessor:
         print("    Normalizing colors...")
         img = self.normalize_colors(img)
 
-        # Step 3: Add white outline
-        print("    Adding white outline...")
-        img = self.add_white_outline(img)
+        # Step 3: Add white outline (conditional — some platforms like emoji skip it)
+        # Split platforms into outline vs no-outline groups
+        outline_platforms = [
+            p
+            for p in platforms
+            if p in self.SPECS and self.SPECS[p].get("outline", True)
+        ]
+        no_outline_platforms = [
+            p
+            for p in platforms
+            if p in self.SPECS and not self.SPECS[p].get("outline", True)
+        ]
 
-        # Step 4: Text overlay (optional)
+        if outline_platforms:
+            print("    Adding white outline...")
+            img_with_outline = self.add_white_outline(img)
+        else:
+            img_with_outline = None
+
+        # Step 4: Text overlay (optional — applied only to outlined version)
         text_cfg = (sticker_config or {}).get("text")
-        if text_cfg:
-            img = self.add_text_overlay(img, text_cfg)
+        if text_cfg and img_with_outline is not None:
+            img_with_outline = self.add_text_overlay(img_with_outline, text_cfg)
 
         # Step 5: Resize and save for each platform
         results = {}
@@ -575,7 +609,9 @@ class StickerProcessor:
             ext = spec["ext"]
             out_path = f"{output_dir}/{platform}/{name}{ext}"
 
-            resized = self.resize_to_spec(img, platform)
+            # Use the appropriate image version (with/without outline)
+            source_img = img_with_outline if platform in outline_platforms else img
+            resized = self.resize_to_spec(source_img, platform)
             results[platform] = self.save_optimized(resized, out_path, platform)
 
         return results

@@ -57,8 +57,8 @@ class LineAuth:
 
         The browser window must be visible (headful mode).
         """
-        await page.goto(LOGIN_AUTH_URL, wait_until="networkidle")
-        await human_delay(1000, 2000)
+        await page.goto(LOGIN_AUTH_URL, wait_until="commit")
+        await human_delay(2000, 3000)
 
         # Already logged in? (restored session still valid)
         if await self._is_authenticated(page):
@@ -111,7 +111,9 @@ class LineAuth:
         )
         return context
 
-    async def ensure_authenticated(self, page: Page) -> None:
+    async def ensure_authenticated(
+        self, page: Page, email: str = "", password: str = ""
+    ) -> None:
         """
         Verify the current session is still valid.
 
@@ -120,7 +122,7 @@ class LineAuth:
         """
         if not await self._check_session_valid(page):
             print("Session expired — re-authenticating...")
-            await self.login(page)
+            await self.login(page, email=email, password=password)
 
     # ── Private helpers ───────────────────────────────────────────────────
 
@@ -130,7 +132,25 @@ class LineAuth:
 
     async def _check_session_valid(self, page: Page) -> bool:
         """Navigate to a protected page; return False if redirected to login."""
-        await page.goto(MY_STICKERS_URL, wait_until="domcontentloaded", timeout=90_000)
+        await page.goto(MY_STICKERS_URL, wait_until="commit", timeout=90_000)
+        # Wait up to 30s for either the sticker list or a login redirect
+        import asyncio as _asyncio
+
+        deadline = 30.0
+        elapsed = 0.0
+        while elapsed < deadline:
+            url = page.url.lower()
+            if "login" in url or "access.line.me" in url:
+                return False
+            if f"{BASE_URL}/my/" in page.url:
+                # Page loaded — wait a moment for any JS redirects
+                await human_delay(2000, 3000)
+                url = page.url.lower()
+                if "login" in url or "access.line.me" in url:
+                    return False
+                return True
+            await _asyncio.sleep(0.5)
+            elapsed += 0.5
         await human_delay(1000, 2000)
         return "login" not in page.url.lower() and "access.line.me" not in page.url
 

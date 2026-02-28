@@ -51,7 +51,8 @@ class LinePriceTier:
 
         async with screenshot_on_failure(page, "set_price"):
             # Navigate to management page
-            await page.goto(sticker_url(sticker_id), wait_until="domcontentloaded")
+            await page.goto(sticker_url(sticker_id), wait_until="commit")
+            await page.wait_for_selector(SEL_TAB_PRICE_TIER, timeout=30_000)
             await human_delay(1000, 1500)
 
             # Close popup

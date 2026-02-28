@@ -78,12 +78,38 @@ class LineSetMetadata:
                           (e.g. ["what", "lol", "ok", "nope", "bye", ...]).
         """
         async with screenshot_on_failure(page, "fill_tag_settings"):
-            # Navigate to management page
-            await page.goto(sticker_url(sticker_id), wait_until="domcontentloaded")
-            await human_delay(1000, 1500)
+            # Navigate to management page with retry logic.
+            # The management page content area sometimes renders empty on
+            # first load — retry with a full reload up to 3 times.
+            tab_found = False
+            for attempt in range(1, 4):
+                await page.goto(sticker_url(sticker_id), wait_until="commit")
+                await human_delay(2000, 3000)
 
-            # Close popup
-            await self._close_popup(page)
+                # Close popup before waiting for content
+                await self._close_popup(page)
+
+                try:
+                    await page.wait_for_selector(SEL_TAB_TAG_SETTINGS, timeout=15_000)
+                    tab_found = True
+                    break
+                except Exception:
+                    print(
+                        f"  Tag Settings tab not found (attempt {attempt}/3)"
+                        " — reloading..."
+                    )
+                    if attempt < 3:
+                        await page.reload(wait_until="commit")
+                        await human_delay(2000, 3000)
+
+            if not tab_found:
+                print(
+                    "  Tag Settings tab not available after 3 attempts — "
+                    "skipping (tags are optional)."
+                )
+                return
+
+            await human_delay(1000, 1500)
 
             # Click Tag Settings tab
             await page.locator(SEL_TAB_TAG_SETTINGS).click()

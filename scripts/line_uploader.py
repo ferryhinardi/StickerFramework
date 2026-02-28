@@ -36,6 +36,7 @@ import asyncio
 import sys
 from datetime import datetime
 from pathlib import Path
+import os
 
 # Ensure automation package is importable
 _REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -144,11 +145,15 @@ async def run_pipeline(args: argparse.Namespace) -> None:
 
         # ── Authentication ───────────────────────────────────────────
         auth = LineAuth()
+        line_email = os.environ.get("LINE_EMAIL", "")
+        line_password = os.environ.get("LINE_PASSWORD", "")
 
         try:
             context = await auth.restore_session(browser)
             page = await context.new_page()
-            await auth.ensure_authenticated(page)
+            await auth.ensure_authenticated(
+                page, email=line_email, password=line_password
+            )
             print("Session restored and valid.")
         except SessionNotFound:
             if headless:
@@ -160,7 +165,7 @@ async def run_pipeline(args: argparse.Namespace) -> None:
                 return
             context = await browser.new_context()
             page = await context.new_page()
-            await auth.login(page)
+            await auth.login(page, email=line_email, password=line_password)
 
         page.set_default_timeout(PAGE_LOAD_TIMEOUT)
 

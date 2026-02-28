@@ -53,20 +53,34 @@ class LineSubmit:
             dry_run: If True, take screenshot but do NOT click Request.
         """
         async with screenshot_on_failure(page, "submit"):
-            # Navigate to management page — use load to ensure JS hydration
-            await page.goto(sticker_url(sticker_id), wait_until="load")
-            await human_delay(2000, 3000)
+            # Navigate to management page with retry — content area can be
+            # blank on first load (same issue as tag settings).
+            page_ready = False
+            for attempt in range(1, 4):
+                print(f"  Loading management page (attempt {attempt}/3)...")
+                await page.goto(sticker_url(sticker_id), wait_until="commit")
+                await human_delay(2000, 3000)
 
-            # Close popup
-            await self._close_popup(page)
+                # Close popup
+                await self._close_popup(page)
 
-            # Wait for status badge to appear (ensures page is hydrated)
-            try:
-                await page.locator(SEL_STATUS_BADGE).wait_for(
-                    state="visible", timeout=SAVE_TIMEOUT
-                )
-            except Exception:
-                pass
+                # Wait for status badge to appear (ensures page is hydrated)
+                try:
+                    await page.locator(SEL_STATUS_BADGE).wait_for(
+                        state="visible", timeout=15_000
+                    )
+                    page_ready = True
+                    break
+                except Exception:
+                    print(
+                        f"  Page content not loaded on attempt {attempt}, retrying..."
+                    )
+                    if attempt < 3:
+                        await page.reload(wait_until="commit")
+                        await human_delay(3000, 5000)
+
+            if not page_ready:
+                print("  WARNING: Page never fully loaded after 3 attempts.")
 
             # Check current status
             status = await self._get_status(page)
@@ -79,12 +93,19 @@ class LineSubmit:
             # Tick consent checkboxes
             await self._tick_consent(page)
 
-            # Take pre-submission screenshot
+            # Take pre-submission screenshot (defensive — full_page can fail on blank pages)
             SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             ss_path = SCREENSHOT_DIR / f"pre_submit_{timestamp}.png"
-            await page.screenshot(path=str(ss_path), full_page=True)
-            print(f"  Pre-submit screenshot: {ss_path}")
+            try:
+                await page.screenshot(path=str(ss_path), full_page=True, timeout=15_000)
+                print(f"  Pre-submit screenshot: {ss_path}")
+            except Exception:
+                try:
+                    await page.screenshot(path=str(ss_path), timeout=15_000)
+                    print(f"  Pre-submit screenshot (viewport only): {ss_path}")
+                except Exception as e:
+                    print(f"  WARNING: Could not save screenshot: {e}")
 
             if dry_run:
                 print("  DRY RUN: Would click 'Request' button. Skipping.")
@@ -116,7 +137,7 @@ class LineSubmit:
             await human_delay(2000, 3000)
 
             # Verify new status — reload page to get settled state
-            await page.goto(sticker_url(sticker_id), wait_until="load")
+            await page.goto(sticker_url(sticker_id), wait_until="commit")
             await human_delay(2000, 3000)
             new_status = await self._get_status(page)
             print(f"  New status: {new_status}")
@@ -145,8 +166,13 @@ class LineSubmit:
         (styled via CSS). We use JavaScript to click them directly.
         Scrolls to bottom first to ensure the section is in the DOM.
         """
-        # Scroll to bottom to ensure consent section is rendered
-        await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        # Scroll to bottom to ensure consent section is rendered (defensive against null body)
+        try:
+            await page.evaluate(
+                "if (document.body) window.scrollTo(0, document.body.scrollHeight)"
+            )
+        except Exception:
+            pass
         await human_delay(1000, 1500)
 
         try:

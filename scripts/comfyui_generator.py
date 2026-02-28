@@ -131,7 +131,13 @@ class ComfyUIStickerGenerator:
             "small round ears, potato-shaped body, tiny stubby legs"
         )
 
-    def build_prompt(self, character: dict, style: dict, sticker: dict) -> str:
+    def build_prompt(
+        self,
+        character: dict,
+        style: dict,
+        sticker: dict,
+        emoji_mode: bool = False,
+    ) -> str:
         """
         Build a Stable Diffusion prompt from pack config components.
         Optimized for SDXL sticker generation.
@@ -145,36 +151,64 @@ class ComfyUIStickerGenerator:
         2. Subject + body description (character-agnostic)
         3. Pose/action for this specific sticker
         4. Style reinforcement suffix — ALWAYS includes anti-text tokens
+
+        Args:
+            emoji_mode: When True, switches to face close-up framing and
+                boosted emotion weight for 180×180 LINE Emoji generation.
         """
         art_style = self._get_art_style(style)
         body_desc = self._get_body_description(character)
 
         # ------------------------------------------------------------------
-        # 1. Style prefix — determined by art_style, NOT by text presence
+        # 1. Style prefix — determined by art_style and emoji_mode
         # ------------------------------------------------------------------
-        if art_style == "painted_illustration":
-            style_prefix = (
-                "kawaii chibi sticker design, cute cartoon illustration, "
-                "digital anime art, thick black outlines, clean lineart, "
-                "(solid pure white background:1.3), "
-                "single character centered, large head small body, "
-                "dynamic expressive pose, masterpiece, best quality"
-            )
+        if emoji_mode:
+            # Emoji mode: face/head close-up, fill the frame, bold expression
+            if art_style == "painted_illustration":
+                style_prefix = (
+                    "kawaii emoji design, cute chibi face icon, "
+                    "single expression, centered face close-up, "
+                    "(large head fills frame:1.3), "
+                    "digital anime art, thick black outlines, clean lineart, "
+                    "(solid pure white background:1.3), "
+                    "bold expressive face, masterpiece, best quality"
+                )
+            else:
+                style_prefix = (
+                    "kawaii emoji icon, cute chibi face, "
+                    "single expression, centered face close-up, "
+                    "(large head fills frame:1.3), "
+                    "flat colors, no gradients, vector art style, "
+                    "(solid pure white background:1.3), "
+                    "masterpiece, best quality"
+                )
         else:
-            # Default: flat_vector (original capybara/mochi style)
-            style_prefix = (
-                "kawaii chibi character illustration, flat colors, no gradients, "
-                "vector art style, (solid pure white background:1.3), "
-                "single character centered, masterpiece, best quality"
-            )
+            # Standard sticker mode (full body)
+            if art_style == "painted_illustration":
+                style_prefix = (
+                    "kawaii chibi sticker design, cute cartoon illustration, "
+                    "digital anime art, thick black outlines, clean lineart, "
+                    "(solid pure white background:1.3), "
+                    "single character centered, large head small body, "
+                    "dynamic expressive pose, masterpiece, best quality"
+                )
+            else:
+                # Default: flat_vector (original capybara/mochi style)
+                style_prefix = (
+                    "kawaii chibi character illustration, flat colors, no gradients, "
+                    "vector art style, (solid pure white background:1.3), "
+                    "single character centered, masterpiece, best quality"
+                )
 
         # ------------------------------------------------------------------
         # 2. Emotion + character (character-agnostic via body_description)
+        #    Emoji mode: boosted emotion weight (1.6 vs 1.5)
         # ------------------------------------------------------------------
         emotion_tag = sticker.get("emotion", "")
         props_tag = sticker.get("props", "")
 
-        char_desc = f"({emotion_tag}:1.5), ({body_desc}:1.3)"
+        emotion_weight = 1.6 if emoji_mode else 1.5
+        char_desc = f"({emotion_tag}:{emotion_weight}), ({body_desc}:1.3)"
 
         # ------------------------------------------------------------------
         # 3. This sticker's specific pose + props
@@ -187,24 +221,43 @@ class ComfyUIStickerGenerator:
         # 4. Style reinforcement suffix — ALWAYS anti-text
         #    Text is handled exclusively by TextCompositor in post-processing.
         # ------------------------------------------------------------------
-        if art_style == "painted_illustration":
-            style_suffix = (
-                "thick dark outlines, clean lineart, expressive face, "
-                "soft cel shading, warm color palette, action effects, "
-                "dynamic composition, "
-                "no text, no words, no letters, no writing"
-            )
+        if emoji_mode:
+            # Emoji suffix: emphasize close-up face, bold expression
+            if art_style == "painted_illustration":
+                style_suffix = (
+                    "thick dark outlines, clean lineart, "
+                    "(bold expressive face:1.2), exaggerated expression, "
+                    "soft cel shading, warm color palette, "
+                    "no text, no words, no letters, no writing"
+                )
+            else:
+                style_suffix = (
+                    "flat colors, thick dark outline, "
+                    "(bold expressive face:1.2), exaggerated expression, "
+                    "no text, no words, no letters, no writing"
+                )
         else:
-            style_suffix = (
-                "flat colors, thick dark outline, simple minimal design, "
-                "no text, no words, no letters, no writing"
-            )
+            # Standard sticker suffix
+            if art_style == "painted_illustration":
+                style_suffix = (
+                    "thick dark outlines, clean lineart, expressive face, "
+                    "soft cel shading, warm color palette, action effects, "
+                    "dynamic composition, "
+                    "no text, no words, no letters, no writing"
+                )
+            else:
+                style_suffix = (
+                    "flat colors, thick dark outline, simple minimal design, "
+                    "no text, no words, no letters, no writing"
+                )
 
         # Assemble
         parts = [style_prefix, char_desc, sticker_desc, style_suffix]
         return ", ".join(parts)
 
-    def build_negative_prompt(self, art_style: str = "flat_vector") -> str:
+    def build_negative_prompt(
+        self, art_style: str = "flat_vector", emoji_mode: bool = False
+    ) -> str:
         """
         Standard negative prompt for sticker generation.
 
@@ -213,6 +266,10 @@ class ComfyUIStickerGenerator:
 
         For ``painted_illustration`` style, anti-gradient and anti-realistic
         tokens are removed (those qualities are desired).
+
+        Args:
+            emoji_mode: When True, adds anti-full-body tokens to force
+                face/head close-up composition for 180×180 emoji images.
         """
         # Anti-text tokens — always present (text is post-processed, not SDXL)
         anti_text = "text, words, letters, numbers, alphabet, writing, caption, label, "
@@ -252,7 +309,16 @@ class ComfyUIStickerGenerator:
                 "realistic, photograph, photorealistic, 3d render, gradient shading"
             )
 
-        return f"{anti_text}{core_negatives}, {bg_negatives}, {style_negatives}"
+        # Emoji mode: force close-up by blocking full body generation
+        emoji_negatives = ""
+        if emoji_mode:
+            emoji_negatives = (
+                ", full body, legs, feet, standing pose, sitting pose, "
+                "wide shot, far away, tiny character, small character, "
+                "full figure, distant view"
+            )
+
+        return f"{anti_text}{core_negatives}, {bg_negatives}, {style_negatives}{emoji_negatives}"
 
     def _build_workflow(
         self,
@@ -378,8 +444,13 @@ class ComfyUIStickerGenerator:
             f"ComfyUI generation timed out after {timeout}s for prompt {prompt_id}"
         )
 
-    def _copy_output(self, history_info: dict, output_path: Path) -> Path | None:
+    def _copy_output(
+        self, history_info: dict, output_path: Path, filename_prefix: str = ""
+    ) -> Path | None:
         """Copy generated image from ComfyUI output dir to target path."""
+        comfyui_output = Path.home() / "Documents" / "ComfyUI" / "output"
+
+        # Method 1: Use history API output info
         outputs = history_info.get("outputs", {})
         for node_id, node_output in outputs.items():
             images = node_output.get("images", [])
@@ -387,8 +458,6 @@ class ComfyUIStickerGenerator:
                 filename = img_info.get("filename")
                 subfolder = img_info.get("subfolder", "")
                 if filename:
-                    # ComfyUI output directory
-                    comfyui_output = Path.home() / "Documents" / "ComfyUI" / "output"
                     src = (
                         comfyui_output / subfolder / filename
                         if subfolder
@@ -399,6 +468,19 @@ class ComfyUIStickerGenerator:
                         output_path.parent.mkdir(parents=True, exist_ok=True)
                         shutil.copy2(src, output_path)
                         return output_path
+
+        # Method 2: Fallback — search by filename prefix in ComfyUI output dir
+        if filename_prefix and comfyui_output.exists():
+            matches = sorted(
+                comfyui_output.glob(f"{filename_prefix}*.png"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+            if matches:
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(matches[0], output_path)
+                print(f"    (found via fallback: {matches[0].name})")
+                return output_path
 
         return None
 
@@ -411,6 +493,7 @@ class ComfyUIStickerGenerator:
         seed: int | None = None,
         max_retries: int = 2,
         text_defaults: dict | None = None,
+        emoji_mode: bool = False,
     ) -> Path | None:
         """
         Generate a single sticker image via ComfyUI.
@@ -423,6 +506,7 @@ class ComfyUIStickerGenerator:
             seed: Random seed (None for random)
             max_retries: Number of retries on failure
             text_defaults: Pack-level text_defaults for TextCompositor
+            emoji_mode: When True, uses face close-up prompts for emoji
 
         Returns:
             Path to saved image, or None on failure
@@ -432,8 +516,12 @@ class ComfyUIStickerGenerator:
         has_text = text_content is not None
         art_style = self._get_art_style(style)
 
-        positive_prompt = self.build_prompt(character, style, sticker)
-        negative_prompt = self.build_negative_prompt(art_style=art_style)
+        positive_prompt = self.build_prompt(
+            character, style, sticker, emoji_mode=emoji_mode
+        )
+        negative_prompt = self.build_negative_prompt(
+            art_style=art_style, emoji_mode=emoji_mode
+        )
         output_path = Path(output_dir) / f"{sticker['id']}.png"
 
         if seed is None:
@@ -461,7 +549,9 @@ class ComfyUIStickerGenerator:
                 history = self._wait_for_completion(prompt_id)
 
                 # Copy output to pack directory
-                result_path = self._copy_output(history, output_path)
+                result_path = self._copy_output(
+                    history, output_path, filename_prefix=prefix
+                )
 
                 if result_path:
                     # ----- Text compositing (post-processing) -----
@@ -493,6 +583,7 @@ class ComfyUIStickerGenerator:
                             f.write(f"None (no text configured for this sticker)\n")
                         f.write(f"\n=== Settings ===\n")
                         f.write(f"Art style: {art_style}\n")
+                        f.write(f"Emoji mode: {emoji_mode}\n")
                         f.write(f"Checkpoint: {self.checkpoint}\n")
                         f.write(f"Seed: {seed}\n")
                         f.write(f"Steps: {self.steps}\n")
@@ -548,6 +639,7 @@ class ComfyUIStickerGenerator:
         stickers = config["stickers"]
         text_defaults = config.get("text_defaults")
         art_style = self._get_art_style(config.get("style", {}))
+        emoji_mode = config.get("product_type") == "line_emoji"
 
         if only:
             stickers = [s for s in stickers if s["id"] in only]
@@ -562,6 +654,8 @@ class ComfyUIStickerGenerator:
         print(f"Generating pack: {config['pack_name']}")
         print(f"Generator: ComfyUI (local) — {self.checkpoint}")
         print(f"Art style: {art_style}")
+        if emoji_mode:
+            print(f"Mode: EMOJI (face close-up, boosted emotion)")
         print(f"Stickers: {total}")
         print(f"Base seed: {base_seed}")
         print(f"Steps: {self.steps} | CFG: {self.cfg} | Sampler: {self.sampler}")
@@ -573,9 +667,18 @@ class ComfyUIStickerGenerator:
 
         results = []
         failed = []
+        skipped = 0
 
         for i, sticker in enumerate(stickers):
             sticker_seed = base_seed + i
+            # Skip already-generated images
+            existing = Path(output_dir) / f"{sticker['id']}.png"
+            if existing.exists():
+                skipped += 1
+                print(f"[{i + 1}/{total}] Skipping {sticker['id']} (already exists)")
+                results.append(existing)
+                continue
+
             print(f"[{i + 1}/{total}]", end="")
             path = self.generate_sticker(
                 character=config["character"],
@@ -584,6 +687,7 @@ class ComfyUIStickerGenerator:
                 output_dir=output_dir,
                 seed=sticker_seed,
                 text_defaults=text_defaults,
+                emoji_mode=emoji_mode,
             )
 
             if path:
@@ -594,6 +698,8 @@ class ComfyUIStickerGenerator:
         # Summary
         print(f"\n{'=' * 60}")
         print(f"Generation complete: {len(results)}/{total} successful")
+        if skipped:
+            print(f"Skipped (already existed): {skipped}")
         if failed:
             print(f"Failed: {', '.join(failed)}")
             print("Re-run with --only flag to retry failed stickers.")

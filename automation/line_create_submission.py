@@ -57,8 +57,11 @@ class LineCreateSubmission:
             ``{"sticker_id": "43200641", "url": "https://..."}``
         """
         async with screenshot_on_failure(page, "create_submission"):
-            # Navigate to the create page
-            await page.goto(CREATE_URL, wait_until="networkidle")
+            # Navigate to the create page.
+            # Use wait_until="commit" to avoid timeout on slow LINE pages,
+            # then explicitly wait for the title input to be ready.
+            await page.goto(CREATE_URL, wait_until="commit", timeout=120_000)
+            await page.wait_for_selector(SEL_TITLE, state="visible", timeout=120_000)
             await human_delay(1000, 2000)
 
             # Dismiss campaign popup if present
@@ -167,7 +170,10 @@ class LineCreateSubmission:
             await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
             await human_delay(500, 800)
 
-            await page.locator(SEL_SAVE_LABEL).click(timeout=SAVE_TIMEOUT)
+            # Dismiss popup again right before clicking Save (may appear lazily)
+            await self._close_popup(page)
+
+            await page.locator(SEL_SAVE_LABEL).click(timeout=SAVE_TIMEOUT, force=True)
             await human_delay(500, 1000)
 
             # ── Handle "Save this form?" confirmation ──
@@ -235,11 +241,71 @@ class LineCreateSubmission:
             await human_delay(200, 400)
 
     async def _close_popup(self, page: Page) -> None:
-        """Dismiss campaign popup if visible."""
-        try:
-            popup = page.locator(SEL_CAMPAIGN_POPUP_CLOSE)
-            if await popup.count() > 0 and await popup.first.is_visible():
-                await popup.first.click(timeout=3_000)
-                await human_delay(500, 800)
-        except Exception:
-            pass
+        """Dismiss campaign popup if visible.
+
+        Uses a multi-strategy approach:
+        1. Try clicking known Close button selectors
+        2. Force-remove the popup overlay from DOM via JavaScript
+        """
+        # Strategy 1: Try clicking Close button with multiple selectors
+        close_selectors = [
+            SEL_CAMPAIGN_POPUP_CLOSE,  # legacy: button.FnCloseDialogBtn
+            ".MdPop22CampaignBasicControl button",  # green campaign popup Close btn
+            "button:has-text('Close')",  # generic Close button
+            ".mdPop22CampaignBasic button",  # alt casing
+        ]
+        for sel in close_selectors:
+            try:
+                popup = page.locator(sel)
+                if await popup.count() > 0 and await popup.first.is_visible():
+                    await popup.first.click(timeout=5_000)
+                    await human_delay(500, 800)
+                    print("  ✓ Campaign popup dismissed via click")
+                    return
+            except Exception:
+                continue
+
+        # Strategy 2: Force-remove popup overlay from DOM via JavaScript
+        removed = await page.evaluate("""() => {
+            // Remove any MdPop22CampaignBasic popup and its backdrop
+            const selectors = [
+                '[class*="MdPop22CampaignBasic"]',
+                '[class*="mdPop22CampaignBasic"]',
+                '.MdPop22CampaignBasicControl',
+                '.FnCloseDialogBtn',
+                // Generic modal overlays that may block interaction
+                '.mdModalOverlay:not(.cm-modal)',
+                '[class*="campaign"][class*="popup"]',
+                '[class*="Campaign"][class*="Pop"]',
+            ];
+            let count = 0;
+            for (const sel of selectors) {
+                const els = document.querySelectorAll(sel);
+                for (const el of els) {
+                    // Walk up to the outermost popup container
+                    let target = el;
+                    while (target.parentElement &&
+                           target.parentElement !== document.body &&
+                           target.parentElement.children.length === 1) {
+                        target = target.parentElement;
+                    }
+                    target.remove();
+                    count++;
+                }
+            }
+            // Also remove any fixed/absolute overlay divs that cover the viewport
+            const overlays = document.querySelectorAll(
+                'div[style*="position: fixed"][style*="z-index"]'
+            );
+            for (const ov of overlays) {
+                if (ov.offsetWidth >= window.innerWidth * 0.8 &&
+                    ov.offsetHeight >= window.innerHeight * 0.8) {
+                    ov.remove();
+                    count++;
+                }
+            }
+            return count;
+        }""")
+        if removed:
+            print(f"  ✓ Force-removed {removed} popup element(s) from DOM")
+            await human_delay(300, 500)

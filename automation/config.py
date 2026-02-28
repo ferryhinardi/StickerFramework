@@ -18,6 +18,30 @@ CREATOR_PATH = "LQu3ADYzrcqp2KCs"
 MY_STICKERS_URL = f"{BASE_URL}/my/{CREATOR_PATH}/sticker/"
 CREATE_URL = f"{BASE_URL}/my/{CREATOR_PATH}/sticker/create"
 
+# ─── Emoji URLs ──────────────────────────────────────────────────────────────
+MY_EMOJI_URL = f"{BASE_URL}/my/{CREATOR_PATH}/emoji/"
+EMOJI_CREATE_URL = f"{BASE_URL}/my/{CREATOR_PATH}/emoji/register"
+
+
+def emoji_url(emoji_id: str) -> str:
+    """Management page: /my/{creator}/emoji/{id}"""
+    return f"{BASE_URL}/my/{CREATOR_PATH}/emoji/{emoji_id}"
+
+
+def emoji_update_url(emoji_id: str) -> str:
+    """Edit form: /my/{creator}/emoji/{id}/update"""
+    return f"{BASE_URL}/my/{CREATOR_PATH}/emoji/{emoji_id}/update"
+
+
+def emoji_image_url(emoji_id: str) -> str:
+    """Image edit page: /my/{creator}/emoji/{id}/image"""
+    return f"{BASE_URL}/my/{CREATOR_PATH}/emoji/{emoji_id}/image"
+
+
+def emoji_price_url(emoji_id: str) -> str:
+    """Price page: /my/{creator}/emoji/{id}/price (if separate from management)"""
+    return f"{BASE_URL}/my/{CREATOR_PATH}/emoji/{emoji_id}/price"
+
 
 def sticker_url(sticker_id: str) -> str:
     """Management page: /my/{creator}/sticker/{id}"""
@@ -35,7 +59,7 @@ def sticker_image_url(sticker_id: str) -> str:
 
 
 # ─── Timeouts (milliseconds) ────────────────────────────────────────────────
-PAGE_LOAD_TIMEOUT = 30_000
+PAGE_LOAD_TIMEOUT = 60_000
 UPLOAD_TIMEOUT = 60_000
 SELECTOR_TIMEOUT = 10_000
 SAVE_TIMEOUT = 15_000
@@ -182,8 +206,77 @@ DEFAULTS = {
     "price_tier": "23000",  # maps to select value "2" via PRICE_TIERS
 }
 
+# ─── Emoji-specific selectors (best-effort, verified at integration) ─────────
+# The emoji registration form is expected to be similar to stickers but with
+# differences in URL paths, slot key format, and absence of "main image".
+#
+# Emoji form fields — assumed same named inputs as sticker form:
+SEL_EMOJI_TITLE = SEL_TITLE  # 'input[name="meta[en][title]"]'
+SEL_EMOJI_DESCRIPTION = SEL_DESCRIPTION  # 'textarea[name="meta[en][description]"]'
+SEL_EMOJI_COPYRIGHT = SEL_COPYRIGHT  # 'input[name="copyright"]'
+
+# Emoji image page — emoji uses 3-digit slot keys (001-040) vs sticker 2-digit (01-40)
+SEL_EMOJI_IMAGE_AMOUNT = (
+    '[data-test="select-image-amount"]'  # same selector, different page
+)
+
+
+def sel_emoji_upload_file_input(key: str) -> str:
+    """Per-slot hidden file input for emoji. key: 'tab', '001'-'040'.
+
+    Emoji slots use 3-digit zero-padded keys (001, 002, ..., 040).
+    No 'main' slot for emoji (stickers have main image, emoji do not).
+    """
+    return f"#upload-file-input-{key}"
+
+
+def sel_emoji_upload_button(key: str) -> str:
+    """Per-slot Upload button for emoji. key: 'tab', '001'-'040'."""
+    return f"#upload-button-{key}"
+
+
+def sel_emoji_delete_button(key: str) -> str:
+    """Per-slot Delete button for emoji."""
+    return (
+        f'[data-test="product-images-list-item"]'
+        f':has([data-test="product-image-key"]:text("{key}")) '
+        f'[data-test="btn-delete"]'
+    )
+
+
+def emoji_slot_key(index: int) -> str:
+    """Convert 0-based index to 3-digit emoji slot key: 0 → '001', 39 → '040'."""
+    return f"{index + 1:03d}"
+
+
+# Emoji price tiers — actual values from LINE Creator Market emoji form
+# (discovered via dry-run DOM inspection, Feb 2026).
+EMOJI_PRICE_TIERS = {
+    "16000": "10014",  # Rp16.000+ (cheapest tier)
+    "23000": "2",  # Rp23.000+
+    "35000": "3",  # Rp35.000+
+    "45000": "4",  # Rp45.000+
+    "59000": "5",  # Rp59.000+
+}
+
+# ─── Emoji submission defaults ───────────────────────────────────────────────
+EMOJI_DEFAULTS = {
+    "emoji_type": "static",  # static or animated (APNG)
+    "emoji_count": 40,  # target count (8, 16, 24, 32, or 40)
+    "language": "en",
+    "ai_used": True,
+    "style_category": "cute",
+    "character_category": "other_animals",  # hamster → Other
+    "privacy": True,  # Show in LINE STORE
+    "sale_region": "all",
+    "auto_release": True,
+    "copyright": "FHStudio",
+    "price_tier": "16000",  # Rp16.000+ — cheapest available tier
+}
+
 # ─── Storage paths ───────────────────────────────────────────────────────────
 SESSION_STATE_DIR = Path.home() / ".line-sticker-automation"
 SESSION_STATE_PATH = SESSION_STATE_DIR / "storage_state.json"
 PROGRESS_STATE_PATH = SESSION_STATE_DIR / "progress.json"
+EMOJI_PROGRESS_STATE_PATH = SESSION_STATE_DIR / "emoji_progress.json"
 SCREENSHOT_DIR = REPO_ROOT / "automation" / "screenshots"

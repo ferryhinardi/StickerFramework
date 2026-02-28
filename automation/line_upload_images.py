@@ -56,8 +56,12 @@ class LineStickerUpload:
             # Navigate to image edit page
             await page.goto(
                 sticker_image_url(sticker_id),
-                wait_until="networkidle",
-                timeout=60_000,
+                wait_until="commit",
+                timeout=120_000,
+            )
+            # Wait for image page to render (the image amount selector is always present)
+            await page.wait_for_selector(
+                SEL_IMAGE_AMOUNT, state="visible", timeout=60_000
             )
             await human_delay(1000, 2000)
 
