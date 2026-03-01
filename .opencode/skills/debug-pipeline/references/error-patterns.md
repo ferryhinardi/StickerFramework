@@ -79,3 +79,21 @@
 | `ModuleNotFoundError` | Missing Python dependency | `pip install -r requirements.txt` |
 | `xcodegen not found` | iMessage build tools missing | `brew install xcodegen` |
 
+## Known Non-LINE-Compliant Packs (legacy — already published)
+
+Some older packs have sticker counts that LINE does not accept (valid: 8, 16, 24, 32, 40):
+
+| Pack | Count | Status |
+|---|---|---|
+| `chubby-mochi-cat` | 10 | Not submitted to LINE — WhatsApp/Telegram only |
+| `chubby-mochi-hamster` | 14 | Not submitted to LINE — WhatsApp/Telegram only |
+
+These packs are processed and published to non-LINE platforms. Do not attempt to submit them to LINE Creator Market without first reducing the sticker count to a valid value.
+
+## Stale `packs/my-pack` (removed)
+
+A stale template pack `packs/my-pack/` with a broken `pack_config.py` (references undefined variable `species`) existed and has been removed. If it reappears, delete it:
+```bash
+git rm -r packs/my-pack/
+```
+
