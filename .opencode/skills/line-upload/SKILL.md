@@ -43,7 +43,7 @@ Run the asset checker to confirm all required LINE images are present and
 within spec before launching the browser:
 
 ```bash
-python3 .github/skills/line-upload/scripts/check_line_assets.py "<pack_id>"
+python3 .opencode/skills/line-upload/scripts/check_line_assets.py "<pack_id>"
 ```
 
 Fix any reported errors before continuing.

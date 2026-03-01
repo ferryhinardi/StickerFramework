@@ -25,7 +25,7 @@ sticker set in the user's Telegram account.
 Check that Telegram credentials are configured:
 
 ```bash
-python3 .github/skills/telegram-publish/scripts/check_telegram_env.py
+python3 .opencode/skills/telegram-publish/scripts/check_telegram_env.py
 ```
 
 If credentials are missing, instruct the user:
@@ -50,7 +50,7 @@ Ask the user which format to publish (or infer from context):
 Verify the source directory contains files:
 
 ```bash
-python3 .github/skills/telegram-publish/scripts/check_telegram_assets.py \
+python3 .opencode/skills/telegram-publish/scripts/check_telegram_assets.py \
     "<pack_id>" "<format>"
 ```
 

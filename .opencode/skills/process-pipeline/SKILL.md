@@ -30,7 +30,7 @@ Determine `pack_id` from context:
 Verify the raw directory exists:
 
 ```bash
-python3 .github/skills/process-pipeline/scripts/check_inputs.py "<pack_id>"
+python3 .opencode/skills/process-pipeline/scripts/check_inputs.py "<pack_id>"
 ```
 
 If the script reports missing files, inform the user and stop.
@@ -78,7 +78,7 @@ If animated TGS is also needed, append:
 Run the output checker to confirm all expected platform directories are populated:
 
 ```bash
-python3 .github/skills/process-pipeline/scripts/check_outputs.py "<pack_id>"
+python3 .opencode/skills/process-pipeline/scripts/check_outputs.py "<pack_id>"
 ```
 
 The script prints a per-platform summary table. Report any missing outputs to the user.

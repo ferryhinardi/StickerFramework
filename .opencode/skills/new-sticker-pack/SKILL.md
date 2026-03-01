@@ -35,7 +35,7 @@ Ask the user for the following if not already provided:
 Run the validation script to confirm `pack_id` follows naming rules:
 
 ```bash
-python3 .github/skills/new-sticker-pack/scripts/validate_pack_id.py "<pack_id>"
+python3 .opencode/skills/new-sticker-pack/scripts/validate_pack_id.py "<pack_id>"
 ```
 
 If validation fails, prompt the user to correct the name before continuing.
@@ -63,7 +63,7 @@ packs/<pack_id>/
 Use the scaffold script:
 
 ```bash
-python3 .github/skills/new-sticker-pack/scripts/scaffold_pack.py "<pack_id>"
+python3 .opencode/skills/new-sticker-pack/scripts/scaffold_pack.py "<pack_id>"
 ```
 
 ### Step 4 — Generate pack_config.py

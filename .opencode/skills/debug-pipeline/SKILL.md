@@ -23,7 +23,7 @@ Then read `references/error-patterns.md` to map the symptom to a root cause.
 Run the diagnostic script to collect a snapshot of the current state:
 
 ```bash
-python3 .github/skills/debug-pipeline/scripts/diagnose.py "<pack_id>"
+python3 .opencode/skills/debug-pipeline/scripts/diagnose.py "<pack_id>"
 ```
 
 ### Step 2 — Apply the matched fix
@@ -128,10 +128,10 @@ After applying the fix, rerun the relevant check script:
 
 ```bash
 # For processing issues:
-python3 .github/skills/process-pipeline/scripts/check_outputs.py "<pack_id>"
+python3 .opencode/skills/process-pipeline/scripts/check_outputs.py "<pack_id>"
 
 # For LINE assets:
-python3 .github/skills/line-upload/scripts/check_line_assets.py "<pack_id>"
+python3 .opencode/skills/line-upload/scripts/check_line_assets.py "<pack_id>"
 ```
 
 Report the result to the user.
