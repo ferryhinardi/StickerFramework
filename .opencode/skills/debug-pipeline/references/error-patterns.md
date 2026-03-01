@@ -1,5 +1,34 @@
 # Common Error Patterns — StickerFramework
 
+## pack_config.py — Missing Required Keys
+
+| Symptom | Error message | Root cause | Fix |
+|---|---|---|---|
+| Generation crashes on first sticker | `KeyError: 'blush_color'` | `character` dict missing `blush_color` | Add `"blush_color": "soft pink"` to character |
+| Generation crashes on first sticker | `KeyError: 'outline_color'` | `character` dict missing `outline_color` | Add `"outline_color": "black"` to character |
+| Generation crashes on first sticker | `KeyError: 'accessory'` | `character` dict uses `accessories` (plural) | Rename to `accessory` (singular) |
+| Generation crashes during prompt build | `KeyError: 'extras'` | `style` dict missing `extras` | Add `"extras": "die-cut sticker style..."` to style |
+
+**Required character keys** (all must be present): `name`, `species`, `body_color`, `blush_color`, `outline_color`, `eye_style`, `accessory`, `proportions`
+
+**Required style keys** (all must be present): `outline_type`, `coloring`, `background`, `extras`, `art_style`
+
+## pack_config.py — Wrong Platforms List
+
+| Symptom | Error message | Root cause | Fix |
+|---|---|---|---|
+| Processing crashes after first sticker's WEBP | `ValueError: Unsupported format: TGS` | `telegram_animated` included in `platforms` list | Remove `telegram_animated` from platforms; use `--telegram-animated` flag instead |
+| Processing crashes after first sticker's WEBP | `ValueError: Unsupported format: WEBM` | `telegram_video` included in `platforms` list | Remove `telegram_video` from platforms; use `--telegram-video` flag instead |
+
+**Valid `platforms` list entries** (for `sticker_processor.py`): `line`, `telegram`, `whatsapp`, `imessage_large`, `print_etsy`, `line_main`, `line_tab`
+
+## Missing LINE Cover Images
+
+| Symptom | Root cause | Fix |
+|---|---|---|
+| `check_line_assets.py` fails on `line_main` or `line_tab` | `--process-only` does not auto-generate cover images | Generate manually with PIL: resize `line/01_happy.png` to 240×240 → `line_main/main.png` and 96×74 → `line_tab/tab.png` |
+| LINE upload fails on main image slot | `line_main/` directory empty | See fix above |
+
 ## Background Removal
 
 | Symptom | Pattern in output | Root cause |
@@ -19,7 +48,7 @@
 | Stuck at image upload step | no progress after upload starts | Browser closed mid-session; stale progress |
 | 401 Unauthorized | HTTP 401 from LINE | Session token expired |
 
-**Fix order:** Screenshots → fresh session → selector timeout increase.
+**Fix order:** `rm -f ~/.line-sticker-automation/progress.json` → Screenshots → fresh session → selector timeout increase.
 
 ## Animation / File Size
 
@@ -29,6 +58,9 @@
 | WEBM file > 256 KB | Long duration or high frame rate | Reduce `duration_ms` to ≤ 2000 |
 | `ffmpeg not found` | FFmpeg not installed | `brew install ffmpeg` |
 | `lottie` import error | lottie-python not installed | `pip install lottie` |
+| `--telegram-animated` times out | lottie library is slow on first run | Skip TGS for now, re-run separately |
+
+**Note:** Use `python3 scripts/run_pipeline.py --pack ... --telegram-animated` (NOT `animated_converter.py --pack-dir`) to generate a batch of TGS files.
 
 ## Image Dimensions
 
@@ -46,3 +78,4 @@
 | `playwright install` needed | Chromium not downloaded | `playwright install chromium` |
 | `ModuleNotFoundError` | Missing Python dependency | `pip install -r requirements.txt` |
 | `xcodegen not found` | iMessage build tools missing | `brew install xcodegen` |
+
