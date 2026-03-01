@@ -71,8 +71,9 @@ whatsapp-sticker-app/app/build/
 whatsapp-sticker-app/local.properties
 server/__pycache__/
 
-# OpenCode tool state
-.opencode/
+# OpenCode tool state (session data only — skills/commands are tracked)
+.opencode/sessions/
+.opencode/state/
 
 # Misc logs
 excalidraw.log
