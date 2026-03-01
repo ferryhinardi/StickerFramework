@@ -61,17 +61,13 @@ ls ~/.line-sticker-automation/storage_state.json 2>/dev/null \
 
 ### Step 4a — Upload headless (session exists)
 
-Dry-run first to confirm everything looks correct:
+Clear any stale progress from a previous run before starting:
 
 ```bash
-python3 scripts/line_uploader.py \
-    --pack-dir packs/<pack_id>/final \
-    --title "<title>" \
-    --description "<description>" \
-    --dry-run
+rm -f ~/.line-sticker-automation/progress.json
 ```
 
-If dry-run passes, run the real upload:
+Then run the upload and submit in one command:
 
 ```bash
 python3 scripts/line_uploader.py \
@@ -102,10 +98,17 @@ If a previous upload was interrupted, check for saved progress:
 cat ~/.line-sticker-automation/progress.json 2>/dev/null
 ```
 
-If progress exists, resume from the last completed step:
+If progress exists **and** the LINE draft was partially created, resume from the last completed step:
 
 ```bash
 python3 scripts/line_uploader.py --resume --headful
+```
+
+If the LINE draft was **not** created (the upload failed before the draft step), delete
+the stale progress file and restart from Step 4a:
+
+```bash
+rm -f ~/.line-sticker-automation/progress.json
 ```
 
 ### Step 6 — Confirm submission

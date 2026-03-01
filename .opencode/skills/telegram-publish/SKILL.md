@@ -21,12 +21,57 @@ sticker set in the user's Telegram account.
 
 ## Steps
 
-### Step 1 — Verify environment
-Check that Telegram credentials are configured:
+### Step 1 — Verify environment and resolve bot username
+Check that Telegram credentials are configured and get the real bot username:
 
 ```bash
-python3 .opencode/skills/telegram-publish/scripts/check_telegram_env.py
+python3 -c "
+import os, sys
+from pathlib import Path
+
+# Load .env
+for line in Path('.env').read_text().splitlines():
+    line = line.strip()
+    if line and not line.startswith('#') and '=' in line:
+        k, _, v = line.partition('=')
+        os.environ.setdefault(k.strip(), v.strip())
+
+token = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+uid   = os.environ.get('TELEGRAM_USER_ID', '')
+if not token: sys.exit('ERROR: TELEGRAM_BOT_TOKEN not set in .env')
+if not uid:   sys.exit('ERROR: TELEGRAM_USER_ID not set in .env')
+print('TOKEN OK | USER_ID:', uid)
+"
 ```
+
+Then resolve the actual bot username via the Telegram API (do **not** rely on
+`TELEGRAM_BOT_USERNAME` — it is often absent from `.env`):
+
+```bash
+python3 -c "
+import os, sys, json
+from pathlib import Path
+import urllib.request
+
+for line in Path('.env').read_text().splitlines():
+    line = line.strip()
+    if line and not line.startswith('#') and '=' in line:
+        k, _, v = line.partition('=')
+        os.environ.setdefault(k.strip(), v.strip())
+
+token = os.environ['TELEGRAM_BOT_TOKEN']
+resp = urllib.request.urlopen(
+    f'https://api.telegram.org/bot{token}/getMe', timeout=10
+).read()
+data = json.loads(resp)
+if not data.get('ok'):
+    sys.exit('getMe failed: ' + str(data))
+username = data['result']['username']
+print('Bot username:', username)
+"
+```
+
+Note the printed bot username — it is required for the sticker set name in Step 3.
 
 If credentials are missing, instruct the user:
 1. Message `@BotFather` on Telegram → `/newbot` → copy the token.
@@ -51,8 +96,10 @@ Verify the source directory contains files:
 
 ```bash
 python3 .opencode/skills/telegram-publish/scripts/check_telegram_assets.py \
-    "<pack_id>" "<format>"
+    "<pack_id>" static
 ```
+
+Use `static`, `animated`, or `video` as the second argument to match the chosen format.
 
 ### Step 3 — Compose the sticker set name
 Telegram set names must:
@@ -60,9 +107,16 @@ Telegram set names must:
 - Contain only `a-z`, `0-9`, `_`.
 - End with `_by_<bot_username>` (Telegram enforces this).
 
-Derive a default suggestion: `<pack_id_underscored>_by_<botname>`
+Use the bot username resolved in Step 1 (from `getMe`, not from env):
 
-Confirm with the user before proceeding.
+```
+<pack_id_with_underscores>_by_<bot_username>
+```
+
+Example: pack `chubby-couple-mochi-hamster` + bot `BobaStickersBot`
+→ `chubby_couple_mochi_hamster_by_BobaStickersBot`
+
+Confirm the final set name before proceeding.
 
 ### Step 4 — Publish sticker set
 
