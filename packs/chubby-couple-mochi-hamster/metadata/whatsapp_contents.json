@@ -1,0 +1,64 @@
+{
+  "android_play_store_link": "",
+  "ios_app_store_link": "",
+  "sticker_packs": [
+    {
+      "identifier": "chubby-couple-mochi-hamster",
+      "name": "Chubby Couple Mochi Hamster",
+      "publisher": "StickerFramework",
+      "tray_image_file": "tray_icon.webp",
+      "publisher_website": "",
+      "privacy_policy_website": "",
+      "stickers": [
+        {
+          "image_file": "01_happy.webp",
+          "emojis": [
+            "\ud83d\ude0a"
+          ]
+        },
+        {
+          "image_file": "02_love.webp",
+          "emojis": [
+            "\u2764\ufe0f"
+          ]
+        },
+        {
+          "image_file": "03_sad.webp",
+          "emojis": [
+            "\ud83d\ude22"
+          ]
+        },
+        {
+          "image_file": "04_angry.webp",
+          "emojis": [
+            "\ud83d\ude20"
+          ]
+        },
+        {
+          "image_file": "05_sleepy.webp",
+          "emojis": [
+            "\ud83d\ude34"
+          ]
+        },
+        {
+          "image_file": "06_surprised.webp",
+          "emojis": [
+            "\ud83d\ude32"
+          ]
+        },
+        {
+          "image_file": "07_laughing.webp",
+          "emojis": [
+            "\ud83d\ude02"
+          ]
+        },
+        {
+          "image_file": "08_thumbsup.webp",
+          "emojis": [
+            "\ud83d\udc4d"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "pack_id": "chubby-couple-mochi-hamster",
+  "pack_name": "Chubby Couple Mochi Hamster",
+  "publisher": "StickerFramework",
+  "sticker_count": 8,
+  "platforms": [
+    "line",
+    "telegram",
+    "whatsapp",
+    "imessage_large",
+    "print_etsy"
+  ],
+  "stickers": [
+    {
+      "id": "01_happy",
+      "emotion": "Happy",
+      "emoji": "\ud83d\ude0a"
+    },
+    {
+      "id": "02_love",
+      "emotion": "In Love",
+      "emoji": "\u2764\ufe0f"
+    },
+    {
+      "id": "03_sad",
+      "emotion": "Sad",
+      "emoji": "\ud83d\ude22"
+    },
+    {
+      "id": "04_angry",
+      "emotion": "Angry",
+      "emoji": "\ud83d\ude20"
+    },
+    {
+      "id": "05_sleepy",
+      "emotion": "Sleepy",
+      "emoji": "\ud83d\ude34"
+    },
+    {
+      "id": "06_surprised",
+      "emotion": "Surprised",
+      "emoji": "\ud83d\ude32"
+    },
+    {
+      "id": "07_laughing",
+      "emotion": "Laughing",
+      "emoji": "\ud83d\ude02"
+    },
+    {
+      "id": "08_thumbsup",
+      "emotion": "Thumbs Up / Approval",
+      "emoji": "\ud83d\udc4d"
+    }
+  ]
+}

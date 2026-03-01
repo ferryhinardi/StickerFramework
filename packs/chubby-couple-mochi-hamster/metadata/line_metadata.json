@@ -1,0 +1,50 @@
+{
+  "title": {
+    "en": "Chubby Couple Mochi Hamster"
+  },
+  "author": {
+    "en": "StickerFramework"
+  },
+  "stickers": [
+    {
+      "id": 1,
+      "filename": "01_happy.png",
+      "emoji": "\ud83d\ude0a"
+    },
+    {
+      "id": 2,
+      "filename": "02_love.png",
+      "emoji": "\u2764\ufe0f"
+    },
+    {
+      "id": 3,
+      "filename": "03_sad.png",
+      "emoji": "\ud83d\ude22"
+    },
+    {
+      "id": 4,
+      "filename": "04_angry.png",
+      "emoji": "\ud83d\ude20"
+    },
+    {
+      "id": 5,
+      "filename": "05_sleepy.png",
+      "emoji": "\ud83d\ude34"
+    },
+    {
+      "id": 6,
+      "filename": "06_surprised.png",
+      "emoji": "\ud83d\ude32"
+    },
+    {
+      "id": 7,
+      "filename": "07_laughing.png",
+      "emoji": "\ud83d\ude02"
+    },
+    {
+      "id": 8,
+      "filename": "08_thumbsup.png",
+      "emoji": "\ud83d\udc4d"
+    }
+  ]
+}
