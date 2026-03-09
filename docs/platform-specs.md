@@ -395,6 +395,19 @@ Includes **pop-up stickers** (animations play across the whole chat screen) and 
 #### Pack Size Rules
 - Select from exactly **8, 16, or 24** animated stickers (fewer options than static stickers)
 
+#### Framework Implementation
+- **Pipeline flag:** `python run_pipeline.py --line-animated`
+- **Source images:** Uses `line/` directory (370x320 PNGs) as input for APNG conversion
+- **Output directory:** `packs/<name>/final/line_animated/` (320x270 APNG files with `.png` extension)
+- **Main image:** `packs/<name>/final/line_animated_main/` (240x240 APNG)
+- **Tab icon:** `packs/<name>/final/line_animated_tab/` (96x74 APNG)
+- **Metadata:** `packs/<name>/metadata/line_animated_metadata.json`
+- **Converter:** `APNGAnimator` class in `scripts/animated_converter.py`
+- **Max file size (pipeline):** 300 KB target (stricter than LINE's 1 MB limit for safety margin)
+- **Default FPS:** 10 frames per second
+- **Animation presets:** bounce, wiggle, pulse, spin, shake, float, pop_in, slide_in, tada, heartbeat
+- **Pack config:** Add `"line_animated"` to `platforms` list in `pack_config.py`
+
 ---
 
 ### 3. Emoji

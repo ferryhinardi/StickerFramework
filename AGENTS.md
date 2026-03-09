@@ -60,6 +60,13 @@ python3 scripts/line_uploader.py --resume --headful
 
 # Skip pre-flight content check (religious content filter)
 python3 scripts/line_uploader.py ... --skip-preflight
+
+# Upload LINE animated stickers (APNG)
+python3 scripts/line_uploader.py \
+    --pack-dir packs/<pack-name>/final \
+    --title "Pack Title" \
+    --description "Pack description" \
+    --animated --headful
 ```
 
 ### Telegram Publishing
@@ -160,12 +167,12 @@ The `scripts/run_pipeline.py` orchestrator drives the entire workflow:
    - Outputs to `packs/<name>/final/<platform>/`
 
 4. **Animation** (`animated_converter.py`, `animation_presets.py`)
-   - Converts static PNGs to animated TGS (Lottie) or video WEBM (VP9)
+   - Converts static PNGs to animated TGS (Lottie), video WEBM (VP9), or APNG (LINE animated)
    - 10+ animation presets (bounce, wiggle, pulse, spin, etc.)
-   - Respects Telegram size limits (TGS: 64KB, WEBM: 256KB)
+   - Respects platform size limits (TGS: 64KB, WEBM: 256KB, APNG: 300KB target / 1MB hard limit)
 
 5. **Metadata** (`run_pipeline.py::stage_metadata`)
-   - Generates platform-specific JSON: `whatsapp_contents.json`, `telegram_emojis.json`, `line_metadata.json`
+   - Generates platform-specific JSON: `whatsapp_contents.json`, `telegram_emojis.json`, `line_metadata.json`, `line_animated_metadata.json`
 
 6. **Distribution** (`create_print_sheet.py`)
    - Creates print sheets (US Letter, A4) for physical stickers
@@ -179,6 +186,7 @@ The `automation/` module implements a stateful, resumable Playwright automation:
 - **`line_auth.py`**: OAuth login with session persistence (`~/.line-sticker-automation/storage_state.json`)
 - **`line_create_submission.py`**: Creates draft, fills display info (title, description, AI usage, categories, copyright)
 - **`line_upload_images.py`**: Uploads main image (240x240), tab icon (96x74), and 8 stickers (370x320)
+- **`line_animated_upload.py`**: Uploads animated APNG main image, tab icon, and 8/16/24 animated stickers (320x270)
 - **`line_set_metadata.py`**: Sets display information and tag settings with emoji auto-assignment
 - **`line_set_price.py`**: Selects price tier (default: Rp23.000+)
 - **`line_submit.py`**: Final review and submission to LINE Creator Market
@@ -224,6 +232,9 @@ packs/<pack-name>/
 │   ├── line/                     # 370x320 PNG
 │   ├── line_main/                # 240x240 PNG (cover)
 │   ├── line_tab/                 # 96x74 PNG (chat icon)
+│   ├── line_animated/            # 320x270 APNG (animated stickers)
+│   ├── line_animated_main/       # 240x240 APNG (animated cover)
+│   ├── line_animated_tab/        # 96x74 APNG (animated chat icon)
 │   ├── whatsapp/                 # 512x512 WEBP (Sticker.ly)
 │   ├── whatsapp_native/          # 512x512 WEBP + contents.json
 │   ├── telegram/                 # 512x512 WEBP
@@ -242,6 +253,9 @@ packs/<pack-name>/
 - Sticker dimensions: 370x320px PNG, max 1MB
 - Main image: 240x240px PNG
 - Tab icon: 96x74px PNG
+- Animated stickers (APNG): 8, 16, or 24 per set
+- Animated sticker dimensions: 320x270px APNG (.png extension), max 1MB
+- Animation: 5-20 frames, 1-4 seconds, 1-4 loops per APNG
 - Guideline 3.13: Religious content (including Jesus, Mary, crosses) is prohibited and will cause instant rejection
 - Pre-flight check: `line_preflight_check.py` scans metadata for banned keywords before upload
 

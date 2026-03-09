@@ -42,7 +42,8 @@ import os
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_REPO_ROOT))
 
-from automation.config import DEFAULTS, PAGE_LOAD_TIMEOUT
+from automation.config import ANIMATED_DEFAULTS, DEFAULTS, PAGE_LOAD_TIMEOUT
+from automation.line_animated_upload import LineAnimatedUpload
 from automation.line_auth import LineAuth
 from automation.line_create_submission import LineCreateSubmission
 from automation.line_set_metadata import LineSetMetadata
@@ -191,7 +192,10 @@ async def run_pipeline(args: argparse.Namespace) -> None:
         # ── Determine sticker names for tag settings ─────────────────
         sticker_names: list[str] = []
         if pack_dir:
-            line_dir = pack_dir / "line"
+            if getattr(args, "animated", False):
+                line_dir = pack_dir / "line_animated"
+            else:
+                line_dir = pack_dir / "line"
             if line_dir.exists():
                 sticker_names = [p.stem for p in sorted(line_dir.glob("*.png"))]
 
@@ -213,7 +217,7 @@ async def run_pipeline(args: argparse.Namespace) -> None:
                     "character_category": args.character_category,
                     "sale_region": args.sale_region,
                     "auto_release": True,
-                    "sticker_type": "static",
+                    "sticker_type": "animation" if args.animated else "static",
                 },
             )
             sticker_id = result["sticker_id"]
@@ -239,7 +243,10 @@ async def run_pipeline(args: argparse.Namespace) -> None:
             print("STEP 2: Uploading sticker images")
             print(f"{'=' * 60}")
 
-            uploader = LineStickerUpload()
+            if getattr(args, "animated", False):
+                uploader = LineAnimatedUpload()
+            else:
+                uploader = LineStickerUpload()
             await uploader.upload_all(page, sticker_id, str(pack_dir))
             completed.append("upload_images")
             _save(
@@ -423,6 +430,11 @@ Examples:
         "--skip-preflight",
         action="store_true",
         help="Skip LINE content pre-flight check (not recommended)",
+    )
+    parser.add_argument(
+        "--animated",
+        action="store_true",
+        help="Upload animated APNG stickers (320x270, 8/16/24 count) instead of static PNG",
     )
 
     args = parser.parse_args()

@@ -190,6 +190,35 @@ def stage_metadata(config: dict):
     with open(meta_dir / "line_metadata.json", "w") as f:
         json.dump(line_meta, f, indent=2)
 
+    # LINE animated metadata (APNG)
+    if "line_animated" in config.get("platforms", []):
+        line_animated_meta = {
+            "title": {"en": config["pack_name"]},
+            "author": {"en": config.get("publisher", "Your Brand Name")},
+            "sticker_type": "animation",
+            "format": "APNG",
+            "dimensions": {"width": 320, "height": 270},
+            "valid_counts": [8, 16, 24],
+            "animation": {
+                "max_duration_ms": 4000,
+                "min_frames": 5,
+                "max_frames": 20,
+                "max_loops": 4,
+            },
+            "stickers": [
+                {
+                    "id": i + 1,
+                    "filename": f"{s['id']}.png",
+                    "emoji": s["emoji"],
+                    "animation_type": s.get("animation", {}).get("type", "bounce"),
+                    "duration_ms": s.get("animation", {}).get("duration_ms", 2000),
+                }
+                for i, s in enumerate(config["stickers"])
+            ],
+        }
+        with open(meta_dir / "line_animated_metadata.json", "w") as f:
+            json.dump(line_animated_meta, f, indent=2)
+
     # Pack summary
     summary = {
         "pack_id": pack_id,
@@ -209,6 +238,8 @@ def stage_metadata(config: dict):
     print(f"    - whatsapp_contents.json")
     print(f"    - telegram_emojis.json")
     print(f"    - line_metadata.json")
+    if "line_animated" in config.get("platforms", []):
+        print(f"    - line_animated_metadata.json")
     print(f"    - pack_summary.json")
 
 
@@ -434,13 +465,16 @@ def stage_process_animated(
 ):
     """Stage 2b: Create animated/video versions of processed stickers.
 
-    Converts processed PNGs into TGS (animated) and/or WebM (video) files
-    for Telegram animated sticker publishing.
+    Converts processed PNGs into TGS (animated), WebM (video), and/or
+    APNG (LINE animated) files.
+
+    For TGS/WebM: uses Telegram 512x512 PNGs as source.
+    For APNG: uses LINE 370x320 PNGs as source (closer to 320x270 target).
 
     Args:
         config: Pack configuration dict.
-        formats: List of formats to generate, e.g. ["tgs", "webm"].
-                 Defaults to both.
+        formats: List of formats to generate, e.g. ["tgs", "webm", "apng"].
+                 Defaults to ["tgs", "webm"].
         animation_type: Animation preset name (e.g. "bounce", "pulse", "pop_in").
     """
     from sticker_processor import StickerProcessor
@@ -449,20 +483,38 @@ def stage_process_animated(
         formats = ["tgs", "webm"]
 
     pack_id = config["pack_id"]
-    # Use the base telegram processed PNGs as source
-    telegram_dir = str(REPO_ROOT / "packs" / pack_id / "final" / "telegram")
+    output_dir = str(REPO_ROOT / "packs" / pack_id / "final")
 
-    if not Path(telegram_dir).exists():
-        print(f"  Telegram stickers not found in {telegram_dir}")
-        print("  Run processing stage first (needs 'telegram' in platforms).")
-        return
+    # TGS and WebM use Telegram source PNGs (512x512)
+    telegram_formats = [f for f in formats if f in ("tgs", "webm")]
+    if telegram_formats:
+        telegram_dir = str(REPO_ROOT / "packs" / pack_id / "final" / "telegram")
+        if not Path(telegram_dir).exists():
+            print(f"  Telegram stickers not found in {telegram_dir}")
+            print("  Run processing stage first (needs 'telegram' in platforms).")
+        else:
+            processor = StickerProcessor()
+            processor.process_batch_animated(
+                input_dir=telegram_dir,
+                output_dir=output_dir,
+                animation_type=animation_type,
+                formats=telegram_formats,
+            )
 
-    processor = StickerProcessor()
-    processor.process_batch_animated(
-        input_dir=telegram_dir,
-        animation_type=animation_type,
-        formats=formats,
-    )
+    # APNG uses LINE source PNGs (370x320, closer to target 320x270)
+    if "apng" in formats:
+        line_dir = str(REPO_ROOT / "packs" / pack_id / "final" / "line")
+        if not Path(line_dir).exists():
+            print(f"  LINE stickers not found in {line_dir}")
+            print("  Run processing stage first (needs 'line' in platforms).")
+        else:
+            processor = StickerProcessor()
+            processor.process_batch_animated(
+                input_dir=line_dir,
+                output_dir=output_dir,
+                animation_type=animation_type,
+                formats=["apng"],
+            )
 
 
 def stage_telegram_animated(config: dict, sticker_format: str = "animated"):
@@ -640,7 +692,12 @@ Examples:
         type=str,
         default="bounce",
         help="Animation preset for animated/video stickers (default: bounce). "
-        "Options: bounce, shake, pulse, pop_in, spin, wave, float",
+        "Options: bounce, shake, pulse, pop_in, spin, wave, float, tada, heartbeat, slide_in, jelly",
+    )
+    parser.add_argument(
+        "--line-animated",
+        action="store_true",
+        help="Also create LINE animated stickers (APNG, 320x270, max 1MB)",
     )
     parser.add_argument(
         "--imessage-publish",
@@ -668,15 +725,53 @@ Examples:
         default=None,
         help="WhatsApp sticker server URL to push packs to (e.g. http://localhost:8080)",
     )
+    parser.add_argument(
+        "--skip-emotion-check",
+        action="store_true",
+        help="Skip emotion coverage validation at pipeline start",
+    )
     args = parser.parse_args()
 
     config = _load_pack_config(args.pack)
 
+    # --- Emotion coverage validation ---
+    if not args.skip_emotion_check:
+        from pack_config import validate_emotion_coverage
+
+        result = validate_emotion_coverage(config["stickers"], level="essential")
+        print(
+            f"\n  Emotion Coverage: {result['coverage_pct']}% "
+            f"({len(result['covered'])}/{len(result['covered']) + len(result['missing'])})"
+        )
+        if result["missing"]:
+            print(f"  Missing emotions: {', '.join(result['missing'])}")
+        for suggestion in result["suggestions"]:
+            print(f"  Tip: {suggestion}")
+        if not result["passed"]:
+            print("  WARNING: Pack does not cover all essential emotions.")
+            print("  Use --skip-emotion-check to suppress this warning.")
+
+    # --- Couple pack info ---
+    characters = config.get("characters")
+    relationship = config.get("relationship")
+    char_label = config["character"]["name"] if "character" in config else "Unknown"
+    if characters:
+        names = " & ".join(c.get("name", "?") for c in characters)
+        char_label = f"{names} ({relationship or 'pair'})"
+
+    # --- Localization info ---
+    localization = config.get("localization")
+    locale_label = "English only"
+    if localization:
+        locale_label = f"English + {', '.join(sorted(localization.keys()))}"
+
     print("\n" + "=" * 70)
     print(f"  STICKER PIPELINE: {config['pack_name']}")
     print(f"  Pack ID: {config['pack_id']}")
+    print(f"  Character: {char_label}")
     print(f"  Stickers: {len(config['stickers'])}")
     print(f"  Platforms: {', '.join(config['platforms'])}")
+    print(f"  Localization: {locale_label}")
     print("=" * 70)
 
     # Stage 1: Generate
@@ -701,7 +796,7 @@ Examples:
     stage_process(config, input_dir=args.input, skip_bg=args.skip_bg)
 
     # Stage 2b: Animated/video conversion (optional)
-    if args.telegram_animated or args.telegram_video:
+    if args.telegram_animated or args.telegram_video or args.line_animated:
         print(f"\n{'=' * 60}")
         print("STAGE 2b: Creating animated/video sticker variants")
         print(f"{'=' * 60}")
@@ -710,6 +805,8 @@ Examples:
             formats.append("tgs")
         if args.telegram_video:
             formats.append("webm")
+        if args.line_animated:
+            formats.append("apng")
         stage_process_animated(
             config, formats=formats, animation_type=args.animation_preset
         )
@@ -792,6 +889,8 @@ Examples:
         print(f"  │   ├── telegram_animated/   - TGS animated stickers")
     if args.telegram_video:
         print(f"  │   ├── telegram_video/      - WebM video stickers")
+    if args.line_animated:
+        print(f"  │   ├── line_animated/       - LINE APNG animated stickers")
     if args.whatsapp_native:
         print(f"  │   ├── whatsapp_native/     - WhatsApp 512x512 WebP stickers")
     print(f"  ├── metadata/     - Platform metadata files")
@@ -808,6 +907,8 @@ Examples:
         print("  4. Animated Telegram: python run_pipeline.py --telegram-animated")
     if not args.telegram_video:
         print("  5. Video Telegram: python run_pipeline.py --telegram-video")
+    if not args.line_animated:
+        print("  5b. LINE Animated: python run_pipeline.py --line-animated")
     if not args.imessage:
         print("  6. iMessage project: python run_pipeline.py --imessage")
     if not args.imessage_publish:

@@ -9,6 +9,7 @@ Modules:
   Sticker modules:
     line_create_submission — Create new sticker submission (fills all display info)
     line_upload_images     — Image edit page automation (per-slot upload)
+    line_animated_upload   — Animated sticker (APNG) image upload (8/16/24 slots)
     line_set_metadata      — Tag Settings tab automation
     line_set_price         — Price Tier tab automation
     line_submit            — Final review and submission (consent + Request)
@@ -20,6 +21,8 @@ Modules:
 """
 
 from automation.config import (
+    ANIMATED_DEFAULTS,
+    ANIMATED_VALID_COUNTS,
     BASE_URL,
     CREATE_URL,
     DEFAULTS,
@@ -32,6 +35,7 @@ from automation.config import (
     SCREENSHOT_DIR,
     SELECTOR_TIMEOUT,
 )
+from automation.line_animated_upload import LineAnimatedUpload
 from automation.line_auth import LineAuth
 from automation.line_create_submission import LineCreateSubmission
 from automation.line_emoji_create import LineEmojiCreate
@@ -45,12 +49,14 @@ from automation.line_upload_images import LineStickerUpload
 __all__ = [
     # Auth
     "LineAuth",
-    # Sticker
+    # Sticker (static)
     "LineCreateSubmission",
     "LineStickerUpload",
     "LineSetMetadata",
     "LinePriceTier",
     "LineSubmit",
+    # Sticker (animated)
+    "LineAnimatedUpload",
     # Emoji
     "LineEmojiCreate",
     "LineEmojiUpload",

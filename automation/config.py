@@ -206,6 +206,14 @@ DEFAULTS = {
     "price_tier": "23000",  # maps to select value "2" via PRICE_TIERS
 }
 
+# ─── Animated sticker defaults ──────────────────────────────────────────────
+ANIMATED_DEFAULTS = {
+    **DEFAULTS,
+    "sticker_type": "animation",
+    "sticker_count": 8,  # Valid counts: 8, 16, 24 only
+}
+ANIMATED_VALID_COUNTS = [8, 16, 24]  # LINE animated sticker limits
+
 # ─── Emoji-specific selectors (best-effort, verified at integration) ─────────
 # The emoji registration form is expected to be similar to stickers but with
 # differences in URL paths, slot key format, and absence of "main image".

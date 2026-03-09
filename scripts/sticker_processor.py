@@ -117,6 +117,28 @@ class StickerProcessor:
             "max_kb": 256,
             "ext": ".webm",
         },
+        # LINE Animated Stickers — APNG format
+        # See: https://creators.line.biz/en/docs/sticker-guidelines
+        "line_animated": {
+            "size": (320, 270),
+            "format": "APNG",
+            "max_kb": 300,
+            "ext": ".png",  # APNG uses .png extension
+            "duration_range": (1000, 4000),  # 1-4 seconds in ms
+            "loop": True,
+        },
+        "line_animated_main": {
+            "size": (240, 240),
+            "format": "APNG",
+            "max_kb": 300,
+            "ext": ".png",
+        },
+        "line_animated_tab": {
+            "size": (96, 74),
+            "format": "APNG",
+            "max_kb": 300,
+            "ext": ".png",
+        },
         # Phase 3: WhatsApp native app (stricter limits than Sticker.ly)
         "whatsapp_native": {
             "size": (512, 512),
@@ -451,6 +473,7 @@ class StickerProcessor:
         Save image with format and size optimization for target platform.
         For WebP: uses binary search on quality to fit under max_kb.
         For PNG: uses optimize flag and color quantization if needed.
+        For APNG: saves as static APNG (single-frame) with size optimization.
         """
         spec = self.SPECS[platform]
         output = Path(output_path)
@@ -463,6 +486,8 @@ class StickerProcessor:
             return self._save_webp_optimized(img, output, max_kb)
         elif fmt == "PNG":
             return self._save_png_optimized(img, output, max_kb)
+        elif fmt == "APNG":
+            return self._save_apng_optimized(img, output, max_kb)
         else:
             raise ValueError(f"Unsupported format: {fmt}")
 
@@ -527,6 +552,42 @@ class StickerProcessor:
             f.write(buffer.getvalue())
 
         print(f"    {output.name}: {size_kb:.1f}KB")
+        return output
+
+    def _save_apng_optimized(
+        self, img: Image.Image, output: Path, max_kb: int | None
+    ) -> Path:
+        """Save as APNG (single-frame) with size optimization.
+
+        Single-frame APNG files are valid PNG files and are used for
+        LINE animated sticker main images and tab icons where a static
+        APNG is required. For multi-frame APNG animation, use the
+        APNGAnimator class in animated_converter.py instead.
+        """
+        buffer = io.BytesIO()
+        # Save as APNG with single frame — Pillow saves APNG when
+        # save_all=True and append_images is provided (even if empty),
+        # but a single-frame PNG is already valid APNG, so we save
+        # as standard PNG with optimize flag.
+        img.save(buffer, format="PNG", optimize=True)
+        size_kb = buffer.tell() / 1024
+
+        if max_kb and size_kb > max_kb:
+            # Reduce color depth to fit under size limit
+            img_reduced = img.quantize(colors=256, method=2).convert("RGBA")
+            buffer = io.BytesIO()
+            img_reduced.save(buffer, format="PNG", optimize=True)
+            size_kb = buffer.tell() / 1024
+
+        with open(output, "wb") as f:
+            f.write(buffer.getvalue())
+
+        if max_kb and size_kb > max_kb:
+            print(
+                f"    WARNING {output.name}: {size_kb:.1f}KB exceeds {max_kb}KB limit!"
+            )
+        else:
+            print(f"    {output.name}: {size_kb:.1f}KB (APNG)")
         return output
 
     def process_single(
@@ -695,30 +756,35 @@ class StickerProcessor:
         output_dir: str,
         animation_type: str = "bounce",
         formats: list[str] | None = None,
+        animation_duration_ms: int = 2000,
     ) -> dict[str, Path]:
         """
         Create animated/video stickers from a static (already processed) image.
 
         This runs AFTER the normal static processing pipeline, using the
-        processed 512x512 PNG as input.
+        processed PNG as input.
 
         Steps:
             1. Load processed sticker (transparent bg, outline already applied)
-            2. Resize to 512x512 if needed
-            3. Convert to TGS (animated Lottie) if "tgs" in formats
-            4. Convert to WebM VP9 (video sticker) if "webm" in formats
+            2. Convert to TGS (animated Lottie) if "tgs" in formats
+            3. Convert to WebM VP9 (video sticker) if "webm" in formats
+            4. Convert to APNG (LINE animated) if "apng" in formats
 
         Args:
-            input_path:      Path to a processed sticker PNG (512x512 preferred).
-            output_dir:      Base output directory (subdirs per format).
-            animation_type:  Preset name from animation_presets module.
-            formats:         List of output formats: ["tgs", "webm"]. Default: both.
+            input_path:          Path to a processed sticker PNG.
+            output_dir:          Base output directory (subdirs per format).
+            animation_type:      Preset name from animation_presets module.
+            formats:             List of output formats: ["tgs", "webm", "apng"].
+                                 Default: ["tgs", "webm"].
+            animation_duration_ms: Duration in ms (used for APNG; TGS/WebM use
+                                   their own defaults).
 
         Returns:
             Dict mapping format key to output Path, e.g.
-            {"telegram_animated": Path(...), "telegram_video": Path(...)}.
+            {"telegram_animated": Path(...), "telegram_video": Path(...),
+             "line_animated": Path(...)}.
         """
-        from animated_converter import LottieAnimator, VideoConverter
+        from animated_converter import LottieAnimator, VideoConverter, APNGAnimator
 
         if formats is None:
             formats = ["tgs", "webm"]
@@ -762,6 +828,25 @@ class StickerProcessor:
             except Exception as exc:
                 print(f"    WARNING: WebM conversion failed for {name}: {exc}")
 
+        if "apng" in formats:
+            apng_dir = Path(output_dir) / "line_animated"
+            apng_dir.mkdir(parents=True, exist_ok=True)
+            apng_out = apng_dir / f"{name}.png"
+            try:
+                apng_animator = APNGAnimator()
+                apng_animator.png_to_apng(
+                    input_path,
+                    str(apng_out),
+                    animation_type=animation_type,
+                    duration_ms=animation_duration_ms,
+                )
+                results["line_animated"] = apng_out
+                print(
+                    f"    {apng_out.name}: {apng_out.stat().st_size / 1024:.1f}KB (APNG)"
+                )
+            except Exception as exc:
+                print(f"    WARNING: APNG conversion failed for {name}: {exc}")
+
         return results
 
     def process_batch_animated(
@@ -774,15 +859,14 @@ class StickerProcessor:
         """
         Generate animated/video stickers for all processed images in a directory.
 
-        Expects input_dir to contain already-processed 512x512 PNGs
-        (typically from the telegram/ output subdirectory, or any static
-        processed output).
+        Expects input_dir to contain already-processed PNGs (typically from
+        the telegram/ or line/ output subdirectory).
 
         Args:
             input_dir:       Directory of processed sticker PNGs.
             output_dir:      Base output directory.
             animation_type:  Animation preset name.
-            formats:         ["tgs", "webm"] or subset.
+            formats:         ["tgs", "webm", "apng"] or subset.
 
         Returns:
             List of result dicts per image.
@@ -820,7 +904,7 @@ class StickerProcessor:
         # Summary
         print(f"\n{'=' * 60}")
         print(f"Animated generation complete: {len(all_results)} stickers")
-        for fmt_key in ["telegram_animated", "telegram_video"]:
+        for fmt_key in ["telegram_animated", "telegram_video", "line_animated"]:
             out_dir = Path(output_dir) / fmt_key
             if out_dir.exists():
                 count = len(list(out_dir.iterdir()))
