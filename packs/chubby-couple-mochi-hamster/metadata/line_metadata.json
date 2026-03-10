@@ -28,8 +28,8 @@
     },
     {
       "id": 5,
-      "filename": "05_sleepy.png",
-      "emoji": "\ud83d\ude34"
+      "filename": "05_laughing.png",
+      "emoji": "\ud83d\ude02"
     },
     {
       "id": 6,
@@ -38,13 +38,93 @@
     },
     {
       "id": 7,
-      "filename": "07_laughing.png",
-      "emoji": "\ud83d\ude02"
+      "filename": "07_sleepy.png",
+      "emoji": "\ud83d\ude34"
     },
     {
       "id": 8,
       "filename": "08_thumbsup.png",
       "emoji": "\ud83d\udc4d"
+    },
+    {
+      "id": 9,
+      "filename": "09_grateful.png",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": 10,
+      "filename": "10_sorry.png",
+      "emoji": "\ud83d\ude25"
+    },
+    {
+      "id": 11,
+      "filename": "11_confused.png",
+      "emoji": "\ud83e\udd14"
+    },
+    {
+      "id": 12,
+      "filename": "12_shy.png",
+      "emoji": "\ud83d\ude33"
+    },
+    {
+      "id": 13,
+      "filename": "13_hungry.png",
+      "emoji": "\ud83d\ude0b"
+    },
+    {
+      "id": 14,
+      "filename": "14_celebrating.png",
+      "emoji": "\ud83c\udf89"
+    },
+    {
+      "id": 15,
+      "filename": "15_hello.png",
+      "emoji": "\ud83d\udc4b"
+    },
+    {
+      "id": 16,
+      "filename": "16_goodbye.png",
+      "emoji": "\ud83d\udc4b"
+    },
+    {
+      "id": 17,
+      "filename": "17_sick.png",
+      "emoji": "\ud83e\udd12"
+    },
+    {
+      "id": 18,
+      "filename": "18_working.png",
+      "emoji": "\ud83d\udcbb"
+    },
+    {
+      "id": 19,
+      "filename": "19_bored.png",
+      "emoji": "\ud83d\ude11"
+    },
+    {
+      "id": 20,
+      "filename": "20_cool.png",
+      "emoji": "\ud83d\ude0e"
+    },
+    {
+      "id": 21,
+      "filename": "21_scared.png",
+      "emoji": "\ud83d\ude31"
+    },
+    {
+      "id": 22,
+      "filename": "22_encouraging.png",
+      "emoji": "\ud83d\udcaa"
+    },
+    {
+      "id": 23,
+      "filename": "23_goodnight.png",
+      "emoji": "\ud83c\udf19"
+    },
+    {
+      "id": 24,
+      "filename": "24_kiss.png",
+      "emoji": "\ud83d\ude18"
     }
   ]
 }

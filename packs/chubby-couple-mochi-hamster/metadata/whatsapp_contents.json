@@ -35,9 +35,9 @@
           ]
         },
         {
-          "image_file": "05_sleepy.webp",
+          "image_file": "05_laughing.webp",
           "emojis": [
-            "\ud83d\ude34"
+            "\ud83d\ude02"
           ]
         },
         {
@@ -47,15 +47,111 @@
           ]
         },
         {
-          "image_file": "07_laughing.webp",
+          "image_file": "07_sleepy.webp",
           "emojis": [
-            "\ud83d\ude02"
+            "\ud83d\ude34"
           ]
         },
         {
           "image_file": "08_thumbsup.webp",
           "emojis": [
             "\ud83d\udc4d"
+          ]
+        },
+        {
+          "image_file": "09_grateful.webp",
+          "emojis": [
+            "\ud83d\ude4f"
+          ]
+        },
+        {
+          "image_file": "10_sorry.webp",
+          "emojis": [
+            "\ud83d\ude25"
+          ]
+        },
+        {
+          "image_file": "11_confused.webp",
+          "emojis": [
+            "\ud83e\udd14"
+          ]
+        },
+        {
+          "image_file": "12_shy.webp",
+          "emojis": [
+            "\ud83d\ude33"
+          ]
+        },
+        {
+          "image_file": "13_hungry.webp",
+          "emojis": [
+            "\ud83d\ude0b"
+          ]
+        },
+        {
+          "image_file": "14_celebrating.webp",
+          "emojis": [
+            "\ud83c\udf89"
+          ]
+        },
+        {
+          "image_file": "15_hello.webp",
+          "emojis": [
+            "\ud83d\udc4b"
+          ]
+        },
+        {
+          "image_file": "16_goodbye.webp",
+          "emojis": [
+            "\ud83d\udc4b"
+          ]
+        },
+        {
+          "image_file": "17_sick.webp",
+          "emojis": [
+            "\ud83e\udd12"
+          ]
+        },
+        {
+          "image_file": "18_working.webp",
+          "emojis": [
+            "\ud83d\udcbb"
+          ]
+        },
+        {
+          "image_file": "19_bored.webp",
+          "emojis": [
+            "\ud83d\ude11"
+          ]
+        },
+        {
+          "image_file": "20_cool.webp",
+          "emojis": [
+            "\ud83d\ude0e"
+          ]
+        },
+        {
+          "image_file": "21_scared.webp",
+          "emojis": [
+            "\ud83d\ude31"
+          ]
+        },
+        {
+          "image_file": "22_encouraging.webp",
+          "emojis": [
+            "\ud83d\udcaa"
+          ]
+        },
+        {
+          "image_file": "23_goodnight.webp",
+          "emojis": [
+            "\ud83c\udf19"
+          ]
+        },
+        {
+          "image_file": "24_kiss.webp",
+          "emojis": [
+            "\ud83d\ude18"
           ]
         }
       ]

@@ -2,10 +2,13 @@
   "pack_id": "chubby-couple-mochi-hamster",
   "pack_name": "Chubby Couple Mochi Hamster",
   "publisher": "StickerFramework",
-  "sticker_count": 8,
+  "sticker_count": 24,
   "platforms": [
     "line",
+    "line_animated",
     "telegram",
+    "telegram_animated",
+    "telegram_video",
     "whatsapp",
     "imessage_large",
     "print_etsy"
@@ -18,7 +21,7 @@
     },
     {
       "id": "02_love",
-      "emotion": "In Love",
+      "emotion": "Love",
       "emoji": "\u2764\ufe0f"
     },
     {
@@ -32,9 +35,9 @@
       "emoji": "\ud83d\ude20"
     },
     {
-      "id": "05_sleepy",
-      "emotion": "Sleepy",
-      "emoji": "\ud83d\ude34"
+      "id": "05_laughing",
+      "emotion": "Laughing",
+      "emoji": "\ud83d\ude02"
     },
     {
       "id": "06_surprised",
@@ -42,14 +45,94 @@
       "emoji": "\ud83d\ude32"
     },
     {
-      "id": "07_laughing",
-      "emotion": "Laughing",
-      "emoji": "\ud83d\ude02"
+      "id": "07_sleepy",
+      "emotion": "Sleepy",
+      "emoji": "\ud83d\ude34"
     },
     {
       "id": "08_thumbsup",
-      "emotion": "Thumbs Up / Approval",
+      "emotion": "OK",
       "emoji": "\ud83d\udc4d"
+    },
+    {
+      "id": "09_grateful",
+      "emotion": "Grateful",
+      "emoji": "\ud83d\ude4f"
+    },
+    {
+      "id": "10_sorry",
+      "emotion": "Sorry",
+      "emoji": "\ud83d\ude25"
+    },
+    {
+      "id": "11_confused",
+      "emotion": "Confused",
+      "emoji": "\ud83e\udd14"
+    },
+    {
+      "id": "12_shy",
+      "emotion": "Shy",
+      "emoji": "\ud83d\ude33"
+    },
+    {
+      "id": "13_hungry",
+      "emotion": "Hungry",
+      "emoji": "\ud83d\ude0b"
+    },
+    {
+      "id": "14_celebrating",
+      "emotion": "Celebrating",
+      "emoji": "\ud83c\udf89"
+    },
+    {
+      "id": "15_hello",
+      "emotion": "Hello",
+      "emoji": "\ud83d\udc4b"
+    },
+    {
+      "id": "16_goodbye",
+      "emotion": "Goodbye",
+      "emoji": "\ud83d\udc4b"
+    },
+    {
+      "id": "17_sick",
+      "emotion": "Sick",
+      "emoji": "\ud83e\udd12"
+    },
+    {
+      "id": "18_working",
+      "emotion": "Working",
+      "emoji": "\ud83d\udcbb"
+    },
+    {
+      "id": "19_bored",
+      "emotion": "Bored",
+      "emoji": "\ud83d\ude11"
+    },
+    {
+      "id": "20_cool",
+      "emotion": "Cool",
+      "emoji": "\ud83d\ude0e"
+    },
+    {
+      "id": "21_scared",
+      "emotion": "Scared",
+      "emoji": "\ud83d\ude31"
+    },
+    {
+      "id": "22_encouraging",
+      "emotion": "Encouraging",
+      "emoji": "\ud83d\udcaa"
+    },
+    {
+      "id": "23_goodnight",
+      "emotion": "Goodnight",
+      "emoji": "\ud83c\udf19"
+    },
+    {
+      "id": "24_kiss",
+      "emotion": "Love",
+      "emoji": "\ud83d\ude18"
     }
   ]
 }

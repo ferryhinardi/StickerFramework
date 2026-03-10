@@ -660,6 +660,12 @@ class StickerProcessor:
             img_with_outline = self.add_text_overlay(img_with_outline, text_cfg)
 
         # Step 5: Resize and save for each platform
+        # Skip animated-only formats (TGS, WEBM) — they use process_animated() instead.
+        # Also skip 'line_animated' — sticker APNGs need multi-frame animation from
+        # process_animated(), not single-frame saves. (line_animated_main and
+        # line_animated_tab are fine here since they are static cover images.)
+        ANIMATED_ONLY_FORMATS = {"TGS", "WEBM"}
+        ANIMATED_ONLY_PLATFORMS = {"line_animated"}
         results = {}
         for platform in platforms:
             if platform not in self.SPECS:
@@ -667,6 +673,11 @@ class StickerProcessor:
                 continue
 
             spec = self.SPECS[platform]
+            if spec["format"] in ANIMATED_ONLY_FORMATS:
+                continue  # handled by process_animated()
+            if platform in ANIMATED_ONLY_PLATFORMS:
+                continue  # multi-frame APNG handled by process_animated()
+
             ext = spec["ext"]
             out_path = f"{output_dir}/{platform}/{name}{ext}"
 

@@ -1,0 +1,195 @@
+{
+  "title": {
+    "en": "Chubby Couple Mochi Hamster"
+  },
+  "author": {
+    "en": "StickerFramework"
+  },
+  "sticker_type": "animation",
+  "format": "APNG",
+  "dimensions": {
+    "width": 320,
+    "height": 270
+  },
+  "valid_counts": [
+    8,
+    16,
+    24
+  ],
+  "animation": {
+    "max_duration_ms": 4000,
+    "min_frames": 5,
+    "max_frames": 20,
+    "max_loops": 4
+  },
+  "stickers": [
+    {
+      "id": 1,
+      "filename": "01_happy.png",
+      "emoji": "\ud83d\ude0a",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 2,
+      "filename": "02_love.png",
+      "emoji": "\u2764\ufe0f",
+      "animation_type": "heartbeat",
+      "duration_ms": 2500
+    },
+    {
+      "id": 3,
+      "filename": "03_sad.png",
+      "emoji": "\ud83d\ude22",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 4,
+      "filename": "04_angry.png",
+      "emoji": "\ud83d\ude20",
+      "animation_type": "shake",
+      "duration_ms": 1500
+    },
+    {
+      "id": 5,
+      "filename": "05_laughing.png",
+      "emoji": "\ud83d\ude02",
+      "animation_type": "jelly",
+      "duration_ms": 2000
+    },
+    {
+      "id": 6,
+      "filename": "06_surprised.png",
+      "emoji": "\ud83d\ude32",
+      "animation_type": "pop_in",
+      "duration_ms": 1000
+    },
+    {
+      "id": 7,
+      "filename": "07_sleepy.png",
+      "emoji": "\ud83d\ude34",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 8,
+      "filename": "08_thumbsup.png",
+      "emoji": "\ud83d\udc4d",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 9,
+      "filename": "09_grateful.png",
+      "emoji": "\ud83d\ude4f",
+      "animation_type": "tada",
+      "duration_ms": 2000
+    },
+    {
+      "id": 10,
+      "filename": "10_sorry.png",
+      "emoji": "\ud83d\ude25",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 11,
+      "filename": "11_confused.png",
+      "emoji": "\ud83e\udd14",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 12,
+      "filename": "12_shy.png",
+      "emoji": "\ud83d\ude33",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 13,
+      "filename": "13_hungry.png",
+      "emoji": "\ud83d\ude0b",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 14,
+      "filename": "14_celebrating.png",
+      "emoji": "\ud83c\udf89",
+      "animation_type": "tada",
+      "duration_ms": 2000
+    },
+    {
+      "id": 15,
+      "filename": "15_hello.png",
+      "emoji": "\ud83d\udc4b",
+      "animation_type": "wave",
+      "duration_ms": 2000
+    },
+    {
+      "id": 16,
+      "filename": "16_goodbye.png",
+      "emoji": "\ud83d\udc4b",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 17,
+      "filename": "17_sick.png",
+      "emoji": "\ud83e\udd12",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 18,
+      "filename": "18_working.png",
+      "emoji": "\ud83d\udcbb",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 19,
+      "filename": "19_bored.png",
+      "emoji": "\ud83d\ude11",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 20,
+      "filename": "20_cool.png",
+      "emoji": "\ud83d\ude0e",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 21,
+      "filename": "21_scared.png",
+      "emoji": "\ud83d\ude31",
+      "animation_type": "shake",
+      "duration_ms": 1500
+    },
+    {
+      "id": 22,
+      "filename": "22_encouraging.png",
+      "emoji": "\ud83d\udcaa",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 23,
+      "filename": "23_goodnight.png",
+      "emoji": "\ud83c\udf19",
+      "animation_type": "bounce",
+      "duration_ms": 2000
+    },
+    {
+      "id": 24,
+      "filename": "24_kiss.png",
+      "emoji": "\ud83d\ude18",
+      "animation_type": "heartbeat",
+      "duration_ms": 2500
+    }
+  ]
+}

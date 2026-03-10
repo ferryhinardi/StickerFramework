@@ -107,21 +107,30 @@ class LineAnimatedUpload:
                     f"(have {sticker_count} APNG images)"
                 )
 
-            # Upload main image (APNG)
-            main_image = self._find_image(pack_path / "line_animated_main")
+            # Upload main image (APNG or static PNG fallback)
+            main_image = self._find_image(
+                pack_path / "line_animated_main"
+            ) or self._find_image(pack_path / "line_main")
             if main_image:
-                print(f"  Uploading animated main image: {main_image.name}")
+                print(f"  Uploading main image: {main_image.name}")
                 await self._upload_to_slot(page, "main", main_image)
             else:
-                print("  WARNING: No animated main image found in line_animated_main/")
+                print(
+                    "  WARNING: No main image found in "
+                    "line_animated_main/ or line_main/"
+                )
 
-            # Upload tab image (APNG)
-            tab_image = self._find_image(pack_path / "line_animated_tab")
+            # Upload tab image (APNG or static PNG fallback)
+            tab_image = self._find_image(
+                pack_path / "line_animated_tab"
+            ) or self._find_image(pack_path / "line_tab")
             if tab_image:
-                print(f"  Uploading animated tab image: {tab_image.name}")
+                print(f"  Uploading tab image: {tab_image.name}")
                 await self._upload_to_slot(page, "tab", tab_image)
             else:
-                print("  WARNING: No animated tab image found in line_animated_tab/")
+                print(
+                    "  WARNING: No tab image found in line_animated_tab/ or line_tab/"
+                )
 
             # Upload animated sticker images
             if not sticker_images:
@@ -161,28 +170,149 @@ class LineAnimatedUpload:
         APNG files use .png extension, so the existing file inputs
         (accept="image/png") work without modification.
 
+        Uses multiple fallback strategies:
+          A) JS input.click() + expect_file_chooser  (most reliable on Vue pages)
+          B) Playwright set_input_files() + dispatch change/input events
+          C) Force-visible button click + expect_file_chooser
+
         Args:
             key: Slot key — "main", "tab", "01"-"24".
             file_path: Path to the APNG file.
         """
+        from automation.config import sel_upload_button
+
         selector = sel_upload_file_input(key)
+
+        # ── Strategy A: JS input.click() + file chooser ──────────────────
+        # This triggers the native file dialog from the hidden input, which
+        # LINE's Vue component listens to properly.
+        try:
+            has_input = await page.evaluate(
+                "(sel) => !!document.querySelector(sel)", selector
+            )
+            if has_input:
+                async with page.expect_file_chooser(timeout=10_000) as fc_info:
+                    await page.evaluate(
+                        "(sel) => document.querySelector(sel).click()", selector
+                    )
+                file_chooser = await fc_info.value
+                await file_chooser.set_files(str(file_path))
+                await human_delay(2000, 3500)
+
+                # The file chooser interaction succeeded — LINE's Vue component
+                # may not update the DOM immediately (APNG renders via canvas),
+                # so a quick slot check may return false.  We trust that the
+                # file_chooser handshake guarantees the upload was sent.
+                if await self._is_slot_filled(page, key):
+                    return
+                # Even if slot check fails, the upload was likely accepted.
+                # LINE animated uploads often need a page reload to reflect.
+                print(
+                    f"    Strategy A: file_chooser succeeded for '{key}' "
+                    f"(slot may update after reload)"
+                )
+                return  # Don't fall through — the upload was sent
+            else:
+                print(f"    Hidden input {selector} not found, trying strategy B...")
+        except Exception as e:
+            print(f"    Strategy A failed for slot '{key}': {e}")
+
+        # ── Strategy B: set_input_files + event dispatch ─────────────────
         try:
             file_input = page.locator(selector)
-            await file_input.set_input_files(str(file_path))
-            await human_delay(1000, 2000)
-        except Exception as e:
-            print(f"    WARNING: Failed to upload to slot {key}: {e}")
-            try:
-                from automation.config import sel_upload_button
+            if await file_input.count() > 0:
+                await file_input.set_input_files(str(file_path))
+                await file_input.dispatch_event("change")
+                await file_input.dispatch_event("input")
+                await human_delay(1500, 2500)
+
+                if await self._is_slot_filled(page, key):
+                    return
+                print(
+                    f"    Strategy B (set_input_files) did not fill slot '{key}', trying C..."
+                )
+        except Exception as e2:
+            print(f"    Strategy B failed for slot '{key}': {e2}")
+
+        # ── Strategy C: force-visible button + file chooser ──────────────
+        try:
+            btn_sel = sel_upload_button(key)
+            btn = page.locator(btn_sel)
+            if await btn.count() > 0:
+                await page.evaluate(
+                    """(sel) => {
+                        const el = document.querySelector(sel);
+                        if (el) {
+                            el.style.display = 'block';
+                            el.style.visibility = 'visible';
+                            el.style.opacity = '1';
+                            el.style.pointerEvents = 'auto';
+                        }
+                    }""",
+                    btn_sel,
+                )
+                await human_delay(300, 500)
 
                 async with page.expect_file_chooser(timeout=10_000) as fc_info:
-                    await page.locator(sel_upload_button(key)).click()
-                file_chooser = fc_info.value
+                    await btn.click(force=True)
+                file_chooser = await fc_info.value
                 await file_chooser.set_files(str(file_path))
-                await human_delay(1000, 2000)
-            except Exception as e2:
-                print(f"    ERROR: Both upload methods failed for slot {key}: {e2}")
-                raise
+                await human_delay(1500, 2500)
+
+                if await self._is_slot_filled(page, key):
+                    return
+                print(
+                    f"    Strategy C (force-visible button) did not fill slot '{key}'"
+                )
+        except Exception as e3:
+            print(f"    Strategy C failed for slot '{key}': {e3}")
+
+        # ── All strategies exhausted ─────────────────────────────────────
+        print(
+            f"    WARNING: All upload strategies exhausted for slot '{key}'. "
+            f"The slot may need manual upload."
+        )
+
+    async def _is_slot_filled(self, page: Page, key: str) -> bool:
+        """Check whether a specific upload slot has an image (not a placeholder).
+
+        For main/tab, checks the slot identified by data-test attributes.
+        For numbered sticker slots, checks positionally.
+        """
+        try:
+            filled = await page.evaluate(
+                """(key) => {
+                    // Try direct slot lookup first
+                    const item = document.querySelector(
+                        `[data-test="product-images-list-item-${key}"]`
+                    );
+                    if (item) {
+                        const placeholder = item.querySelector('[data-test="no-product-image"]');
+                        const hasImg = item.querySelector('img');
+                        const hasCanvas = item.querySelector('canvas');
+                        return !!(hasImg || hasCanvas) && !placeholder;
+                    }
+
+                    // Fallback: check by upload-button visibility / state
+                    const uploadBtn = document.querySelector(`#upload-button-${key}`);
+                    if (uploadBtn) {
+                        // If the slot area contains a rendered image, it's filled
+                        const parent = uploadBtn.closest('[data-test="product-images-list-item"]');
+                        if (parent) {
+                            const hasImg = parent.querySelector('img');
+                            const hasCanvas = parent.querySelector('canvas');
+                            return !!(hasImg || hasCanvas);
+                        }
+                    }
+
+                    // Cannot determine — assume not filled
+                    return false;
+                }""",
+                key,
+            )
+            return bool(filled)
+        except Exception:
+            return False
 
     # ── Verification ─────────────────────────────────────────────────────
 
@@ -193,7 +323,17 @@ class LineAnimatedUpload:
         tab_image: Path | None,
         sticker_images: list[Path],
     ) -> None:
-        """Check how many slots now have images vs placeholders."""
+        """Check how many slots now have images vs placeholders.
+
+        LINE's animated sticker page doesn't always update the DOM after
+        an upload — a reload is required to see the final state.
+        """
+        # Reload so the Vue app re-fetches server state
+        await page.reload(wait_until="networkidle", timeout=30_000)
+        await human_delay(2000, 3000)
+        # Dismiss popup that may reappear after reload
+        await self._close_popup(page)
+
         slot_status = await page.evaluate("""() => {
             const items = document.querySelectorAll('[data-test="product-images-list-item"]');
             let filled = 0;

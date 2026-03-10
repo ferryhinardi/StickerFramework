@@ -740,6 +740,7 @@ class APNGAnimator:
         duration_ms: int = 2000,
         loop: int = 0,
         num_frames: int | None = None,
+        target_size: tuple[int, int] | None = None,
     ) -> Path:
         """
         Convert static PNG to animated APNG for LINE.
@@ -753,6 +754,9 @@ class APNGAnimator:
                   LINE requires 1-4 loops; 0 will be clamped to 1 at verify.
             num_frames: Number of frames to render. If None, auto-calculated
                         from duration and fps (clamped to 5-20).
+            target_size: Optional (width, height) tuple for the output APNG.
+                         Defaults to (320, 270) for LINE animated stickers.
+                         Use (240, 240) for main image, (96, 74) for tab icon.
 
         Returns:
             Path to the generated APNG file.
@@ -792,9 +796,9 @@ class APNGAnimator:
             loop,
         )
 
-        # 1. Load source image and resize to LINE dimensions (320×270)
+        # 1. Load source image and resize to target dimensions
         img = Image.open(png_path).convert("RGBA")
-        img = self._resize_to_line(img)
+        img = self._resize_to_line(img, target_size=target_size)
 
         # 2. Generate keyframes from animation preset
         keyframes = generate_keyframes(animation_type, num_frames)
@@ -829,14 +833,26 @@ class APNGAnimator:
     # -----------------------------------------------------------------------
 
     @staticmethod
-    def _resize_to_line(img: Image.Image) -> Image.Image:
+    def _resize_to_line(
+        img: Image.Image,
+        target_size: tuple[int, int] | None = None,
+    ) -> Image.Image:
         """
-        Resize image to fit within LINE's 320×270 canvas.
+        Resize image to fit within the specified canvas.
 
-        Maintains aspect ratio, ensures at least one side is 270px,
-        and centers on a transparent 320×270 canvas.
+        Maintains aspect ratio, ensures the image fills the canvas,
+        and centers on a transparent canvas.
+
+        Args:
+            img: Source image.
+            target_size: (width, height) tuple. Defaults to LINE APNG sticker
+                         dimensions (320×270). Use (240, 240) for main image,
+                         (96, 74) for tab icon.
         """
-        target_w, target_h = LINE_APNG_WIDTH, LINE_APNG_HEIGHT
+        if target_size is None:
+            target_w, target_h = LINE_APNG_WIDTH, LINE_APNG_HEIGHT
+        else:
+            target_w, target_h = target_size
 
         # Scale to fit within bounds while maintaining aspect ratio
         w, h = img.size
