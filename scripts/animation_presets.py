@@ -10,7 +10,7 @@ Each preset returns a list of keyframe dicts with:
     - "rotation": float (degrees)
     - "opacity": float (0.0-1.0)
 
-Presets are designed for 512x512 Telegram stickers.
+Presets are designed for 512x512 Telegram stickers and 320x270 LINE animated stickers.
 Default parameters produce subtle, appealing animations.
 """
 
@@ -221,6 +221,161 @@ def float_up(duration_frames: int, amplitude: float = 12.0) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# New presets: tada, heartbeat, slide_in (March 2026)
+# Based on LINE Store marketplace analysis — most engaging animations.
+# ---------------------------------------------------------------------------
+
+
+def tada(duration_frames: int = 60, **_kwargs) -> list[dict]:
+    """
+    Tada / celebration: scale up + wiggle rotation + settle.
+    Popular for emphasis/celebration stickers (party, excited, surprise).
+    """
+    keyframes = []
+    for i in range(duration_frames):
+        t = i / max(duration_frames - 1, 1)
+        kf = _default_transform()
+        kf["frame"] = i
+
+        if t < 0.15:
+            # Scale up with slight rotation
+            progress = t / 0.15
+            kf["scale"] = _lerp(0.8, 1.2, progress)
+            kf["rotation"] = _lerp(0, -10, progress)
+        elif t < 0.65:
+            # Wiggle back and forth
+            wiggle_t = (t - 0.15) / 0.50
+            kf["scale"] = 1.15 - 0.05 * wiggle_t  # Slowly settle scale
+            cycles = 4
+            kf["rotation"] = (
+                10 * math.sin(wiggle_t * cycles * 2 * math.pi) * (1 - wiggle_t)
+            )
+        else:
+            # Settle to normal
+            settle_t = (t - 0.65) / 0.35
+            kf["scale"] = _lerp(1.10, 1.0, settle_t)
+            kf["rotation"] = _lerp(kf.get("rotation", 2), 0, settle_t)
+
+        kf["opacity"] = min(1.0, t / 0.05)  # Quick fade in
+        keyframes.append(kf)
+    return keyframes
+
+
+def heartbeat(duration_frames: int = 60, **_kwargs) -> list[dict]:
+    """
+    Heartbeat: rhythmic double-pump scale animation.
+    Perfect for love/heart stickers — the #1 selling category on LINE Store.
+    More organic than pulse; mimics real heartbeat rhythm.
+    """
+    keyframes = []
+    for i in range(duration_frames):
+        t = i / max(duration_frames - 1, 1)
+        kf = _default_transform()
+        kf["frame"] = i
+
+        # Two beats per cycle, second beat slightly smaller
+        cycle = t * 3.0  # 3 full heartbeat cycles
+        beat_phase = cycle % 1.0
+
+        if beat_phase < 0.12:
+            # First beat (systole) — strong pump
+            pump = beat_phase / 0.12
+            kf["scale"] = 1.0 + 0.18 * math.sin(pump * math.pi)
+        elif beat_phase < 0.25:
+            # Relax after first beat
+            relax = (beat_phase - 0.12) / 0.13
+            kf["scale"] = _lerp(1.0, 0.97, relax)
+        elif beat_phase < 0.37:
+            # Second beat (diastole) — softer pump
+            pump2 = (beat_phase - 0.25) / 0.12
+            kf["scale"] = 0.97 + 0.10 * math.sin(pump2 * math.pi)
+        else:
+            # Rest period
+            rest = (beat_phase - 0.37) / 0.63
+            kf["scale"] = _lerp(0.97, 1.0, rest**0.5)
+
+        kf["opacity"] = min(1.0, t / 0.03)
+        keyframes.append(kf)
+    return keyframes
+
+
+def slide_in(
+    duration_frames: int = 60, direction: str = "left", **_kwargs
+) -> list[dict]:
+    """
+    Slide in from off-screen with bounce settle.
+    Great for entrance animations and reply stickers.
+    direction: 'left', 'right', 'top', 'bottom'
+    """
+    keyframes = []
+    offset_distance = 300  # pixels off screen
+
+    for i in range(duration_frames):
+        t = i / max(duration_frames - 1, 1)
+        kf = _default_transform()
+        kf["frame"] = i
+
+        if t < 0.4:
+            # Slide in phase
+            progress = t / 0.4
+            eased = 1 - (1 - progress) ** 3  # ease-out cubic
+            dist = _lerp(offset_distance, 0, eased)
+        elif t < 0.55:
+            # Overshoot
+            progress = (t - 0.4) / 0.15
+            dist = _lerp(0, -20, math.sin(progress * math.pi))
+        elif t < 0.70:
+            # Bounce back
+            progress = (t - 0.55) / 0.15
+            dist = _lerp(-20, 8, progress)
+        else:
+            # Settle
+            progress = (t - 0.70) / 0.30
+            dist = _lerp(8, 0, progress**2)
+
+        if direction == "left":
+            kf["x"] = -dist
+        elif direction == "right":
+            kf["x"] = dist
+        elif direction == "top":
+            kf["y"] = -dist
+        elif direction == "bottom":
+            kf["y"] = dist
+
+        kf["opacity"] = min(1.0, t / 0.1)
+        kf["scale"] = 1.0
+        keyframes.append(kf)
+    return keyframes
+
+
+def jelly(duration_frames: int = 60, **_kwargs) -> list[dict]:
+    """
+    Jelly/squish effect: alternating horizontal and vertical squash-stretch.
+    Popular for cute/kawaii stickers — makes characters feel soft and bouncy.
+    """
+    keyframes = []
+    for i in range(duration_frames):
+        t = i / max(duration_frames - 1, 1)
+        kf = _default_transform()
+        kf["frame"] = i
+
+        # Damped oscillation for squish effect
+        cycles = 3
+        decay = math.exp(-3 * t)
+        squish = 0.15 * decay * math.sin(t * cycles * 2 * math.pi)
+
+        # We approximate squish using scale + slight y offset
+        # (true squash-stretch would need separate x/y scale, but Lottie
+        #  embedding supports uniform scale only in our current pipeline)
+        kf["scale"] = 1.0 + squish
+        kf["y"] = -squish * 30  # Move up when squished wider, down when stretched
+
+        kf["opacity"] = min(1.0, t / 0.03)
+        keyframes.append(kf)
+    return keyframes
+
+
+# ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
 
@@ -232,6 +387,10 @@ PRESETS: dict[str, Callable] = {
     "spin": spin,
     "wave": wave,
     "float": float_up,
+    "tada": tada,
+    "heartbeat": heartbeat,
+    "slide_in": slide_in,
+    "jelly": jelly,
 }
 
 

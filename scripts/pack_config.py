@@ -2,6 +2,12 @@
 Sticker Pack Configuration
 Define your character, art style, and all stickers in a pack.
 This config drives the entire generation + processing pipeline.
+
+Supports:
+- Single character packs (standard)
+- Dual/couple character packs (set "characters" list + "relationship")
+- Localization (set "localization" dict for multi-language titles)
+- Emotion coverage validation (essential emotions are checked at pipeline start)
 """
 
 # =============================================================================
@@ -254,6 +260,146 @@ PACK_CONFIG = {
 
 
 # =============================================================================
+# EMOTION COVERAGE MATRIX
+# Based on LINE Store marketplace analysis (March 2026).
+# The essential set (8) is the minimum for a viable sticker pack.
+# The extended set (24) covers all common conversational needs.
+# =============================================================================
+ESSENTIAL_EMOTIONS = [
+    "happy",  # Joy, cheerful, smiling
+    "love",  # Romance, hearts, affection
+    "sad",  # Crying, disappointed, down
+    "angry",  # Frustrated, mad, annoyed
+    "laughing",  # LOL, funny, haha
+    "surprised",  # Shocked, wow, unexpected
+    "sleepy",  # Tired, zzz, yawning
+    "ok",  # Thumbs up, approval, yes
+]
+
+EXTENDED_EMOTIONS = ESSENTIAL_EMOTIONS + [
+    "grateful",  # Thank you, appreciation
+    "sorry",  # Apologetic, regretful
+    "confused",  # Thinking, questioning
+    "proud",  # Accomplished, confident
+    "shy",  # Blushing, embarrassed
+    "hungry",  # Eating, food, drool
+    "celebrating",  # Party, dancing, confetti
+    "hello",  # Greeting, waving
+    "goodbye",  # Farewell, bye-bye
+    "sick",  # Unwell, fever, ill
+    "working",  # Busy, focused, laptop
+    "bored",  # Waiting, yawning
+    "cool",  # Sunglasses, chill
+    "scared",  # Frightened, hiding
+    "encouraging",  # Fighting!, cheer up
+    "goodnight",  # Sweet dreams, moon
+]
+
+# Aliases: map common sticker emotion names to canonical names above
+_EMOTION_ALIASES = {
+    "excited": "happy",
+    "winking": "happy",
+    "mischievous": "happy",
+    "in love": "love",
+    "crying": "sad",
+    "crying (comedic)": "sad",
+    "frustrated": "angry",
+    "thinking": "confused",
+    "blushing": "shy",
+    "blushing / shy": "shy",
+    "cool / confident": "cool",
+    "tired": "sleepy",
+    "tired / exhausted": "sleepy",
+    "sick / unwell": "sick",
+    "yes": "ok",
+    "yes / ok / approval": "ok",
+    "no": "ok",
+    "no / rejection": "ok",
+    "grateful / thankful": "grateful",
+    "hello / greeting": "hello",
+    "goodbye": "goodbye",
+}
+
+
+def validate_emotion_coverage(stickers: list[dict], level: str = "essential") -> dict:
+    """
+    Validate that a sticker pack covers the required emotional range.
+
+    Args:
+        stickers: List of sticker dicts from PACK_CONFIG["stickers"]
+        level: "essential" (8 minimum) or "extended" (24 recommended)
+
+    Returns:
+        dict with keys: passed (bool), covered (list), missing (list),
+                        coverage_pct (float), suggestions (list)
+    """
+    target = ESSENTIAL_EMOTIONS if level == "essential" else EXTENDED_EMOTIONS
+    covered = set()
+
+    for s in stickers:
+        emotion = s.get("emotion", "").lower().strip()
+        # Check direct match
+        for target_emotion in target:
+            if target_emotion in emotion:
+                covered.add(target_emotion)
+                break
+        else:
+            # Check aliases
+            canonical = _EMOTION_ALIASES.get(emotion)
+            if canonical and canonical in target:
+                covered.add(canonical)
+
+    missing = [e for e in target if e not in covered]
+    coverage_pct = len(covered) / len(target) * 100 if target else 100.0
+
+    suggestions = []
+    if missing:
+        suggestions.append(
+            f"Add stickers for: {', '.join(missing)} "
+            f"to improve conversational coverage."
+        )
+    if len(stickers) < 8:
+        suggestions.append(
+            "Pack has fewer than 8 stickers. Consider adding more "
+            "for a competitive launch (8 minimum, 24 recommended)."
+        )
+    if len(stickers) == 8:
+        suggestions.append(
+            "8-sticker pack is viable for launch. Plan a 24-sticker "
+            "expansion pack as a sequel for better marketplace performance."
+        )
+
+    return {
+        "passed": len(missing) == 0,
+        "covered": sorted(covered),
+        "missing": missing,
+        "coverage_pct": round(coverage_pct, 1),
+        "suggestions": suggestions,
+        "level": level,
+        "total_stickers": len(stickers),
+    }
+
+
+# =============================================================================
+# STICKER INTERACTION TYPES (for couple/pair packs)
+# =============================================================================
+INTERACTION_TYPES = [
+    "shared_emotion",  # Both characters show same emotion (both happy)
+    "complementary",  # Complementary emotions (one comforts the other)
+    "interaction",  # Physical interaction (hugging, high-five, etc.)
+    "solo_primary",  # Only primary character shown
+    "solo_secondary",  # Only secondary character shown
+]
+
+RELATIONSHIP_TYPES = [
+    "couple",  # Romantic pair (most popular on LINE Store)
+    "friends",  # Friendship / buddy pair
+    "family",  # Parent-child, siblings
+    "rivals",  # Frenemies, competitive duo
+]
+
+
+# =============================================================================
 # HELPER: Create additional pack configs easily
 # =============================================================================
 def create_pack_config(
@@ -262,14 +408,36 @@ def create_pack_config(
     stickers: list[dict],
     platforms: list[str] | None = None,
     character: dict | None = None,
+    characters: list[dict] | None = None,
+    relationship: str | None = None,
     style: dict | None = None,
     publisher: str = "Your Brand Name",
     text_defaults: dict | None = None,
+    localization: dict | None = None,
 ) -> dict:
     """
     Create a new pack config using the same character/style.
 
-    Usage:
+    Supports both single-character and dual-character (couple) packs.
+
+    Args:
+        pack_id: Unique pack identifier (kebab-case)
+        pack_name: Display name (English)
+        stickers: List of sticker definition dicts
+        platforms: Target platforms list
+        character: Single character dict (legacy, for single-char packs)
+        characters: List of character dicts (for couple/pair packs)
+            Each character dict should have a "role" field: "primary" or "secondary"
+        relationship: Relationship type for couple packs (see RELATIONSHIP_TYPES)
+        style: Art style dict
+        publisher: Publisher name
+        text_defaults: Text overlay defaults (None for no text)
+        localization: Multi-language title/description dict, e.g.:
+            {"id": {"title": "...", "description": "..."},
+             "th": {"title": "...", "description": "..."},
+             "ja": {"title": "...", "description": "..."}}
+
+    Usage (single character):
         daily_life_pack = create_pack_config(
             pack_id="pack02_daily_life",
             pack_name="Mochi Daily Life",
@@ -279,12 +447,29 @@ def create_pack_config(
                 ...
             ]
         )
+
+    Usage (couple pack):
+        couple_pack = create_pack_config(
+            pack_id="mochi-and-luna",
+            pack_name="Mochi & Luna in Love",
+            characters=[
+                {"name": "Mochi", "role": "primary", "species": "cat", ...},
+                {"name": "Luna", "role": "secondary", "species": "rabbit", ...},
+            ],
+            relationship="couple",
+            stickers=[
+                {"id": "01_hug", "emotion": "Love",
+                 "interaction_type": "interaction",
+                 "pose": "Mochi and Luna hugging each other tightly",
+                 "props": "Floating hearts around them", "emoji": "..."},
+                ...
+            ]
+        )
     """
-    return {
+    config = {
         "pack_id": pack_id,
         "pack_name": pack_name,
         "publisher": publisher,
-        "character": character or CHARACTER,
         "style": style or STYLE,
         "text_defaults": text_defaults,
         "stickers": stickers,
@@ -299,3 +484,21 @@ def create_pack_config(
             "print_etsy",
         ],
     }
+
+    # Support dual-character / couple packs
+    if characters:
+        config["characters"] = characters
+        config["relationship"] = relationship or "couple"
+        # Also set legacy "character" field to primary for backward compatibility
+        primary = next(
+            (c for c in characters if c.get("role") == "primary"), characters[0]
+        )
+        config["character"] = primary
+    else:
+        config["character"] = character or CHARACTER
+
+    # Support localization for multi-market publishing
+    if localization:
+        config["localization"] = localization
+
+    return config

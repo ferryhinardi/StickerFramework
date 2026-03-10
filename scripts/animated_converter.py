@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-Animated sticker converter for Telegram.
+Animated sticker converter for Telegram and LINE.
 
-Two conversion pipelines:
+Three conversion pipelines:
   A) LottieAnimator  — Static PNG → animated TGS (Lottie gzip, ≤64 KB)
   B) VideoConverter   — Static PNG / GIF / MP4 → WebM VP9 video sticker (≤256 KB)
+  C) APNGAnimator     — Static PNG → animated APNG for LINE (≤1 MB, 5-20 frames)
 
 TGS approach for AI-generated / photographic stickers:
   - Embed the rasterised image as a base64 Lottie image asset
@@ -15,6 +16,11 @@ WebM VP9 approach:
   - Render animation frames via Pillow transforms
   - Pipe frames to ffmpeg  (-c:v libvpx-vp9 -pix_fmt yuva420p)
   - Verify output: ≤256 KB, ≤3 s, 512×512, VP9 codec, no audio
+
+LINE APNG approach:
+  - Render animation frames via Pillow transforms (reuses VideoConverter._render_frame)
+  - Assemble frames into APNG using Pillow's save_all
+  - Verify output: ≤1 MB, ≤4 s, 320×270, 5-20 frames, all frames distinct
 """
 
 from __future__ import annotations
@@ -695,6 +701,295 @@ class VideoConverter:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# C) APNGAnimator  —  PNG → APNG (LINE animated stickers)
+# ═══════════════════════════════════════════════════════════════════════════
+
+# LINE animated sticker limits
+LINE_APNG_MAX_BYTES = 1_000_000  # 1 MB
+LINE_APNG_WIDTH = 320
+LINE_APNG_HEIGHT = 270
+LINE_APNG_MIN_FRAMES = 5
+LINE_APNG_MAX_FRAMES = 20
+LINE_APNG_MAX_LOOPS = 4
+LINE_APNG_MAX_DURATION_SEC = 4
+LINE_APNG_FPS = 10  # 10 fps × 20 frames = 2 sec, good default
+
+
+class APNGAnimator:
+    """
+    Convert static sticker PNGs into animated APNG files for LINE.
+
+    LINE animated sticker requirements:
+      - Format: APNG (with .png extension)
+      - Dimensions: up to 320×270, one side must be ≥270px
+      - Frame count: 5–20 frames
+      - Loops: 1–4
+      - Max playback: 4 seconds
+      - Max file size: 1 MB
+      - All frames must be visually distinct
+
+    Uses Pillow's native APNG support (save_all=True) for assembly
+    and the same _render_frame() logic as VideoConverter for transforms.
+    """
+
+    def png_to_apng(
+        self,
+        png_path: str,
+        output_path: str,
+        animation_type: str = "bounce",
+        duration_ms: int = 2000,
+        loop: int = 0,
+        num_frames: int | None = None,
+    ) -> Path:
+        """
+        Convert static PNG to animated APNG for LINE.
+
+        Args:
+            png_path: Path to source PNG (any resolution).
+            output_path: Path for output .png (APNG) file.
+            animation_type: Animation preset name (bounce, heartbeat, etc.).
+            duration_ms: Total animation duration in milliseconds (max 4000).
+            loop: Number of loops. 0 = infinite, 1-4 for LINE compliance.
+                  LINE requires 1-4 loops; 0 will be clamped to 1 at verify.
+            num_frames: Number of frames to render. If None, auto-calculated
+                        from duration and fps (clamped to 5-20).
+
+        Returns:
+            Path to the generated APNG file.
+        """
+        png_path = Path(png_path)
+        output_path = Path(output_path)
+        if not png_path.exists():
+            raise FileNotFoundError(f"Source PNG not found: {png_path}")
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Clamp duration to LINE limit
+        duration_ms = min(duration_ms, LINE_APNG_MAX_DURATION_SEC * 1000)
+        duration_sec = duration_ms / 1000.0
+
+        # Calculate frame count
+        if num_frames is None:
+            num_frames = max(
+                LINE_APNG_MIN_FRAMES,
+                min(LINE_APNG_MAX_FRAMES, int(LINE_APNG_FPS * duration_sec)),
+            )
+        num_frames = max(LINE_APNG_MIN_FRAMES, min(LINE_APNG_MAX_FRAMES, num_frames))
+
+        per_frame_ms = int(duration_ms / num_frames)
+
+        # Clamp loop count for LINE compliance (1-4; 0=infinite is non-compliant)
+        if loop <= 0 or loop > LINE_APNG_MAX_LOOPS:
+            loop = 1
+
+        logger.info(
+            "APNG: %s → %s | preset=%s duration=%dms frames=%d loop=%d",
+            png_path.name,
+            output_path.name,
+            animation_type,
+            duration_ms,
+            num_frames,
+            loop,
+        )
+
+        # 1. Load source image and resize to LINE dimensions (320×270)
+        img = Image.open(png_path).convert("RGBA")
+        img = self._resize_to_line(img)
+
+        # 2. Generate keyframes from animation preset
+        keyframes = generate_keyframes(animation_type, num_frames)
+
+        # 3. Render individual frames
+        frames = []
+        for kf in keyframes:
+            frame = self._render_frame(img, kf)
+            frames.append(frame)
+
+        # 4. Ensure all frames are visually distinct (LINE requirement)
+        frames = self._ensure_distinct_frames(frames)
+
+        # 5. Assemble APNG using Pillow
+        self._save_apng(frames, output_path, per_frame_ms, loop)
+
+        # 6. Verify file size and optimize if needed
+        self._verify_and_optimize(frames, output_path, per_frame_ms, loop)
+
+        file_size = output_path.stat().st_size
+        logger.info(
+            "APNG created: %s (%s bytes, %d frames, %d loops)",
+            output_path,
+            f"{file_size:,}",
+            len(frames),
+            loop,
+        )
+        return output_path
+
+    # -----------------------------------------------------------------------
+    # Internal helpers
+    # -----------------------------------------------------------------------
+
+    @staticmethod
+    def _resize_to_line(img: Image.Image) -> Image.Image:
+        """
+        Resize image to fit within LINE's 320×270 canvas.
+
+        Maintains aspect ratio, ensures at least one side is 270px,
+        and centers on a transparent 320×270 canvas.
+        """
+        target_w, target_h = LINE_APNG_WIDTH, LINE_APNG_HEIGHT
+
+        # Scale to fit within bounds while maintaining aspect ratio
+        w, h = img.size
+        scale = min(target_w / w, target_h / h)
+        new_w = max(1, int(w * scale))
+        new_h = max(1, int(h * scale))
+        img = img.resize((new_w, new_h), Image.LANCZOS)
+
+        # Center on transparent canvas
+        canvas = Image.new("RGBA", (target_w, target_h), (0, 0, 0, 0))
+        offset_x = (target_w - new_w) // 2
+        offset_y = (target_h - new_h) // 2
+        canvas.paste(img, (offset_x, offset_y), img)
+        return canvas
+
+    @staticmethod
+    def _render_frame(base_img: Image.Image, kf: dict) -> Image.Image:
+        """
+        Apply a single keyframe's transform to the base image.
+
+        Same logic as VideoConverter._render_frame() but operates
+        on 320×270 canvas instead of 512×512.
+        """
+        w, h = base_img.size  # 320, 270
+        canvas = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+
+        # Scale
+        s = max(0.01, kf.get("scale", 1.0))
+        new_w = max(1, int(w * s))
+        new_h = max(1, int(h * s))
+        scaled = base_img.resize((new_w, new_h), Image.LANCZOS)
+
+        # Rotate
+        rotation = kf.get("rotation", 0.0)
+        if abs(rotation) > 0.01:
+            scaled = scaled.rotate(-rotation, resample=Image.BICUBIC, expand=True)
+
+        # Position on canvas (centered + offset)
+        ox = kf.get("x", 0.0)
+        oy = kf.get("y", 0.0)
+        paste_x = int((w - scaled.size[0]) / 2 + ox)
+        paste_y = int((h - scaled.size[1]) / 2 + oy)
+
+        # Opacity
+        opacity = max(0.0, min(1.0, kf.get("opacity", 1.0)))
+        if opacity < 1.0:
+            r, g, b, a = scaled.split()
+            a = a.point(lambda p: int(p * opacity))
+            scaled = Image.merge("RGBA", (r, g, b, a))
+
+        canvas.paste(scaled, (paste_x, paste_y), scaled)
+        return canvas
+
+    @staticmethod
+    def _ensure_distinct_frames(frames: list[Image.Image]) -> list[Image.Image]:
+        """
+        Ensure all frames are visually distinct (LINE upload rejects
+        identical consecutive frames). Adds a 1px transparent nudge
+        to any frame that is identical to its predecessor.
+        """
+        import hashlib
+
+        distinct = [frames[0]]
+        prev_hash = hashlib.md5(frames[0].tobytes()).hexdigest()
+
+        for frame in frames[1:]:
+            curr_hash = hashlib.md5(frame.tobytes()).hexdigest()
+            if curr_hash == prev_hash:
+                # Nudge: shift 1px right to create a visual difference
+                nudged = Image.new("RGBA", frame.size, (0, 0, 0, 0))
+                nudged.paste(frame, (1, 0), frame)
+                distinct.append(nudged)
+                curr_hash = hashlib.md5(nudged.tobytes()).hexdigest()
+            else:
+                distinct.append(frame)
+            prev_hash = curr_hash
+
+        return distinct
+
+    @staticmethod
+    def _save_apng(
+        frames: list[Image.Image],
+        output_path: Path,
+        per_frame_ms: int,
+        loop: int,
+    ) -> None:
+        """Assemble frames into APNG using Pillow's native support."""
+        frames[0].save(
+            str(output_path),
+            format="PNG",
+            save_all=True,
+            append_images=frames[1:],
+            duration=per_frame_ms,
+            loop=loop,
+            optimize=True,
+        )
+
+    def _verify_and_optimize(
+        self,
+        frames: list[Image.Image],
+        output_path: Path,
+        per_frame_ms: int,
+        loop: int,
+    ) -> None:
+        """
+        Verify APNG meets LINE size limit. If over 1 MB, attempt:
+          1. Reduce to 256 colors (per frame)
+          2. Reduce frame count to minimum (5)
+        """
+        file_size = output_path.stat().st_size
+        if file_size <= LINE_APNG_MAX_BYTES:
+            return
+
+        logger.warning(
+            "APNG too large (%s bytes > %s). Attempting color quantization...",
+            f"{file_size:,}",
+            f"{LINE_APNG_MAX_BYTES:,}",
+        )
+
+        # Strategy 1: quantize to 256 colors per frame
+        quantized = [f.quantize(colors=256, method=2).convert("RGBA") for f in frames]
+        self._save_apng(quantized, output_path, per_frame_ms, loop)
+        file_size = output_path.stat().st_size
+        if file_size <= LINE_APNG_MAX_BYTES:
+            logger.info("Quantization succeeded: %s bytes", f"{file_size:,}")
+            return
+
+        # Strategy 2: reduce frame count to minimum
+        if len(frames) > LINE_APNG_MIN_FRAMES:
+            logger.warning(
+                "Still too large. Reducing to %d frames...", LINE_APNG_MIN_FRAMES
+            )
+            step = max(1, len(quantized) // LINE_APNG_MIN_FRAMES)
+            reduced = quantized[::step][:LINE_APNG_MIN_FRAMES]
+            new_per_frame = int(per_frame_ms * len(frames) / len(reduced))
+            self._save_apng(reduced, output_path, new_per_frame, loop)
+            file_size = output_path.stat().st_size
+            if file_size <= LINE_APNG_MAX_BYTES:
+                logger.info(
+                    "Frame reduction succeeded: %s bytes, %d frames",
+                    f"{file_size:,}",
+                    len(reduced),
+                )
+                return
+
+        logger.error(
+            "APNG still exceeds 1 MB (%s bytes) after optimization. "
+            "Consider using a simpler animation preset or smaller source image.",
+            f"{file_size:,}",
+        )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # CLI entry point
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -704,7 +999,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
     parser = argparse.ArgumentParser(
-        description="Convert stickers to Telegram animated/video formats.",
+        description="Convert stickers to animated formats (Telegram TGS/WebM, LINE APNG).",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -735,6 +1030,29 @@ if __name__ == "__main__":
     )
     webm_p.add_argument("--fps", type=int, default=30, help="Frame rate (default: 30)")
 
+    # --- apng sub-command ---
+    apng_p = sub.add_parser("apng", help="PNG → APNG (LINE animated sticker)")
+    apng_p.add_argument("input", help="Source PNG file")
+    apng_p.add_argument("output", help="Output .png (APNG) file")
+    apng_p.add_argument(
+        "--animation", default="bounce", help="Preset name (default: bounce)"
+    )
+    apng_p.add_argument(
+        "--duration",
+        type=int,
+        default=2000,
+        help="Duration ms (default: 2000, max: 4000)",
+    )
+    apng_p.add_argument(
+        "--frames",
+        type=int,
+        default=None,
+        help="Frame count (default: auto, range: 5-20)",
+    )
+    apng_p.add_argument(
+        "--loops", type=int, default=1, help="Loop count (default: 1, LINE allows 1-4)"
+    )
+
     args = parser.parse_args()
 
     if args.command == "tgs":
@@ -764,3 +1082,15 @@ if __name__ == "__main__":
                 fps=args.fps,
             )
         print(f"Created WebM: {out} ({out.stat().st_size:,} bytes)")
+
+    elif args.command == "apng":
+        animator = APNGAnimator()
+        out = animator.png_to_apng(
+            args.input,
+            args.output,
+            animation_type=args.animation,
+            duration_ms=args.duration,
+            num_frames=args.frames,
+            loop=args.loops,
+        )
+        print(f"Created APNG: {out} ({out.stat().st_size:,} bytes)")
