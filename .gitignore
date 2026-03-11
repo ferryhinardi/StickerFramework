@@ -75,6 +75,8 @@ server/__pycache__/
 .opencode/sessions/
 .opencode/state/
 
+openai-costs.json
+
 # Misc logs
 excalidraw.log
 automation/stickerly/screenshots/
